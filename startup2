@@ -1,0 +1,59 @@
+#! /usr/bin/tcsh
+
+# Script to startup everything for normal operation
+# Single radio, dual VFO
+
+# The SO2V bridge controls the rig, and a copy of fldigi and a copy of wsjt
+# talk through it.  Fldigi is listening to the radio & wsjtx is listening to
+# the SDR
+
+# Still need to test TX but it also looks like WSJT can listen to rig at
+# same time by using pavucontrol to select input.  Perhaps we can eventaully
+# run 3 copies of WSJT monitoring three bands on the SDR
+
+set RIG="DIRECT"
+set FS=48
+set FOLLOW="-bfo 1000 -follow_band"
+#set FOLLOW="-follow_band"
+#set FOLLOW=""
+set LOOPBACK="-loopback -no_hamlib"
+set PY_SDR = "~/Python/pySDR/pySDR.py"
+set FLDIGI="~/fldigi-4.0.18/src/fldigi"
+
+# Kill stale stuff
+pkill bridge.py
+pkill pySDR.py
+pkill bandmap
+pkill rigctld
+
+# Start the bridge
+#pavucontrol &
+cd ~/Python/bridge
+set OPTS='-wsjt'
+#bridge.py $OPTS &
+bridge.py $OPTS >& /tmp/BRIDGE &
+sleep 2
+#exit
+
+# Start SDR
+cd ~/Python/pySDR
+$PY_SDR -mode USB -fsout $FS -af_bw 10 -vid_bw 45 -ant B -pan -pan_bw 10 $LOOPBACK -rig HAMLIB $FOLLOW -no_rigctl -port 4732 &
+sleep 1
+
+#exit
+
+# Start FLDIGI & WSJT & FLLOG
+#~/fllog-1.2.5/src/fllog >& /tmp/FLLOG &
+sleep 1
+$FLDIGI --config-dir ~/.fldigi5 --xmlrpc-server-port 7363 >& /tmp/FLDIGI5 &
+sleep 1
+wsjtx -r VFOB >& /tmp/WSJTX &
+
+exit
+
+# This seems too slow things up too much
+sleep 2
+pushd ../bandmap 
+bandmap.py  -rig HAMLIB -port 4633 >& /tmp/BANDMAP &
+popd
+

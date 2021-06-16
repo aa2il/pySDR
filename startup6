@@ -1,0 +1,96 @@
+#! /usr/bin/tcsh
+
+# Script to startup everything for a FT8 contest
+# Single radio, dual VFO
+
+# The SO2V bridge controls the rig & two copies of WSJT-X talk through it
+# One of them is listening to the radio & the other is listening to
+# the SDR.
+
+set RIG="DIRECT"
+set FS=48
+set FOLLOW="-so2v -bfo 1000"
+set FOLLOW="-bfo 1000"
+set LOOPBACK="-loopback -no_hamlib"
+#set LOOPBACK="-no_hamlib"
+set PY_SDR = "~/Python/pySDR/pySDR.py"
+set FLDIGI="~/fldigi-4.0.18/src/fldigi"
+set FLDIGI="~/fldigi-4.1.00/src/fldigi"
+
+set CONTEST = 0
+
+# Kill stale stuff
+pkill bridge.py
+pkill pySDR.py
+pkill bandmap
+pkill rigctld
+
+# Start loopback
+cd ~/Python/pySDR
+start_loopback
+sleep 1
+
+# Start the bridge
+echo "Starting SDR bridge ..."
+cd ~/Python/bridge
+#bridge.py &
+bridge.py >& /tmp/BRIDGE &
+#exit
+sleep 2
+
+# Start SDR
+echo "Starting SDR ..."
+cd ~/Python/pySDR
+$PY_SDR -mode USB -fsout $FS -af_bw 10 -vid_bw 45 -ant B -pan -pan_bw 10 $LOOPBACK -rig HAMLIB $FOLLOW -no_rigctl -port 4732 -aux &
+#exit
+sleep 1
+
+
+# Select CONTEST or REGULAR mode
+if( $CONTEST == 0 )then
+
+    # Regular mode 
+   # ~/Python/bandmap/bandmap.py -rig HAMLIB -server WSJT -dx >& /tmp/BANDMAP1 &
+   # sleep 1
+   # ~/Python/bandmap/bandmap.py -rig HAMLIB -dx  >& /tmp/BANDMAP2 &
+   # sleep 1
+
+    echo "Starting WSJT-X ..."
+    /usr/local/bin/wsjtx &
+    sleep 1
+    /usr/local/bin/wsjtx -r VFOB &
+    sleep 1
+
+else
+
+    # Contest mode 
+    ~/Python/bandmap/bandmap.py -rig HAMLIB -server WSJT6 -dx >& /tmp/BANDMAP1 &
+    sleep 1
+    
+    /usr/local/bin/wsjtx -r CONTEST &
+
+endif
+
+
+exit
+
+# Start FLDIGI & FLLOG
+~/fllog-1.2.5/src/fllog >& /tmp/FLLOG &
+sleep 1
+$FLDIGI --config-dir ~/.fldigi5 --xmlrpc-server-port 7363 >& /tmp/FLDIGI5 &
+$FLDIGI --config-dir ~/.fldigi6 --xmlrpc-server-port 7364 >& /tmp/FLDIGI6 &
+
+#exit
+
+# Start bandmap
+sleep 2
+pushd ../bandmap 
+bandmap.py  -rig HAMLIB -port 4633 -contest -log /home/joea/.fllog/naqp.adif >& /tmp/BANDMAP &
+popd
+
+
+exit
+
+################################################################
+
+

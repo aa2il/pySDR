@@ -1,0 +1,97 @@
+#! /usr/bin/tcsh
+
+# Script to startup everything for a CW contest
+# pyKeyer talks directly to rig and SDR is a client
+# This is a development script that doesn't work anymore
+
+set MODEL = 129                   # Yaesu
+set MODEL = 209                   # Kenwood TS850
+    
+set MASTER="-master"
+set PRACTICE=""
+set HINTS=""
+#set RIG="FLDIGI"
+#set RIG="HAMLIB -port 4575"
+set RIG="HAMLIB"
+
+# Settings for NCCC CW Sprints
+#set CONTEST="-sprint"
+#set WPM=25
+
+# Setting for NAQP
+set CONTEST="-naqp"
+set WPM=22
+
+# Setting for ARRL DX
+#set CONTEST="-arrl_dx"
+
+# Setting for CW Ops mini tests
+set CONTEST="-CWops"
+set WPM=25
+set HINTS="-nohints"
+
+# Kill stale stuff
+pkill rigctld
+pkill bandmap
+pkill wclock
+pkill pySDR
+pkill pyKeyer
+pkill wclock
+
+# Determine which rig we're using
+if( $MODEL == 129 )then
+   set DEVICE="/dev/serial/by-id/usb-Silicon_Labs_CP2105_Dual_USB_to_UART_Bridge_Controller_AH046H3M120067-if00-port0"
+   set PORT=0
+else if( $MODEL == 209 )then
+   set DEVICE="/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_TS850-if00-port0"
+   set PORT=1
+else
+   echo Unknown rig model $MODEL
+   exit
+endif
+
+
+if( 0 )then
+    # Start hamlib rigctld daemon
+    echo " "
+    set a=`ls -l $DEVICE`
+    echo -$a-
+    set b=`echo $a | cut -f 2 -d '>'`
+    echo -$b-
+    set c=`echo $b | cut -f 3 -d '/'`
+    echo -$c-
+    ~/hamlib-3.0.1/tests/rigctld -m $MODEL -r /dev/$c  &
+    exit
+endif
+
+if( 1 )then
+    cd ~/Python/pyKeyer
+    set RUN_FILE="/tmp/pyKeyer.run"
+    rm -f $RUN_FILE
+    
+    echo Starting pyKeyer.py ...........
+    #pyKeyer.py -wpm ${WPM} $PRACTICE ${CONTEST} -rig DIRECT -port $PORT $MASTER $HINTS & 
+    pyKeyer.py -wpm ${WPM} $PRACTICE ${CONTEST} -rig DIRECT -port $PORT $MASTER $HINTS >& /tmp/KEYER &
+    #exit
+
+    #set PID=$!
+    #echo "PID=",$PID
+    #ps -aux | fgrep $PID
+
+    while ( ! -e $RUN_FILE )
+        echo "Waiting for pyKeyer to start ..."
+        sleep 1
+    end
+endif
+
+cd ~/Python/pySDR
+start_loopback
+set FS=48
+#set LOOPBACK="-loopback -follow_freq"
+set LOOPBACK="-loopback"
+set PY_SDR = "~/Python/pySDR/pySDR.py"
+#$PY_SDR -mode IQ -fsout $FS -af_bw 45 -vid_bw 45 -ant A -pan -pan_bw 10 $LOOPBACK -rig $RIG -no_hamlib &
+$PY_SDR -mode IQ -fsout $FS -af_bw 45 -vid_bw 45 -ant B -pan -pan_bw 10 $LOOPBACK -rig $RIG -no_hamlib -rigIF -8.83 &
+
+sleep 1
+wclock.py >& /tmp/WCLOCK &

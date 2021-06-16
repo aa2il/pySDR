@@ -1,0 +1,41 @@
+#! /bin/csh -f
+#############################################################################
+#
+# Script to compare working code version on RPi to configured version
+#
+#############################################################################
+#
+# Specify root where old version exists
+#set ROOT="/media/${USER}/305f60b3-8413-4edb-afc1-4e4ce064aab3/home/${USER}"
+set ROOT="/media/${USER}/pi2"
+#set ROOT="/media/${USER}/pi"
+set ROOT="/media/${USER}/marconi"
+
+# Add path down to old version
+set N=`echo $HOME | wc -c`
+echo N=$N
+set PTH=`pwd | cut -c ${N}-`
+echo PTH=$PTH
+set old=${ROOT}${PTH}
+echo OLD=$old
+
+# Overide if necessary
+#set OLD="work2"
+
+rm -f DIFFS
+foreach i (*.py)
+    echo $i
+    set n=`diff -w $old/$i $i | wc -l`
+    if( $n>0 ) then
+        echo ---------------------------------- >> DIFFS
+        echo $i >> DIFFS
+        echo " " >> DIFFS
+        diff -w $old/$i $i >> DIFFS
+        echo " " >> DIFFS
+        
+        kompare $old/$i $i
+        #kompare $i $old/$i
+    endif
+end
+
+cat DIFFS

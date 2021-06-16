@@ -1,0 +1,232 @@
+# Maintain compatability with python2 for now
+from __future__ import print_function
+
+from pyqtgraph.Qt import QtCore
+import time
+from support import MAX_RX
+import numpy as np
+import sys
+from rig_io.socket_io import find_fldigi_port
+
+############################################################################
+
+# Logger
+class Logger:
+    def __init__(self,P):
+
+        P.LOG1 = open('LOG1.TXT','w')
+        P.LOG2 = open('LOG2.TXT','w')
+        P.LOG2.write('%d,%d,0,0\n' % (P.RB_SIZE,P.FS_OUT) )
+        self.P = P
+
+        
+# Watch Dog Timer - Called every msec to monitor health of app
+class WatchDog:
+    def __init__(self,P,msec):
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.Monitor)
+        self.timer.start(msec)
+        self.count=0
+        self.P = P
+        self.quiet=True
+        self.quiet=False
+
+        # Record start-time
+        self.Start_Time = time.time()
+        self.Last_Time  = self.Start_Time
+
+        # Ring buffer diagnostics
+        self.nin_prev=0
+        self.nout_prev=0
+        self.avg_latency = [0]*MAX_RX
+        self.zz = np.zeros(P.OUT_CHUNK_SIZE, np.complex64)
+
+    # Function to monitor audio ring buffers
+    def check_ringbuff(self,t,irx,verbosity):
+
+        P      = self.P
+        if P.MP_SCHEME==2 or P.MP_SCHEME==3:
+            msg        = P.gui.mp_comm('rbStatus',irx,rx=irx)
+            tag        = msg[0]
+            nsamps     = msg[1]
+            size       = msg[2]
+            Start_Time = msg[3]
+            fs         = msg[4]
+        elif P.MP_SCHEME==1:
+            player     = P.players[irx]
+            if player and player.active:
+                tag        = player.rb.tag
+                nsamps     = player.rb.nsamps 
+                size       = player.rb.size
+                Start_Time = player.Start_Time
+                fs         = player.fs
+            else:
+                return
+        else:
+            print('WATCHDOG - Unknown MP SCHEME',P.MP_SCHEME)
+            sys.exit(0)
+                
+        latency = float( nsamps ) / float(P.FS_OUT)
+        if self.count==1:
+            self.avg_latency[irx] = latency
+        else:
+            if self.count<100:
+                alpha = 1./float( self.count )
+            else:
+                alpha=.01
+            self.avg_latency[irx] = (1.-alpha)*self.avg_latency[irx] + alpha*latency
+
+        if not self.quiet:
+            #print('Watch Dog:',tag,'Latency =',nsamps,'samps =',latency,' sec')
+            print('Watch Dog: %s Latency = %5d samp = %4.2f sec' % (tag,nsamps,latency),end='',flush=True)
+        self.P.LOG2.write('%f,%d,%f,%f\n' % (t,nsamps,latency,self.avg_latency[irx]) )
+        self.P.LOG2.flush()
+
+        dt = t - Start_Time
+        fs_diff = int( float( nsamps - size/2 ) / dt )
+        pct = float(100*nsamps)/float(size)
+        if verbosity>=0:
+            print('   Ring Buffer: ',pct," %   dfs=",fs_diff,"   fs_out=",fs)
+
+        if dt>2 and nsamps > 3*size/4:
+            #print("   ",tag," - Ring Buffer High Water Mark Hit - nsamps=", nsamps)
+            print(' *** High Water Mark ***')
+            self.P.LOG1.write("t=%f - %s Ring Buffer High Water Mark Hit - nsamps = %d / %d\n" % \
+                              (t,tag, nsamps, size) )
+
+        elif dt>2 and nsamps < size/4:
+            #print("   ",tag," - Ring Buffer Low Water Mark Hit - nsamps=", nsamps)
+            print(' *** Low Water Mark ***')
+            self.P.LOG1.write("t=%f - %s Ring Buffer Low Water Mark Hit - nsamps = %d / %d\n" % \
+                              (t,tag, nsamps, size) )
+            self.P.LOG1.flush()
+
+        else:
+            print(' ')
+
+        # Check on plotting ring buffs
+        if False:
+            if self.P.SHOW_RF_PSD:
+                nsamps = self.P.rb_rf.nsamps
+                tag    = self.P.rb_rf.tag
+                size   = self.P.rb_rf.size
+                print('Watch Dog:',tag,'nsamps =',nsamps,size)
+            
+            if self.P.SHOW_BASEBAND_PSD:
+                nsamps = self.P.rb_baseband.nsamps
+                tag    = self.P.rb_baseband.tag
+                size   = self.P.rb_baseband.size
+                print('Watch Dog:',tag,'nsamps =',nsamps,size)
+
+            if self.P.SHOW_AF_PSD:
+                nsamps = self.P.rb_af.nsamps
+                tag    = self.P.rb_af.tag
+                size   = self.P.rb_af.size
+                print('Watch Dog:',tag,'nsamps =',nsamps,size)
+
+
+            
+    # Check health of app in here
+    def Monitor(self):
+        #print('Monitor: in...')
+        P=self.P
+        
+        t=time.time()
+        if not self.quiet and False:
+            print('Watch Dog: FC,FOFFSET=',P.FC,P.FOFFSET)
+
+        if P.SHUT_DOWN:
+            #quit_rx(self.P)
+            #print "\nThat's all Folks!"
+            #P.gui.QuitApp()
+            print('WatchDog Monitor: Shutting down...')
+            P.gui.closeEvent()
+            sys.exit(0)
+
+        verbosity = -1
+        if verbosity>=0:
+            print('\nWatch Dog:',int( t-self.Start_Time ))
+        self.count+=1
+
+        # Monitor audio ring buffer i/o
+        for i in range(P.NUM_PLAYERS):
+            self.check_ringbuff(t,i,verbosity)
+            #time.sleep(0.1)
+        
+        # Monitor AGC
+        if verbosity>=0:
+            agc=P.rx[0].agc
+            slider  = P.AF_GAIN
+            af_gain = pow(10.,P.AF_GAIN)-1 
+            print('   AGC=',agc.agc,'\tGAIN=',agc.gain,'\tMAX=',agc.maxbuf,'\tREF=',agc.ref,'\tERR=',agc.err, \
+                  '\tSLIDER=',slider,'\tAF_GAIN=',af_gain,'\tGAIN*MAX=',af_gain*agc.maxbuf*agc.gain)
+
+        # Check rig mode
+        if P.sock and P.sock.fldigi_active and P.gui.follow_freq_cb.isChecked():
+            mode = P.sock.get_fldigi_mode()
+            rig_mode = P.sock.get_mode()
+            #print 'mode=',mode,rig_mode,P.MODE
+            if mode=='CW' and rig_mode!='CW':
+                print('WATCHDOG: Setting rig to match FLDIGI decoder',mode,rig_mode,P.MODE,'...')
+                P.sock.set_mode(mode)
+            elif mode=='RTTY' and rig_mode!='PKT-U':
+                print('WATCHDOG: Setting rig to match FLDIGI decoder',mode,rig_mode,P.MODE,'...')
+                P.sock.set_mode(mode)
+
+        # Check rig band
+        if P.sock and P.FOLLOW_BAND and P.sock.active:
+            freq = P.sock.get_freq()*1e-3
+            mode = P.sock.get_mode()
+            band = socket_io.convert_freq2band(freq,True)
+            #print BANDS
+            #print "Rig    :\tFreq =",freq,"\tBand =",band,"\tMode =",mode
+            bands2=[]
+            for i in range(P.NUM_RX):
+                fc=P.FC[i]*1e-3
+                bands2.append( socket_io.convert_freq2band(fc,True) )
+                idx = BANDS.index(bands2[i])
+                print('RX',i,':\tFreq =',fc,"\tBand =",bands2[i],"\tMode =",P.MODE,'\tidx=',idx)
+
+            if P.NUM_RX==3 and band != bands2[1]:
+                idx = BANDS.index(band)
+                print(BANDS)
+                print(band,bands2,idx)
+                idx1=idx-1
+                if BANDS[idx1]=='60m':
+                    idx1-=1
+                idx2=idx+1
+                if BANDS[idx2]=='60m':
+                    idx2+=1
+                frq1=bands[BANDS[idx1]]['FT8']*1e3
+                frq2=bands[BANDS[idx ]]['FT8']*1e3
+                frq3=bands[BANDS[idx2]]['FT8']*1e3
+                frq4=0
+                #print idx,frq1,frq2,frq3,frq4
+                if mode=='RTTY':
+                    mode='USB'
+                    P.NEW_MODE=mode
+                    P.MODE_CHANGE=True
+
+                P.NEW_FREQ=[frq1,frq2,frq3,frq4]
+                fc=[frq1,frq2,frq3]
+                fo = 0.5*( max(fc)+min(fc) )
+                P.FOFFSET = fo-max(fc)
+                P.FREQ_CHANGE=True
+                print('New FOFFSET=',P.FOFFSET)
+                #P.gui.FreqSelect(frq1,False,frq2,frq3,frq4)
+
+        # Try to open xlmrpc ports if they aren't yet
+        for i in range(len(P.XLMRPC_LIST)):
+            if not P.XLMRPC_SOCKS[i]:
+                port = P.XLMRPC_LIST[i]
+                print('WatchDog: Attempting to open xlmrpc port',port,' ...')
+                P.XLMRPC_SOCKS[i] = find_fldigi_port(0,port,port,'A: ',False)
+                if P.XLMRPC_SOCKS[i]:
+                    print('Got it!!!')
+                    if i==0:
+                        P.gui.rig.sock1=P.XLMRPC_SOCKS[i]
+                
+        self.Last_Time = t
+        #print('Monitor: ...out')
+

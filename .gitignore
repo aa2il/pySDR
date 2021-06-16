@@ -1,0 +1,15 @@
+/#*#
+/DIFFS
+/LOG1.TXT
+/LOG2.TXT
+/Data/
+/SatComm/Data
+/SatComm/ISS_SSTV/
+/SatComm/
+/SatComm2/
+/SatComm3/
+/__pycache__/
+/data/presets.old
+/internals.mat
+/save*
+/work

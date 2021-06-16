@@ -1,0 +1,35 @@
+#! /usr/bin/tcsh
+
+# CW devel
+#pySDR.py -fc 14030 -audio 2 -fs 1 -mode IQ -pan
+#pySDR.py -fc 14029.5 -bfo 700 -mode CW -af_bw 1 -pan_bw 4
+#pySDR.py -fc 14047.5 -bfo 700 -mode CW -af_bw .5 -pan_bw 40  -audio 2 -fs 1 -pan
+#pySDR.py -fc 14029.5 14047.5 -bfo 700 -mode CW -af_bw .5 -pan_bw 40  -audio 2 -fs 1 -pan
+
+rm demod_*
+#pySDR.py -mode IQ -fsout 48 -af_bw 45 -vid_bw 45 -ant B -pan -pan_bw 10 -follow_freq -rig HAMLIB -no_hamlib -no_rigctl -port 4532
+
+pySDR.py -fc 600 600 -mode CW -fsout 48 -af_bw 1 -vid_bw 45 -ant B -pan -pan_bw 10 -follow_freq -rig HAMLIB -no_hamlib -no_rigctl -port 4532
+
+#pySDR.py -fc 600 600 -mode CW -fsout 48 -af_bw 1 -vid_bw 45 -ant B -pan -pan_bw 10 -follow_freq -no_hamlib -no_rigctl
+
+#pySDR.py -mode CW -fsout 48 -af_bw 45 -vid_bw 45 -ant B -pan -pan_bw 10 -loopback -follow_freq -rig HAMLIB -no_hamlib -no_rigctl -port 4532
+
+exit
+
+# Listen to two AM stations
+pySDR.py -fc 600 760 -audio 2 -fs 1
+
+exit
+
+
+
+# Pan adaptor for TS850
+
+set FS=48
+
+pkill pySDR
+pySDR.py -mode IQ -fsout $FS -af_bw 45 -vid_bw 45 -ant B -pan -pan_bw 50 -rigIF -8.83 -rig DIRECT -port 1 -ant B
+
+exit
+

@@ -1,0 +1,109 @@
+#! /bin/tcsh
+
+# Script to start single band monitoring of FT8 and, optionally, FT4
+
+# WSJTX Settings:
+#       SDR1  - localhost:4575,  monitor for aloop_0
+#       SDR14 - localhost:4576,  monitor for aloop_1
+
+###############################################################################
+
+# Set rig to HAMLIB if want to compare decodes from SDR and rig
+#set RIG="-rig HAMLIB"
+set RIG="-rig NONE"
+
+set FRQS = "1840 3573 7074 10136 14074 18100 21074 24915 28075 50313"
+set FRQS = "3573 7074 10136 14074"
+set FRQS = "7074 10136 14074 18100"
+set FRQS = "1840 3573 7074 10136"
+
+set FRQS = "3573 7074 10136 14074"
+set FRQS = "10136 14074 18100 21074"
+set FRQS = "10136"
+set FRQS = "14074"
+#set FRQS = ""
+
+#set HOP_TIME=180
+set HOP_TIME=150
+#set HOP_TIME=30
+
+set RTL="-rtlhf"
+set RTL=""
+
+set LOOPBACK="-loopback"
+#set LOOPBACK=""
+
+set FS=1
+
+# Turn this on to monitor FT4 sub-bands also
+set FT4=""
+#set FT4="-ft4"
+#set FT4="-ft44"
+
+set HOPPER="$FT4 -hop -hop_time $HOP_TIME"
+set HOPPER="$FT4"
+
+###############################################################################
+
+cd ~/Python/pySDR
+set PY_SDR = "pySDR.py"
+#set PY_SDR = "mp.py"
+
+start_loopback
+
+pkill pySDR
+pkill bandmap
+pkill rigctld
+
+echo Starting pySDR ...
+set cmd="$PY_SDR $RTL -fc $FRQS -fs $FS -IF 0 -mode USB -fsout 48 -af_bw 4 $HOPPER $LOOPBACK $RIG"
+echo $cmd
+echo $cmd >& /tmp/SDR 
+$cmd >>& /tmp/SDR &
+#exit
+
+sleep 1
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo Waiting for SDR to start up ...
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+set id=`find_windows "pySDR" 20`
+
+###############################################################################
+
+# Sometimes we need to use pavucontrol to direct audio to right place
+echo Starting WSJT-X ...
+wsjtx -r SDR1 &
+#if( "$FT4" == "-ft4" )then
+if( "$FT4" != "" )then
+    wsjtx -r SDR14 &
+endif
+
+###############################################################################
+
+echo Starting BANDMAPS ...
+rm /tmp/BANDMAP*
+cd ~/Python/bandmap
+set BANDMAP=~/Python/bandmap/bandmap.py
+set cmd="$BANDMAP -rig NONE -wsjt SDR1 2238 -dx"
+
+# The control buttons on bandmap do not work yet - ok since this mainly meant as a monitor
+#set cmd="$BANDMAP -rig HAMLIB -port 4575 -wsjt SDR1 2238 -dx"
+
+echo $cmd >& /tmp/BANDMAP3 &
+$cmd >>& /tmp/BANDMAP3 &
+
+if( "$FT4" != "" )then
+    set cmd="$BANDMAP -rig NONE -wsjt SDR14 2264 -dx"
+    echo $cmd >& /tmp/BANDMAP14 &
+    $cmd >>& /tmp/BANDMAP14 &
+endif
+exit
+
+###############################################################################
+
+# Organize windows
+echo Waiting for bandmaps to start...
+set id=`find_windows "Band Map" 20`
+organize_windows

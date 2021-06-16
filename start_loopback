@@ -1,0 +1,95 @@
+#! /bin/tcsh
+
+# Script to start loopback devices
+
+# Need to add this to get sounddevice or pyAudio to recognize 4 loopback devices:
+# Pattern is obvious for more than 4 devices
+#
+# sudo emacs /etc/modprobe.d/sound.conf
+# alias snd-card-0 snd-aloop
+# options snd-aloop enable=1,1,1,1 index=20,21,22,23
+# reboot
+#
+# Use this to determine numbers for loopback module
+# pactl list sources
+# pactl list sinks
+# pactl unload-module module-loopback
+# pactl load-module module-loopback source=4 sink=2
+# pactl load-module module-loopback source=6 sink=3
+
+# Was playing with virtual sinks but don't seem to need this now
+# pactl unload-module module-null-sink
+# pactl load-module module-null-sink sink_name="Virtual1" sink_properties=device.description="Virtual1"
+# pactl load-module module-null-sink sink_name="Virtual2" sink_properties=device.description="Virtual2"
+
+##########################################################################
+
+echo "\n**************** Starting Loopback devices *********************"
+
+# Locate loopback sources
+echo "\n--- loop_back sources:"
+#pacmd list-sources | grep -e 'name:' -e 'index:'
+pacmd list-sources | grep -e 'index:' | cut -f 2 -d ':' > /tmp/idx
+pacmd list-sources | grep -e 'name:'  | cut -f 2 -d ':' > /tmp/names
+
+set idx=`cat /tmp/idx`
+set names=`cat /tmp/names`
+set i=0
+#set src={-1,-1,-1,-1,-1,-1}
+set src=()
+set n=0
+while ( $i < $#names )
+    @ i++
+    echo $idx[$i],$names[$i]
+    set a=`echo $names[$i] | grep input | grep snd_aloop`
+    if( $#a > 0 )then
+        echo '***********',$src,$i,$idx[$i]
+        @ n++
+        #echo $src[$n] 
+        #set src[$n] = $idx[$i]
+        echo $src
+        set src = ($src $idx[$i])
+    endif
+end
+echo src=$src
+
+#exit
+
+# Locate loopback sinks
+echo "\n--- loopback sinks:"
+pacmd list-sinks | grep -e 'index:' | cut -f 2 -d ':' > /tmp/idx
+pacmd list-sinks | grep -e 'name:'  | cut -f 2 -d ':' > /tmp/names
+
+set idx=`cat /tmp/idx`
+set names=`cat /tmp/names`
+set i=0
+#set sink={-1,-1,-1,-1}
+set sink=()
+set n=0
+while ( $i < $#names )
+    @ i++
+    echo $idx[$i],$names[$i]
+    set a=`echo $names[$i] | grep output | grep snd_aloop`
+    if( $#a > 0 )then
+        echo '***********',$src,$i,$idx[$i]
+        @ n++
+        #echo $sink[$n] 
+        #set sink[$n] = $idx[$i]
+        echo $sink 
+        set sink = ($sink $idx[$i])
+    endif
+end
+echo sink=$sink
+
+echo 'Sources =' $src
+echo 'Sinks =' $sink
+
+# Start loopback devices
+pactl unload-module module-loopback
+set n=0
+while ( $n < $#src )
+    @ n++
+    echo $src[$n] $sink[$n]
+#    pactl load-module module-loopback source=$src[$n] sink=$sink[$n]
+    pactl load-module module-loopback source=$src[$n] sink=$sink[$n] rate=48000
+end

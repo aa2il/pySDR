@@ -1,0 +1,80 @@
+#! /bin/tcsh
+
+# Script to set up SDR to listen to SSTV
+
+##############################################################################################################
+
+set PY_SDR = "~/Python/pySDR/pySDR.py"
+
+set FRQS = "14230"
+set FRQS = "145800"
+
+set RTL="-rtlhf"
+set RTL=""
+
+set REPLAY=1
+
+##############################################################################################################
+
+# Replay mode
+if( $REPLAY )then
+    ~/.wine/drive_c/Ham/MMSSTV/MMSSTV.EXE >& /tmp/MMSSTV &
+    qsstv >& /tmp/QSSTV &
+    
+    set OPTS="-mode NFM -rig NONE -af_bw 10 -vid_bw 45 -fsout 48"
+    set fname = "SatComm/ISS_SSTV/baseband_iq_20190209_184402.dat"
+    set fname = "SatComm/ISS_SSTV/baseband_iq_20190215_182952.dat"       
+    set fname = "SatComm3/baseband_iq_20200101_170517.dat"
+    
+    #pySDR.py -mode NFM -replay SatComm/iss_sstv1.dat
+    #pySDR.py -mode NFM -rig NONE -af_bw 10 -fsout 48 -replay SatComm/ISS_SSTV/junk.dat
+
+    $PY_SDR $OPTS -replay $fname
+    exit
+endif
+
+##############################################################################################################
+
+# Might have to use pavucontrol to redirect audio to MMSSTV
+set LOOPBACK='-loopback'
+set LOOPBACK=''
+
+#start_loopback
+
+pkill pySDR
+#pkill bandmap
+
+echo Starting pySDR ...
+$PY_SDR $RTL -fc $FRQS -mode NFM -fsout 48 $LOOPBACK -rig NONE -af_bw 10 -vid_bw 45 &
+#sleep 2
+
+echo "Waiting for pySDR to start ..."
+set id=`find_windows pySDR 20`
+echo id=$id
+if ( $#id == 0 ) then
+    echo "--- ERROR --- Never found pyKeyer after 20 tries - giving up"
+    exit
+endif
+
+#env WINEPREFIX="/home/joea/.wine"
+#wine C:\\windows\\command\\start.exe /Unix /home/joea/.wine/dosdevices/c:/users/Public/Desktop/MMSSTV.lnk
+
+echo Starting MMSSTV ...
+~/.wine/drive_c/Ham/MMSSTV/MMSSTV.EXE >& /tmp/MMSSTV &
+sleep 1
+
+echo Starting QSSTV ...
+qsstv >& /tmp/QSSTV &
+
+wclock >& /tmp//WCLOCK &
+exit
+
+# Replay:
+
+~/.wine/drive_c/Ham/MMSSTV/MMSSTV.EXE >& /tmp/MMSSTV &
+qsstv >& /tmp/QSSTV &
+#pySDR.py -mode NFM -replay SatComm/baseband_iq_20190209_184402.dat
+#pySDR.py -mode NFM -replay SatComm/iss_sstv1.dat
+#pySDR.py -mode NFM -rig NONE -af_bw 10 -fsout 48 -replay SatComm/ISS_SSTV/junk.dat
+
+pySDR.py -mode NFM -replay Satcomm3/baseband_iq_20200101_170517.dat

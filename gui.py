@@ -1,0 +1,1924 @@
+# GUI-related functions for pySDR
+
+from collections import OrderedDict
+import sys
+import functools
+import time
+import inspect
+import types
+from pprint import pprint
+from Tables import *
+from rig_control import *
+from Plotting import *
+from support import *
+from receiver import *
+from rig_io.ft_tables import *
+from rig_io.presets import *
+from rtty import *
+from widgets import *
+import collections
+
+################################################################################
+
+# There are some unreolved ambiguities that need attention - fudged for now
+UNRESOLVED_AMBIGUITY = True
+
+################################################################################
+
+# The GUI 
+class pySDR_GUI(QMainWindow):
+    def __init__(self,app,P,parent=None):
+        super(pySDR_GUI, self).__init__(parent)
+        self.gui_closed=False
+        self.prev_group=''
+
+        # Wait for SDR to start up
+        print('\npySDR_GUI: Init GUI ...\n')
+        if P.MP_SCHEME==1:
+            while not P.sdr:
+                print('pySDR_GUI: Waiting for SDR to startup ...')
+                time.sleep(1)
+        elif P.MP_SCHEME==2:
+            msg = P.pipe.recv()
+            print('msg1=',msg)
+        elif P.MP_SCHEME==3:
+            print('pySDR_GUI: Waiting for SDR to startup ...')
+            while P.nchunks<2:
+                time.sleep(1)
+        else:
+            print('GUI - Unknown MP SCHEME',P.MP_SCHEME)
+            sys.exit(0)
+        
+        self.P=P
+        #        locale.setlocale(locale.LC_NUMERIC, 'English')
+        #print(locale.getlocale())
+        #        locale.setlocale(locale.LC_ALL, 'en_US')
+        self.last_psd_update = time.time()
+        print('pySDR_GUI: ShowParams...')
+        self.ShowParams()
+        self.SHOW_RF_IQ=False
+        #self.SHOW_RF_IQ=True
+        self.SHOW_BASEBAND_PLOTS=False
+        #self.SHOW_BASEBAND_PLOTS=True
+        self.itune_cnt=0
+
+        # Start by putting up the root window
+        self.win  = QWidget()
+        self.setCentralWidget(self.win)
+        self.setWindowTitle('pySDR by AA2IL')
+        #self.win.show()
+
+        # We use a simple grid to layout controls
+        self.grid = QGridLayout()
+        self.win.setLayout(self.grid)
+        nrows=15
+        ncols=11
+
+        # Create wideband RTTY window
+        if self.P.ENABLE_RTTY:
+            self.rtty=RTTY_GUI(P)
+            
+        ################################################################################
+
+        # Add top row buttons
+        # Start & stop rx processing - don't use this much so its disabled
+        col=-1
+        if False:
+            col+=1
+            self.btn1 = QPushButton('Start RX')
+            self.btn1.setToolTip('Start/stop receiver')
+            self.btn1.setCheckable(True)
+            self.btn1.clicked.connect(self.StartStopRX)
+            self.grid.addWidget(self.btn1,0,col)
+        else:
+            self.btn1 = None
+        self.btn1state=True
+
+        # Start & stop RF PSD
+        col+=1
+        self.btn2 = QPushButton('Start RF PSD')
+        self.btn2.setToolTip('Start/stop RF PSD')
+        self.btn2.setCheckable(True)
+        self.btn2.clicked.connect(self.StartStopRF_PSD)
+        self.grid.addWidget(self.btn2,0,col)
+
+        # Start & stop Baseband PSD
+        col+=1
+        self.btn4 = QPushButton('Start IQ PSD')
+        self.btn4.setToolTip('Start/stop Baseband IQ PSD')
+        self.btn4.setCheckable(True)
+        self.btn4.clicked.connect(self.StartStopBaseband_PSD)
+        self.grid.addWidget(self.btn4,0,col)
+
+        # Start & stop AF PSD
+        col+=1
+        self.btn3 = QPushButton('Start AF PSD')
+        self.btn3.setToolTip('Start/stop AF PSD')
+        self.btn3.setCheckable(True)
+        self.btn3.clicked.connect(self.StartStopAF_PSD)
+        self.grid.addWidget(self.btn3,0,col)
+
+        # Select Sub RX to control
+        col+=1
+        self.sub_rx_ctrl = QComboBox()
+        for i in range(P.NUM_RX):
+            self.sub_rx_ctrl.addItem('RX '+str(i))
+        self.grid.addWidget(self.sub_rx_ctrl,0,col)
+        self.sub_rx_ctrl.currentIndexChanged.connect(self.SelectPlotRX)
+        
+        # Start & stop saving raw IQ data
+        col+=1
+        self.btn5 = QPushButton('Save Raw IQ')
+        self.btn5.setToolTip('Start/stop saving data')
+        self.btn5.setCheckable(True)
+        self.btn5.clicked.connect(self.StartStopSave_RawIQ)
+        self.grid.addWidget(self.btn5,0,col)
+
+        # Start & stop saving baseband IQ data
+        col+=1
+        self.btn6 = QPushButton('Save BB IQ')
+        self.btn6.setToolTip('Start/stop saving data')
+        self.btn6.setCheckable(True)
+        self.btn6.clicked.connect(self.StartStopSave_BasebandIQ)
+        self.grid.addWidget(self.btn6,0,col)
+
+        # Start & stop saving demod data
+        col+=1
+        self.btn7 = QPushButton('Save Demod')
+        self.btn7.setToolTip('Start/stop saving data')
+        self.btn7.setCheckable(True)
+        self.btn7.clicked.connect(self.StartStopSave_Demod)
+        self.grid.addWidget(self.btn7,0,col)
+
+        # Debug - show settings
+        b = QPushButton('Params')
+        b.setToolTip('Show params')
+        b.clicked.connect(self.ShowParams)
+        self.grid.addWidget(b,0,ncols-1)
+
+        # Exit app
+        b = QPushButton('Quit')
+        b.setToolTip('Click to quit!')
+        b.clicked.connect( self.closeEvent )        
+        self.grid.addWidget(b,0,ncols)
+
+        ################################################################################
+
+        # Left side relates to the SDRplay
+        row=1
+
+        # Add Antenna Selector
+        if self.P.SDR_TYPE=='sdrplay':
+            self.Antennas=['Ant A','Ant B','Hi-Z']
+            lb=QLabel("Antenna:")
+            self.Ant_cb = QComboBox()
+            self.Ant_cb.addItems(self.Antennas)
+            self.Ant_cb.currentIndexChanged.connect(self.AntSelect)
+            self.AntSelect(-1)
+            row+=1
+            self.grid.addWidget(lb,row,0)
+            self.grid.addWidget(self.Ant_cb,row,1)
+
+        # Add control for BCB band notch
+        if self.P.SDR_TYPE=='sdrplay':
+            lb=QLabel("BCD Notch:")
+            self.BCB_btn = QPushButton('Enable')
+            self.BCB_btn.setToolTip('Enable/disable AM/FM BCB notch filter')
+            self.BCB_btn.clicked.connect(self.EnableBCBnotch)
+            row+=1
+            self.grid.addWidget(lb,row,0)
+            self.grid.addWidget(self.BCB_btn,row,1)
+
+        # Add front-end gain control (aka LNA)
+        if self.P.SDR_TYPE=='sdrplay':
+            self.RFgains=[str(i) for i in range(8)]
+            #print 'Available RF gains=',self.RFgains
+            lb=QLabel("RF Gain:")
+            self.RFgain_cb = QComboBox()
+            self.RFgain_cb.addItems(self.RFgains)
+            self.RFgain_cb.currentIndexChanged.connect(self.LNASelect)
+            self.LNASelect(-1)
+            row+=1
+            self.grid.addWidget(lb,row,0)
+            self.grid.addWidget(self.RFgain_cb,row,1)
+        
+        # Add front-end gain control (aka LNA)
+        if self.P.SDR_TYPE=='rtlsdr':
+            self.direct=[str(i) for i in range(3)]
+            lb=QLabel("Direct Sampling:")
+            self.direct_cb = QComboBox()
+            self.direct_cb.addItems(self.direct)
+            self.direct_cb.currentIndexChanged.connect(self.DirectSelect)
+            self.DirectSelect(self.P.DIRECT_SAMP)
+            row+=1
+            self.grid.addWidget(lb,row,0)
+            self.grid.addWidget(self.direct_cb,row,1)
+        
+        # Add IF sampling rate control
+        if not self.P.REPLAY_MODE:
+            if self.P.MP_SCHEME==2:
+                RATEs = self.mp_comm('listSampleRates')
+            else:
+                RATEs = self.P.sdr.listSampleRates(SOAPY_SDR_RX, 0)
+        else:
+            RATEs = [self.P.SRATE]
+        self.srates=[]
+        for rate in RATEs:
+            if rate>=1e6:
+                rate2 = rate/1e6
+                tag=' MHz'
+            else:
+                rate2 = rate/1e3
+                tag=' KHz'
+            if rate2==int(rate2):
+                rate2=int(rate2)
+            self.srates.append( str(rate2) + tag )
+        print('SAMPLING RATEs=',RATEs)
+        print('SAMPLING RATEs=',self.srates)
+        lb=QLabel("Sampling Rate:")
+        self.srate_cb = QComboBox()
+        self.srate_cb.addItems(self.srates)
+        self.srate_cb.currentIndexChanged.connect(self.SrateSelect)
+        self.SrateSelect(-1)
+        row+=1
+        self.grid.addWidget(lb,row,0)
+        self.grid.addWidget(self.srate_cb,row,1)
+
+        # Add IF bandwidth selection - this is tightly coupled to sample rate
+        # selection so is not of much use
+        if self.P.SDR_TYPE=='sdrplay':
+            if self.P.MP_SCHEME==2:
+                BWs=self.mp_comm('listBandwidths')
+            else:
+                BWs=self.P.sdr.listBandwidths(SOAPY_SDR_RX, 0)
+            # print "Available Bandwidths=",self.BWs
+            self.bws=[]
+            for bw in BWs:
+                if bw>=1e6:
+                    bw2 = bw/1e6
+                    tag=' MHz'
+                else:
+                    bw2 = bw/1e3
+                    tag=' KHz'
+                if bw2==int(bw2):
+                    bw2=int(bw2)
+                self.bws.append( str(bw2) + tag )
+
+            lb=QLabel("IF Bandwidth:")
+            self.BW_cb = QComboBox()
+            self.BW_cb.addItems(self.bws)
+            self.BW_cb.currentIndexChanged.connect(self.IF_BWSelect)
+            self.IF_BWSelect(-1)
+            row+=1
+            self.grid.addWidget(lb,row,0)
+            self.grid.addWidget(self.BW_cb,row,1)
+
+        # Add IF freq control
+        self.IFs=['0 KHz','450 KHz','1620 KHz','2048 KHz']
+        lb=QLabel("IF:")
+        self.IF_cb = QComboBox()
+        self.IF_cb.addItems(self.IFs)
+        self.IF_cb.currentIndexChanged.connect(self.IFSelect)
+        self.IFSelect(-1)
+        row+=1
+        self.grid.addWidget(lb,row,0)
+        self.grid.addWidget(self.IF_cb,row,1)
+
+        # Add IF Gain control
+        if P.REPLAY_MODE:
+            self.IFgains=['1']
+        else:
+            if self.P.SDR_TYPE=='sdrplay':
+                stage='IFGR'
+            elif self.P.SDR_TYPE=='rtlsdr':
+                stage='TUNER'
+            if self.P.MP_SCHEME==2:
+                rr = self.mp_comm('getGainRange',stage)
+            else:
+                r = self.P.sdr.getGainRange(SOAPY_SDR_RX, 0,stage)
+                print("\nr=",r,type(r),r.minimum(),r.maximum(),r.step())
+                rr = [r.minimum(),r.maximum(),r.step()]
+            self.dgain = rr[2]
+            if self.dgain==0:
+                self.dgain = rr[1]/10.
+            
+            if self.P.SDR_TYPE=='sdrplay':
+                self.IFgains=[str(i) for i in range(int(rr[0]),int(rr[1]+0.5))]
+            else:
+                self.IFgains=[str(i) for i in np.arange(rr[0],rr[1]+self.dgain/2.,self.dgain)]
+        print(self.IFgains)
+        
+        lb=QLabel("IF Gain:")
+        self.IFgain_cb = QComboBox()
+        self.IFgain_cb.addItems(self.IFgains)
+        self.IFgain_cb.currentIndexChanged.connect(self.IFGainSelect)
+        self.IFGainSelect(-1)
+        row+=1
+        self.grid.addWidget(lb,row,0)
+        self.grid.addWidget(self.IFgain_cb,row,1)
+
+        # Add text boxes to show freq of each rx
+        self.rx_frq_box = []
+        for i in range(P.NUM_RX):
+            lb=QLabel("RX"+str(i)+":")
+            self.rx_frq_box.append( QLineEdit() )
+            row+=1
+            self.grid.addWidget(lb,row,0)
+            self.grid.addWidget(self.rx_frq_box[i],row,1)
+            self.rx_frq_box[i].setText( "{0:,.1f} KHz".format(P.FC[i]/1000.) )
+
+        # Add button to force a hop
+        row+=1
+        self.Hop_btn = QPushButton('Force a Hop')
+        self.Hop_btn.setToolTip('Force a Hop')
+        self.grid.addWidget(self.Hop_btn,row,0,1,2)
+        if P.HOPPER:
+            self.Hop_btn.clicked.connect(self.P.hopper.Hopper)
+        else:
+            self.Hop_btn.setEnabled(False)
+            
+        ################################################################################
+
+        # The middle relates to tuning - start by adding freq readout        
+        self.lcd = MyLCDNumber(None,7,1,ival=.001*P.FC[0],wheelCB=self.FreqSelect)
+        self.grid.addWidget(self.lcd,1,2,5,ncols-3)
+        self.SelectPlotRX(0)
+
+        # Add tabs to hold buttons for presets
+        self.tabs = QTabWidget()
+        self.grid.addWidget(self.tabs,6,2,nrows-6,ncols-3)
+
+        # Add tab for rig control
+        #if P.RIG_CONTROL_MENU:
+        if P.sock and P.sock.connection!='NONE' and P.RIG_CONTROL_MENU:
+            self.rig = RIG_CONTROL(self.tabs,P)
+
+        # Add presets
+        ncols2=6
+        if False:
+            # Old way
+            presets = read_presets(None)
+            for grp in list(presets.keys()):
+                #print grp
+                if grp=='HAM':
+                    ham_bands=make_ham_presets(['160m','80m','40m','20m','15m','10m'],
+                                               bands,P.PAN_BW,P.RIG_IF)
+                    self.create_presets('Ham 1',ham_bands,ncols2)
+                    ham_bands=make_ham_presets(['60m','30m','17m','12m','6m','2m','1.25m','70cm','33cm','23cm'],
+                                               bands,P.PAN_BW,P.RIG_IF)
+                    self.create_presets('Ham 2',ham_bands,ncols2)
+                else:
+                    self.create_presets(grp,presets[grp],ncols2)
+        else:
+            # New way
+            presets = read_presets2(None,'Presets')
+            for line in presets:
+                grp=line['Group']
+                if grp=='Sats':
+                    continue     # Skip this group
+                elif grp=='HAM':
+                    for b in ['160m','80m','40m','20m','15m','10m']:
+                        ham_band=make_ham_presets2(b,bands,P.PAN_BW,P.RIG_IF)
+                        for sub_band in ham_band:
+                            self.create_presets2('Ham 1',sub_band,ncols2)
+                    for b in ['60m','30m','17m','12m','6m','2m','1.25m','70cm','33cm','23cm']:
+                        ham_band=make_ham_presets2(b,bands,P.PAN_BW,P.RIG_IF)
+                        for sub_band in ham_band:
+                            self.create_presets2('Ham 2',sub_band,ncols2)
+                else:
+                    self.create_presets2(grp,line,ncols2)
+
+            
+
+        # Volume control
+        lb=QLabel("AF Gain:")
+        self.grid.addWidget(lb,nrows,1)
+        self.afgain = QSlider(Qt.Horizontal)
+        # sld.setFocusPolicy(Qt.NoFocus)
+        self.afgain.setMinimum(0)
+        self.afgain.setMaximum(100)
+        self.afgain.setValue(50)
+        self.afgain.valueChanged.connect(self.VolumeControl)
+        self.afgain.setTickPosition(QSlider.TicksBelow)
+        self.afgain.setTickInterval(10)
+        self.grid.addWidget(self.afgain,nrows,2,1,ncols-3)
+        self.VolumeControl()
+
+        # Mute Buttons
+        self.Mute_btns = [None]*MAX_RX
+        irow=nrows-2
+        icol=ncols-1
+        for i in range(MAX_RX):
+            self.Mute_btns[i] = QPushButton('Mute RX'+str(i+1))
+            self.Mute_btns[i].setToolTip('Click to Mute/Unmute Audio')
+            self.Mute_btns[i].clicked.connect( functools.partial( self.MuteCB,i ))
+            self.Mute_btns[i].setCheckable(True)
+            if i>=P.NUM_RX:
+                self.Mute_btns[i].setEnabled(False)
+
+            self.grid.addWidget(self.Mute_btns[i],irow,icol)
+            icol=icol+1
+            if icol>ncols:
+                irow+=1
+                icol=ncols-1
+
+        ################################################################################
+
+        # Right side (mostly) relates to demodulation/info extraction
+        # Add Tuning step
+        row=2
+        self.steps=["10 Hz","100 Hz","1 KHz","5 KHz","10 KHz","25 KHz","50 KHz",\
+                    "100 KHz","200 KHz","1 MHz","10 MHz","100 MHz","1 GHz"]
+        lb=QLabel("Tuning Step:")
+        self.grid.addWidget(lb,row,ncols-1)
+        self.step_cb = QComboBox()
+        self.step_cb.addItems(self.steps)
+        self.step_cb.currentIndexChanged.connect(self.StepSelect)
+        self.step_cb.setCurrentIndex(4)
+        self.grid.addWidget(self.step_cb,row,ncols)
+
+        # Add Mode selector
+        row+=1
+        self.modes = MODES
+        lb=QLabel("Demodulator:")
+        self.grid.addWidget(lb,row,ncols-1)
+        self.mode_cb = QComboBox()
+        self.mode_cb.addItems(self.modes)
+        self.mode_cb.currentIndexChanged.connect(self.ModeSelect)
+        self.grid.addWidget(self.mode_cb,row,ncols)
+        self.ModeSelect(-1)
+
+        # Add vidio bandwidth selector
+        row+=1
+        self.video_bws = VIDEO_BWs
+        lb=QLabel("Video Bandwidth:")
+        self.grid.addWidget(lb,row,ncols-1)
+        self.vidbw_cb = QComboBox()
+        self.vidbw_cb.addItems(self.video_bws)
+        self.vidbw_cb.currentIndexChanged.connect(self.Video_BWSelect)
+        self.grid.addWidget(self.vidbw_cb,row,ncols)
+        self.Video_BWSelect(-1)
+
+        # Add audio bandwidth selector
+        row+=1
+        self.af_bws = AF_BWs
+        lb=QLabel("AF Bandwidth:")
+        self.grid.addWidget(lb,row,ncols-1)
+        self.afbw_cb = QComboBox()
+        self.afbw_cb.addItems(self.af_bws)
+        self.afbw_cb.currentIndexChanged.connect(self.AF_BWSelect)
+        self.grid.addWidget(self.afbw_cb,row,ncols)
+        self.AF_BWSelect(-1)
+
+        ################################################################################
+
+        # Add buttons to control pan-adaptor
+        # Checkbox to turn it on and off
+        row+=1
+        self.pan_cb = QCheckBox("Pan-adaptor Mode")
+        self.pan_cb.setChecked(True)
+        self.grid.addWidget(self.pan_cb,row,ncols-1)
+
+        # Scroll box to control direction of Pan adaptor
+        self.PanDirs=['Up/Down','Up','Down']
+        self.PanDir_cb = QComboBox()
+        self.PanDir_cb.addItems(self.PanDirs)
+        self.PanDir_cb.currentIndexChanged.connect(self.PanDirSelect)
+        self.PanDirSelect(0)
+        self.grid.addWidget(self.PanDir_cb,row,ncols)
+       
+        # Scroll box to select display bandwidth
+        row+=1
+        self.PanBWs=PAN_BWs
+        lb=QLabel("Pan BW:")
+        self.PanBW_cb = QComboBox()
+        self.PanBW_cb.addItems(self.PanBWs)
+        self.PanBW_cb.currentIndexChanged.connect(self.PanBWSelect)
+        print('----------------- PAN BW=',P.PAN_BW)
+        self.PanBWSelect(-1)
+        self.grid.addWidget(lb,row,ncols-1)
+        self.grid.addWidget(self.PanBW_cb,row,ncols)
+
+        # Scroll box to select dynamic range
+        row+=1
+        self.PanDRs=[str(i) for i in range(10,100,10)]
+        lb=QLabel("Dynamic Range:")
+        self.PanDR_cb = QComboBox()
+        self.PanDR_cb.addItems(self.PanDRs)
+        self.PanDR_cb.currentIndexChanged.connect(self.PanDRSelect)
+        self.PanDRSelect(-1)
+        self.grid.addWidget(lb,row,ncols-1)
+        self.grid.addWidget(self.PanDR_cb,row,ncols)
+
+        # Scroll box to select min peak distance
+        row+=1
+        self.PeakDists=['100 Hz','1 KHz','10 KHz']
+        lb=QLabel("Min Peak Distance:")
+        self.PeakDist_cb = QComboBox()
+        self.PeakDist_cb.addItems(self.PeakDists)
+        self.PeakDist_cb.currentIndexChanged.connect(self.PeakDistSelect)
+        self.PeakDistSelect(-1)
+        self.grid.addWidget(lb,row,ncols-1)
+        self.grid.addWidget(self.PeakDist_cb,row,ncols)
+
+        # Check box to use peaks for tuning
+        row+=1
+        self.Use_Peaks_cb = QCheckBox("Use Peaks for Tuning")
+        #self.Use_Peaks_cb.setChecked(True)
+        self.Use_Peaks_cb.setChecked(False)
+        self.grid.addWidget(self.Use_Peaks_cb,row,ncols-1)
+
+        # Check box to add offset for digi modes
+        self.DIGI_OFFSET=1000*1e-3
+        self.digi_cb = QCheckBox("Add Digi Offset")
+        self.digi_cb.setChecked(False)
+        self.grid.addWidget(self.digi_cb,row,ncols)
+
+        # Check boxes to follow center freq of transceiver
+        row+=1
+        self.follow_freq_cb = QCheckBox("Follow RIG freq")
+        self.follow_freq_cb.setChecked(self.P.FOLLOW_FREQ)
+        self.grid.addWidget(self.follow_freq_cb,row,ncols-1)
+
+        self.follow_band_cb = QCheckBox("Follow RIG band")
+        self.follow_band_cb.setChecked(self.P.FOLLOW_BAND) 
+        self.grid.addWidget(self.follow_band_cb,row,ncols)
+
+        row+=1
+        self.so2v_cb = QCheckBox("RIG VFO-B follows SDR freq")
+        self.so2v_cb.setChecked(False)
+        self.grid.addWidget(self.so2v_cb,row,ncols)
+
+        ################################################################################
+
+        # Open plotting windows
+        #title="pySDR by AA2IL"
+        self.plots_rf=three_box_plot(P,"RF - AA2IL","RF Time Series","RF PSD", \
+                                     P.SRATE/1000.,P.FOFFSET/1000.,P.IN_CHUNK_SIZE,
+                                     2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF)
+        OVERLAP = 0.5   # 0.75
+        self.plots_af=three_box_plot(P,"Demod Audio - AA2IL","AF Time Series","AF PSD", \
+                                     P.FS_OUT/1000.,0,4*P.OUT_CHUNK_SIZE,
+                                     8*P.OUT_CHUNK_SIZE,OVERLAP,self.MouseClickRF)
+        self.plots_bb=three_box_plot(P,"Baseband IQ - AA2IL","Baseband Time Series", \
+                                     "Baseband PSD", P.FS_OUT/1000.,0,P.IN_CHUNK_SIZE,
+                                     2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF)
+
+        screen_resolution = app.desktop().screenGeometry()
+        width, height = screen_resolution.width(), screen_resolution.height()
+        print("Screen Res:",screen_resolution,width, height)
+        self.plots_af.pwin.setGeometry(0,0,width-1,height/5)
+        self.plots_bb.pwin.setGeometry(0,0,width-1,height/5)
+
+        # Activate various options
+        if self.P.PANADAPTOR:
+            self.StartStopAF_PSD()
+            
+        if self.P.FOLLOW_FREQ:
+            self.follow_freq_cb.setChecked(True)
+
+        if self.P.SO2V:
+            self.so2v_cb.setChecked(True)
+
+        # Connect 'x' close box to close down event
+        #self.connect(self, SIGNAL('triggered()'), self.closeEvent)
+        #print('GUI - Need some help with connect!!! or maybe not')
+
+        # Finally, we're ready to show the gui
+        print('------------------------- here we go !!!!!!!!!!!!!!!!!!!!!!')
+        self.show()
+
+        # Make sure rig settings are reasonable
+        if True:
+            self.P.sock.set_vfo('A','A')
+            self.rig_retune()
+            fc = self.lcd.get()
+            for i in range(1,P.NUM_RX):
+                self.P.FC[i]=1000*fc
+            self.FreqSelect(fc,False)
+        
+        if self.P.ENABLE_RTTY:
+            if self.rtty.active:
+                self.rtty.raise_()
+        print('pySDR: GUI ready ... ')
+        if P.MP_SCHEME==2:
+            self.mp_comm('GUIready')
+      
+    ################################################################################
+
+    # Routine to close down gracefully
+    def closeEvent(self, event=None):
+
+        # This seems to get called twice so trap second call
+        if self.gui_closed:
+            return
+        else:
+            self.gui_closed=True
+
+        # Close plotting windows
+        if self.P.SHOW_RF_PSD:
+        #    self.plots_rf.pwin.close()
+            self.StartStopRF_PSD()
+        if self.P.SHOW_AF_PSD:
+            self.StartStopAF_PSD()
+        if self.P.SHOW_BASEBAND_PSD:
+            self.StartStopBaseband_PSD()
+
+        print('\n--------------------------------------------------------------------------')
+        print('closeEvent: Stopping timers...')
+        self.P.PSDtimer.stop()
+        print("--- PSD timer stopped")
+        self.P.monitor.timer.stop()
+        print("--- WatchDog timer stopped")
+        time.sleep(1)
+        
+        if self.P.MP_SCHEME==2:
+            print('closeEvent: Closing down RX ...')
+            self.mp_comm('Shutdown')
+            print('--- Waiting for RX to join...')
+            self.P.mp_proc.terminate()
+            self.P.mp_proc.join()
+            self.P.pipe=None
+            print('--- RX joined.')
+
+        if self.P.MP_SCHEME==3:
+            print('closeEvent: Closing down RX ...')
+            self.mp_comm('Shutdown')
+            
+        if self.P.ENABLE_RTTY:
+            if self.rtty.active:
+                self.rtty.wrap_up()
+                print('Waiting for RTTY to exit...')
+                while self.rtty.active and True:
+                    time.sleep(1)
+                    self.P.app.processEvents() 
+
+        # Loop through all the threads and close (join) them
+        print("Waiting for threads to quit...")
+        show_threads()
+        for th in self.P.threads:
+            print('\tWaiting for thread to quit -',th.getName(),' ...')
+            if self.P.Stopper:
+                self.P.Stopper.set()
+            th.join()
+            print('\t... Thread quit -',th.getName())
+            
+        print("Closing down gui ...")
+        
+        #if self.P.SHOW_RF_PSD:
+        #    self.plots_rf.pwin.close()
+        #    print "Closing down gui - RF PSD closed"
+        #self.plots_af.close()
+        app = QApplication.instance()
+        app.closeAllWindows()
+        print("Closing down gui - All windows closed")
+        time.sleep(1)
+        self.win.destroy()
+        print("Closing down gui - Main window closed")
+        print("\nThat's all folks!\n")
+        show_threads()
+        sys.exit(0)
+
+    # Function to create preset push buttons
+    def create_presets(self,tag,station_list,ncols):
+
+        #print 'CREATE_PRESETS:',tag,station_list
+
+        # Add a tab
+        tab1 = QWidget()
+        self.tabs.addTab(tab1,tag)
+        grid = QGridLayout()
+        tab1.setLayout(grid)
+
+        # Add a grid of buttons
+        i=0
+        j=0
+        for s in station_list:
+            #print 'CREATE PRESETS:',s,'\n',station_list[s]
+            b = QPushButton(s)
+            
+            f1=station_list[s][0]              # Freq 1
+            m=station_list[s][1]               # Mode
+            if len(station_list[s])>2:
+                f2=station_list[s][2]          # Freq 2
+            else:
+                f2=f1
+            f=(f1+f2)/2                        # Tune to center of band
+
+            # Set tool tip to show freq(s)
+            fthresh=30e3             # Above 30 MHz, show MHz instead of KHz
+            if f1!=f2:
+                if f>fthresh:
+                    tip="{:,} - {:,} MHz".format(.001*f1,.001*f2)
+                else:
+                    tip="{:,d} - {:,d} KHz".format(int(f1),int(f2))
+            else:
+                if f>=fthresh:
+                    tip="{:,} MHz".format(.001*f)
+                else:
+                    tip="{:,d} KHz".format(int(f))
+            b.setToolTip(tip)
+
+            if len(station_list[s])>4:
+                vidbw = station_list[s][4]     # Video bw
+                afbw  = station_list[s][5]     # Audio bw
+            else:
+                vidbw = preset_prefs[m][0]     # Default video bw for this mode
+                afbw  = preset_prefs[m][1]     # Default audio bw for this mode
+
+            #print 'CREATE_PRESETS:',f,m,vidbw,afbw
+            #print s,station_list[s]
+            #print m,preset_prefs[m]
+            
+            b.clicked.connect(functools.partial(self.PresetSelect,f,m,vidbw,afbw))
+            i=i+1
+            if i>ncols:
+                i=1
+                j=j+1
+            #            print s,f,m,j,i
+            grid.addWidget(b,j,i)
+
+        #sys.exit(0)
+        
+    # Function to create preset a push button
+    def create_presets2(self,grp,station,ncols):
+
+        #print 'CREATE_PRESETS2:',tag,station
+
+        # Add a tab
+        if grp!=self.prev_group:
+            tab1 = QWidget()
+            self.tabs.addTab(tab1,grp)
+            self.preset_grid = QGridLayout()
+            tab1.setLayout(self.preset_grid)
+            self.prev_group=grp
+            self.ipreset=0
+            self.jpreset=0
+
+        # Add a button
+        #print 'CREATE PRESETS:',s,'\n',station_list[s]
+        b = QPushButton(station['Tag'])
+            
+        f1=station['Freq1 (KHz)']              # Freq 1
+        m=station['Mode']                      # Mode
+        f2=station['Freq2 (KHz)']              # Freq 2
+        if f2==0:
+            f2=f1
+        f=(f1+f2)/2                            # Tune to center of band
+
+        # Set tool tip to show freq(s)
+        fthresh=30e3             # Above 30 MHz, show MHz instead of KHz
+        if f1!=f2:
+            if f>fthresh:
+                tip="{:,} - {:,} MHz".format(.001*f1,.001*f2)
+            else:
+                tip="{:,d} - {:,d} KHz".format(int(f1),int(f2))
+        else:
+            if f>=fthresh:
+                tip="{:,} MHz".format(.001*f)
+            else:
+                tip="{:,d} KHz".format(int(f))
+        b.setToolTip(tip)
+
+        vidbw = station['Video BW (KHz)']     # Video bw
+        if vidbw==0:
+            vidbw = preset_prefs[m][0]        # Default video bw for this mode
+        afbw = station['Audio BW (KHz)']      # Video bw
+        if afbw==0:
+            afbw = preset_prefs[m][1]         # Default video bw for this mode
+
+        #print 'CREATE_PRESETS:',f,m,vidbw,afbw
+        #print s,station_list[s]
+        #print m,preset_prefs[m]
+            
+        b.clicked.connect(functools.partial(self.PresetSelect,f,m,vidbw,afbw))
+        self.ipreset+=1
+        if self.ipreset>ncols:
+            self.ipreset=1
+            self.jpreset+=1
+            #            print s,f,m,j,i
+        self.preset_grid.addWidget(b,self.jpreset,self.ipreset)
+
+    #sys.exit(0)
+    
+        
+    # Callback to handle pan-adaptor check box - not used but keep as a model
+    def PanAdaptorCB(self):
+        if self.pan_cb.isChecked():
+            print("Hey - checked")
+        else:
+            print("Hey - un-checked")
+
+    # Callback to show current params
+    def ShowParams(self):
+        #print self.P
+        print("P=",pprint(vars(self.P)))
+
+        if False:
+            members = [attr for attr in dir(self.P) if not isinstance(getattr(self.P, attr), collections.Callable) and not attr.startswith("__")]
+            print('members=',members)   
+            #temp = vars( self.P )
+            #for attr in members:
+            #    if not isinstance(attr,self.P):
+            #        print attr, ' : ' , temp[attr]
+            
+            #return
+            
+            for i in inspect.getmembers(self.P):
+                # Ignores anything starting with underscore 
+                # (that is, private and protected attributes)
+                if not i[0].startswith('_'):
+                    # Ignores methods
+                    if not inspect.ismethod(i[1]) and not type(i[1]) is types.InstanceType:
+                        print(i[0],type(i))
+                        print(i[1])
+                        #                    print(i)
+                        
+            return
+
+        #print dir( self.P )
+        #print vars( self.P )
+        #print self.P.__dict__
+
+        if self.P.MP_SCHEME==2:
+            self.mp_comm('CheckSdrSettings')
+        else:
+            check_sdr_settings(self.P)
+
+    # Callback for Volume control slider
+    def VolumeControl(self):
+        # print 'Hey',self.afgain.value()
+        self.P.AF_GAIN=2*self.afgain.value()/100.
+
+    # Callback for RX Start/Stop button
+    def StartStopRX(self):
+        if self.btn1state:
+            if self.btn1:
+                self.btn1.setText('Stop RX')
+            if self.P.MP_SCHEME==1:
+                print("Starting receiver ...")
+                self.P.SDR_EXEC.start_rx()
+                print("... Receiver started ...")
+        else:
+            if self.btn1:
+                self.btn1.setText('Start RX')
+            if self.P.MP_SCHEME==1:
+                print("Stopping receiver ...")
+                self.P.SDR_EXEC.stop_rx()
+                print("... Receiver stopped ...")
+
+        self.btn1state = not self.btn1state
+
+    # Callback to select which RX is plotted
+    def SelectPlotRX(self,irx):
+        self.P.PLOT_RX=irx
+        print('SelectPlotRX: RX to plot set to',self.P.PLOT_RX)
+        if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
+            self.mp_comm('setPlotRX',self.P.PLOT_RX )
+
+        if True:
+            self.P.MAIN_RX=irx
+            frq=.001*self.P.FC[irx]
+            self.lcd.set(frq)
+    
+    # Callback for RF PSD Start/Stop button
+    def StartStopRF_PSD(self):
+        if not self.P.SHOW_RF_PSD:
+            self.btn2.setText('Stop RF PSD')
+            self.plots_rf.pwin.show()
+        else:
+            self.btn2.setText('Start RF PSD')
+            self.plots_rf.pwin.hide()
+
+        self.P.SHOW_RF_PSD = not self.P.SHOW_RF_PSD
+        if self.P.MP_SCHEME==2:
+            self.mp_comm('showRFpsd',self.P.SHOW_RF_PSD )
+        
+    # Callback for Baseband PSD Start/Stop button
+    def StartStopBaseband_PSD(self):
+        if not self.P.SHOW_BASEBAND_PSD:
+            self.btn4.setText('Stop BB IQ PSD')
+            self.plots_bb.pwin.show()
+        else:
+            self.btn4.setText('Start BB IQ PSD')
+            self.plots_bb.pwin.hide()
+
+        self.P.SHOW_BASEBAND_PSD = not self.P.SHOW_BASEBAND_PSD
+        if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
+            self.mp_comm('showBBpsd',self.P.SHOW_BASEBAND_PSD )
+
+    # Callback for AF PSD Start/Stop button
+    def StartStopAF_PSD(self):
+        if not self.P.SHOW_AF_PSD:
+            self.btn3.setText('Stop AF PSD')
+            self.plots_af.pwin.show()
+        else:
+            self.btn3.setText('Start AF PSD')
+            self.plots_af.pwin.hide()
+
+        self.P.SHOW_AF_PSD = not self.P.SHOW_AF_PSD
+        if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
+            self.mp_comm('showAFpsd',self.P.SHOW_AF_PSD )
+        
+    # Callback for Start/Stop Raw IQ Save button
+    def StartStopSave_RawIQ(self):
+        if not self.P.SAVE_IQ:
+            self.btn5.setText('Stop IQ Save')
+        else:
+            #self.btn5.setText('Resume IQ Save')
+            self.btn5.setText('Start IQ Save')
+            self.P.raw_iq_io.close()
+
+        self.P.SAVE_IQ = not self.P.SAVE_IQ
+        
+    # Callback for Start/Stop Baseband Save button
+    def StartStopSave_BasebandIQ(self):
+        if not self.P.SAVE_BASEBAND:
+            self.btn6.setText('Stop BB IQ Save')
+        else:
+            #self.btn6.setText('Resume BB IQ Save')
+            self.btn6.setText('Start BB IQ Save')
+            self.P.baseband_iq_io.close()
+
+        self.P.SAVE_BASEBAND = not self.P.SAVE_BASEBAND
+        
+    # Callback for Start/Stop Demod Save button
+    def StartStopSave_Demod(self):
+        if not self.P.SAVE_DEMOD:
+            self.btn7.setText('Stop Demod Save')
+        else:
+            #self.btn7.setText('Resume Demod Save')
+            self.btn7.setText('Start Demod Save')
+            self.P.demod_io.close()
+
+        self.P.SAVE_DEMOD = not self.P.SAVE_DEMOD
+        
+    # Function to update PSD display
+    def UpdatePSD(self):
+
+        # Update other params
+        #print('UpdatePSD in...')
+        P=self.P
+        P.SO2V = self.so2v_cb.isChecked()
+
+        # Get tuner freq
+        if P.RIG_IF==0 and True:
+            fc = self.lcd.get()
+        else:
+            fc = P.frqArx
+
+        # Determine what plots to show
+        if self.pan_cb.isChecked():
+            show_time_series = False
+            show_psd = False
+            P.PSD_BB_FC3=fc
+            #if P.MODE=='IQ' or (P.MODE=='USB' and UNRESOLVED_AMBIGUITY):
+            if self.P.PANADAPTOR:
+                P.PSD_AF_FC2 = fc
+            else:
+                P.PSD_AF_FC2 = 0
+            #if P.MODE=='WFM' or self.P.MODE=='WFM2': 
+            #    P.PSD_AF_FC2 = 0
+            #else:
+            #    P.PSD_AF_FC2 = fc
+
+            #print '\nPlotting ...',fc,P.RIG_IF,P.frqArx
+            
+        else:
+            show_time_series = True
+            show_psd = True
+            P.PSD_AF_FC2 = 0
+            P.PSD_BB_FC3 = 0
+        
+        if P.SHOW_RF_PSD:
+            n=self.plots_rf.psd.chunk_size
+            fc1 = 1*fc - 0*0.001*P.FOFFSET
+            #print 'fc1=',fc1,fc, P.FOFFSET, P.BFO
+            if P.MP_SCHEME==1:
+                #print 'hey 1'
+                # Should eventually be able to eliminate this path
+                if P.rb_rf.ready(2*n):
+                    x = list(range(n))
+                    y = P.rb_rf.pull(n,True)
+                    self.plots_rf.plot(x,y,fc1,self.SHOW_RF_IQ,True)
+
+                    if False:
+                        x = [fc, fc]
+                        y=[min(PSD),max(PSD)]
+                        self.curve1d.setData(x,y)
+
+            else:
+                #print 'hey 2'
+                y = P.rb_rf.pull(n,True)
+                if len(y)>0:
+                    x = list(range(n))
+                    self.plots_rf.plot(x,y,fc1,self.SHOW_RF_IQ,True)
+                    
+        if P.SHOW_AF_PSD:
+            N=self.plots_af.psd.chunk_size
+            new_samps=self.plots_af.psd.new_samps
+            if P.MP_SCHEME==1:
+                # Should eventually be able to eliminate this path
+                nsamp = P.rb_af.nsamps
+                npsds = int(nsamp/new_samps)
+                x = list(range(new_samps))
+                for i in range(npsds):
+                    y = P.rb_af.pull(new_samps,True)
+                    self.plots_af.plot(x,y,P.PSD_AF_FC2,show_time_series,show_psd)
+            else:
+                x = list(range(new_samps))
+                while True:
+                    y = P.rb_af.pull(new_samps)
+                    if len(y)>0:
+                        self.plots_af.plot(x,y,P.PSD_AF_FC2,show_time_series,show_psd)
+                    else:
+                        break
+
+        if P.SHOW_BASEBAND_PSD:
+            P.PSD_BB_FC3 += 0*0.001*P.FOFFSET
+            n=self.plots_bb.psd.chunk_size
+            if P.MP_SCHEME==1:
+                # Should eventually be able to eliminate this path
+                if P.rb_baseband.ready(2*n):
+                    x = list(range(n))
+                    y = P.rb_baseband.pull(n,True)
+                    self.plots_bb.plot(x,y,P.PSD_BB_FC3,show_time_series,show_psd)
+            else:
+                y = P.rb_baseband.pull(n)
+                if len(y)>0:
+                    x = list(range(n))
+                    self.plots_bb.plot(x,y,P.PSD_BB_FC3,show_time_series,show_psd)
+
+        # Get transciever center freq & retune if necessary
+        # We don't do it each time to help improve gui response
+        self.itune_cnt+=1
+        if self.itune_cnt==20:
+            self.itune_cnt=0
+            self.rig_retune()
+
+        t_old = self.last_psd_update 
+        self.last_psd_update = time.time()
+        #        print "PSD update time=",self.last_psd_update-t_old
+        #print('UpdatePSD ...out')
+
+
+    # Function to retune rig if necessary
+    def rig_retune(self):
+        #print('RIG RETUNE in...')
+        #if self.follow_freq_cb.isChecked():
+        if not self.P.sock:
+            print('&&&&&&&&&&&&&&&& RIG_RETUNE: WARNING - No socket to rig &&&&&&&&&&&&&&&&&')
+            return
+        
+        if self.follow_freq_cb.isChecked() or self.so2v_cb.isChecked():
+            if not self.P.sock.active:
+                print('RIG_RETUNE 1: *** No connection to rig *** ')
+                self.follow_freq_cb.setChecked(False)
+                return
+
+            fc = self.lcd.get()
+            vfo='A'
+            if self.so2v_cb.isChecked():
+                vfo='B'
+            frq=self.P.sock.get_freq(vfo)*1e-3
+            if self.digi_cb.isChecked():
+                frq -= self.DIGI_OFFSET
+            #if int(1000*frq) != int(1000*fc):
+            if np.abs(frq-fc)>=1e-3:
+                print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RIG & SDR Center Freqs:",frq,fc,vfo)
+                #print self.P.sock.freq,self.P.sock.mode,self.P.sock.connection
+                self.FreqSelect(frq,False,vfo)
+                
+                mode = self.P.sock.get_fldigi_mode()
+                rig_mode = self.P.sock.get_mode()
+                if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
+                    mode=self.P.MODE
+                if rig_mode!=mode:
+                    self.P.sock.set_mode(mode)
+                print('RIG_RETUNE: mode=',mode,'rig_mode=',rig_mode,'sdr_mode=',self.P.MODE)
+
+        if self.follow_band_cb.isChecked():
+            if not self.P.sock.active:
+                print('RIG_RETUNE 2: *** No connection to rig *** ')
+                self.follow_band_cb.setChecked(False)
+                return
+            
+            fc = self.lcd.get()
+            band = self.P.sock.get_band()
+            b = str(band)+'m'
+            band2 = convert_freq2band(fc)
+            b2 = str(band2)+'m'
+            if band!=band2:
+                f = self.P.sock.get_freq()*1e-3
+                print('RIG_RETUNE: Follow band:',band,band2,f)
+                if self.P.PAN_BW == 0:
+                    frq = (bands[b]["CW1"] + bands[b]["CW2"])/2
+                else:
+                    frq = bands[b]["CW1"] + self.P.PAN_BW/2000.
+                self.FreqSelect(frq,False)
+                mode = self.P.sock.get_fldigi_mode()
+                self.P.sock.set_mode(mode)
+                print('mode=',mode,self.P.MODE)
+        #print('RIG RETUNE ...out')
+ 
+    # Function to set RF sampling rate
+    def SrateSelect(self,i):
+        a=self.srates[i].split(" ")
+#        print '\n----------------- Srate Select -----------------',i,a,self.P.SRATE
+        if i<0:
+
+            # Set combo box according to current param setting
+            if self.P.SRATE<1e6:
+                #rate = int( self.P.SRATE/1e3 )
+                rate = self.P.SRATE/1e3 
+                if rate==int(rate):
+                    rate=int(rate)
+                s=str(rate)+" KHz"
+            else:
+                #rate = int( self.P.SRATE/1e6 )
+                rate =  self.P.SRATE/1e6 
+                if rate==int(rate):
+                    rate=int(rate)
+                s=str(rate)+" MHz"
+            #print s
+            idx=self.srates.index(s)
+            self.srate_cb.setCurrentIndex(idx)
+                
+        else:
+                
+            # Set current param setting according to combo box 
+            if a[1]=="KHz":
+                #rate=int(a[0])*1e3
+                rate = float(a[0])*1e3
+            elif a[1]=="MHz":
+                #rate=int(a[0])*1e6
+                rate = float(a[0])*1e6
+            self.P.SRATE=rate
+#            print 'SRATE set to',rate,'\n'
+
+            
+    # Function to set IF Bandwidth
+    def IF_BWSelect(self,i):
+        print('\n----------------- IF BW Select -----------------',i,'\n')
+        if i<0:
+
+            # Set SDR BW according to input params
+            if self.P.IF_BW>0:
+                print('>>>>>>>>>>>>>> Changing SDR Bandwidth to',self.P.IF_BW) 
+                self.P.sdr.setBandwidth(SOAPY_SDR_RX, 0,self.P.IF_BW)
+
+            # Set combo box according to current SDR setting
+            if self.P.MP_SCHEME==2:
+                bw = self.mp_comm('getBandwidth')
+            else:
+                bw = self.P.sdr.getBandwidth(SOAPY_SDR_RX, 0)
+            print('bw=',bw)
+            if bw>=1e6:
+                bw2 = bw/1e6
+                tag=' MHz'
+            else:
+                bw2 = bw/1e3
+                tag=' KHz'
+            if bw2==int(bw2):
+                bw2=int(bw2)
+            s = str(bw2) + tag
+            idx=self.bws.index(s)
+            print(s)
+            print(self.bws)
+            print(idx)
+            self.BW_cb.setCurrentIndex(idx)
+                
+        else:
+                
+            # Set current param setting according to combo box 
+            a=self.bws[i].split(" ")
+            if a[1]=="KHz":
+                bw=float(a[0])*1e3
+            elif a[1]=="MHz":
+                bw=float(a[0])*1e6
+            self.P.IF_BW = int(bw)
+            print('<<<<<<<<<<<< Changing SDR Bandwidth to',bw)
+            self.P.sdr.setBandwidth(SOAPY_SDR_RX, 0,self.P.IF_BW)
+            
+    # Function to set IF 
+    def IFSelect(self,i):
+        # print '\n----------------- hey -----------------',i,a,self.P.IF,'\n'
+        if i<0:
+
+            # Set combo box according to current param setting
+            s=str(self.P.IF)+" KHz"
+            # print s
+            idx=self.IFs.index(s)
+            self.IF_cb.setCurrentIndex(idx)
+                
+        else:
+                
+            # Set current param setting according to combo box 
+            a=self.IFs[i].split(" ")
+            self.P.IF = int(a[0])*1e3
+
+            
+    # Function to set Pan adaptor BW
+    def PanBWSelect(self,i):
+        print('\n----------------- Pan BW Select -----------------',i,'\n')
+        if i<0:
+            try:
+                bw = int( self.P.PAN_BW*1e-3 ) 
+                idx=self.PanBWs.index(str(bw)+' KHz')
+                bw = int( self.P.PAN_BW ) 
+            except ValueError:
+                bw = int( self.P.PAN_BW ) 
+                #print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! PanBW Select - special",i,bw,'\n')
+                idx = len(self.PanBWs)-1
+                #idx = 0
+        else:
+            a=self.PanBWs[i].split(" ")
+            try:
+                bw = int(a[0])
+                if a[1]=="KHz":
+                    bw *= 1e3 
+                elif a[1]=="MHz":
+                    bw *= 1e6
+            except:
+                bw = self.P.AF_BW
+            idx=i
+            
+        self.PanBW_cb.setCurrentIndex(idx)
+        self.P.PAN_BW = bw
+            
+        print("Pan BW select:",i,idx,bw, self.P.PAN_BW)
+            
+    # Function to set min peak distance
+    def PeakDistSelect(self,i):
+        print('\n----------------- Peak Distance Select -----------------',i,'\n')
+        if i<0:
+            try:
+                bw = int( self.P.PEAK_DIST*1E-3 ) 
+                idx=self.PeakDists.index(str(bw)+' KHz')
+                bw = int( self.P.PEAK_DIST ) 
+            except ValueError:
+                idx = len(self.PeakDists)-1
+                #idx = 0
+        else:
+            a=self.PeakDists[i].split(" ")
+            bw = int(a[0])
+            if a[1]=="KHz":
+                bw *= 1e3 
+            elif a[1]=="MHz":
+                bw *= 1e6
+            idx=i
+            
+        self.PeakDist_cb.setCurrentIndex(idx)
+        self.P.PEAK_DIST = bw
+        print("Peak Dist select:",i,idx,bw, self.P.PEAK_DIST)
+            
+    # Function to set Pan adaptor Direction
+    def PanDirSelect(self,i):
+        #print '\n----------------- hey -----------------',i,'\n'
+        self.P.PAN_DIR = self.PanDirs[i]
+        print(self.P.PAN_DIR)
+            
+    # Function to set Pan adaptor Dyn Range
+    def PanDRSelect(self,i):
+        #print '\n----------------- hey -----------------',i,'\n'
+        if i<0:
+            #self.P.PAN_DR = 50
+            idx=self.PanDRs.index( str(self.P.PAN_DR) )
+            self.PanDR_cb.setCurrentIndex(idx)
+        else:
+            self.P.PAN_DR = int( self.PanDRs[i] )
+            #print idx,self.P.PAN_DR
+            
+    # Function to set tuning step
+    def StepSelect(self,i):
+        if isinstance(i, str):
+            a = i.split(" ")
+            idx = self.steps.index( i )
+            self.step_cb.setCurrentIndex(idx)
+        else:
+            a=self.steps[i].split(" ")
+        step = int(a[0])
+        print("Step select:",i,step)
+        if a[1]=="Hz":
+            step=step*1e-3
+        elif a[1]=="MHz":
+            step=step*1e3
+        elif a[1]=="GHz":
+            step=step*1e6
+        print('GUI STEP SELECT - Need some help!')
+        #self.lcd.set_step(step)
+
+    # Function to select Vidio Bandwidth
+    def Video_BWSelect(self,i):
+        print("\n%%%%%%%%%%%%%%%% Video_BW Select:",i,self.P.VIDEO_BW)
+
+        if i<0:
+            try:
+                if self.P.VIDEO_BW>1e6-1:
+                    bw = int( self.P.VIDEO_BW*1e-6 )
+                    idx=self.video_bws.index(str(bw)+' MHz')
+                else:
+                    bw = int( self.P.VIDEO_BW*1e-3 )
+                    idx=self.video_bws.index(str(bw)+' KHz')
+            except ValueError:
+                print("special")
+                idx = len(self.video_bws)-1
+                
+        elif i==0 and self.P.NEW_MODE=='IQ':
+
+            # Max - find highest supported by sampling rate
+            best_bw = find_filter( self.P.FS_OUT , VIDEO_BWs )
+            idx=self.video_bws.index(best_bw)
+            
+        else:
+            idx = i
+                
+        print("Video BW select:",i,idx,self.video_bws[idx],self.P.MODE,self.P.NEW_MODE)
+        self.vidbw_cb.setCurrentIndex(idx)
+        self.P.VIDEO_FILTER_NUM = idx
+
+        if (not self.P.MODE_CHANGE and (self.P.MODE=='WFM' or self.P.MODE=='WFM2')) or \
+            (self.P.MODE_CHANGE and (self.P.NEW_MODE=='WFM' or self.P.NEW_MODE=='WFM2')):
+
+            # BCB FM is wideband so we need to demodulate first before resampling
+            self.P.rx[0].demod.wfm_video.h = self.P.rx[0].demod.wfm_filter_bank[idx]
+            #print idx,i,self.P.VIDEO_BW
+
+        else:
+
+            # For narrowband modes, resampling is applied to SDR data
+            if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
+                self.mp_comm('setVideoFilter',idx)
+            else:
+                self.P.rx[0].dec.h = self.P.rx[0].dec.filter_bank[idx]
+
+
+    # Function to select Audio Bandwidth
+    def AF_BWSelect(self,i):
+        print("\n%%%%%%%%%%%%%%%% AF_BW Select:",i,self.P.AF_BW)
+
+        if i<0:
+            try:
+                if self.P.AF_BW<1e3:
+                    bw = int( self.P.AF_BW ) 
+                    idx=self.af_bws.index(str(bw)+' Hz')
+                else:
+                    bw = int( self.P.AF_BW*1e-3 ) 
+                    idx=self.af_bws.index(str(bw)+' KHz')
+            except ValueError:
+                print("special")
+                #idx = len(self.af_bws)-1
+                idx = 0
+                
+        elif i==0 and self.P.NEW_MODE=='IQ':
+
+            # Max - find highest supported by sampling rate
+            best_bw = find_filter( self.P.FS_OUT , AF_BWs )
+            idx=self.af_bws.index(best_bw)
+            a=self.af_bws[idx].split(" ")
+            bw = int(a[0])
+            
+        else:
+            a=self.af_bws[i].split(" ")
+            bw = int(a[0])
+            if a[1]=="KHz":
+                bw *= 1e3 
+            elif a[1]=="MHz":
+                bw *= 1e6
+            idx=i
+                
+        print("AF BW select:",i,idx,bw)
+        self.afbw_cb.setCurrentIndex(idx)
+        self.P.AF_BW = bw
+        self.P.AF_FILTER_NUM = idx
+
+        # For BCB FM, the audio filtering is done in the resampler
+        if (not self.P.MODE_CHANGE and (self.P.MODE=='WFM' or self.P.MODE=='WFM2')) or \
+            (self.P.MODE_CHANGE and (self.P.NEW_MODE=='WFM' or self.P.NEW_MODE=='WFM2')):
+            self.P.rx[0].dec.h = self.P.rx[0].dec.filter_bank[i]
+
+        if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
+            self.mp_comm('setAudioFilter',bw,idx)
+            
+
+    # Callback to change center freq when clicked 
+    def MouseClickRF(self,button,frq,y,fc):
+        print('MouseClickRF in:',button,frq,y,self.P.PSD_AF_FC2,fc)
+        
+        # Make sure we include center freq if it is not already part of the plot
+        #if self.P.PSD_AF_FC2==0:
+        if fc==0:
+            frq += .001*self.P.FC[self.P.PLOT_RX]
+        print('MouseClickRF:',button,frq)
+
+        if button==1:
+
+            # Left click - What we do depends on how SDR is being used
+            if self.P.RIG_IF==0 or True:
+                
+                # Left click as an SDR - shift SDR center freq
+                print("\tLeft button - Setting SDR freq to",frq)
+                vfo='A'
+                if self.so2v_cb.isChecked():
+                    vfo='B'
+                self.FreqSelect(frq,True,vfo)
+                if self.P.RIG_IF==0:
+                    self.lcd.set(frq)
+
+            else:
+                
+                # Left click with SDR listening to a rig's IF - shift rig freq
+                print("\tLeft button - Setting Rig Freq",frq)
+                vfo='A'
+                self.P.sock.set_freq(float(frq),vfo)
+            
+        elif button==2:
+
+            # Right click with 2 RX's - shift freq of VFO B
+            if self.P.NUM_RX==2:
+
+                new_frq=[0,0]
+                irx=self.P.MAIN_RX
+                new_frq[irx]   = .001*self.P.FC[irx]
+                new_frq[1-irx] = frq
+                print('Right click: irx/frq/new_frq=',irx,frq,new_frq)
+                self.FreqSelect(new_frq,True)
+                
+            # Right click - shift RIG center freq
+            # Need to reconcile this
+            elif UNRESOLVED_AMBIGUITY:
+                # This is how it was for S02V
+                print("\tRight button - Setting Rig Freq",frq)
+                vfo='A'
+                #self.FreqSelect(frq,True,'A')
+                self.P.sock.set_freq(float(frq),vfo)
+
+            else:
+                # Would like this for DX split ops
+                frq1 = self.P.sock.get_freq()*1e-3
+                df = frq-frq1
+                print("\tRight button - Setting Split",frq,frq1,df)
+                SetTXSplit(self.P,df)
+                
+        elif button==4:
+            # Middle button with 2 RXs - swap rig VFO
+            if self.P.NUM_RX==2:
+                rig_vfo = self.P.sock.get_vfo()
+                if rig_vfo[0]=='A':
+                    new_vfo='B'
+                elif rig_vfo[0]=='B':
+                    new_vfo='A'
+                elif rig_vfo[0]=='M':
+                    new_vfo='S'
+                elif rig_vfo[0]=='S':
+                    new_vfo='M'
+                else:
+                    print('Middle button - unknown rig vfo????',rig_vfo)
+                    return
+                
+                print('Middle button - changing vfo from',rig_vfo,' to ',new_vfo)
+                self.P.sock.set_vfo(new_vfo,new_vfo)
+            else:
+                print("\tMiddle button - TBD")
+
+    # Callback to change center freq
+    def FreqSelect(self,new_frq,tune_rig=True,VFO=[]):
+        P = self.P
+        print('&&&&&&&&&&&&&&&&&& RX UPDATE FREQ &&&&&&&&&&&&&&&&',P.FC,new_frq,VFO,tune_rig)
+
+        # If SDR is listening to rig's IF, only change rig freq
+        if P.RIG_IF!=0:
+            #print 'Howdy Ho!'
+            vfo='A'
+            if new_frq>0:
+                print('@@@@@@@@@@@@ Tuning rig',new_frq,vfo)
+                P.sock.set_freq(float(new_frq),vfo)
+                P.frqArx = new_frq
+                self.itune_cnt=0
+            return
+        
+        # Tuning offset
+        foff = -P.FOFFSET
+
+        # Manage Main RX
+        irx=P.MAIN_RX
+        if np.isscalar(new_frq):
+            f2 = new_frq*1000.
+        else:
+            f2 = new_frq[irx]*1000.
+        if f2>0:
+            if P.REPLAY_MODE:
+                print('Changing',P.REPLAY_FC,f2,P.FOFFSET)
+                P.FOFFSET = P.lo.change_freq( P.REPLAY_FC-f2 + 0*P.BFO )
+                print('Replay mode:',P.FOFFSET)
+            else:
+                if self.P.MP_SCHEME==2:
+                    #f1 = self.mp_comm('getFrequency') + P.FOFFSET
+                    self.mp_comm('setFrequency',0,foff,f2-P.FOFFSET)
+                elif self.P.MP_SCHEME==3:
+                    self.mp_comm('setFrequency',foff,rx=0)
+                    P.sdr.setFrequency(SOAPY_SDR_RX, 0, f2-P.FOFFSET)
+                else:
+                    #f1 = P.sdr.getFrequency(SOAPY_SDR_RX, 0) + P.FOFFSET
+                    P.rx[irx].lo.change_freq( foff )
+                    P.sdr.setFrequency(SOAPY_SDR_RX, 0, f2-P.FOFFSET)
+                print('\tChanging Main-RX',irx,' freq from',P.FC[irx],' to ',f2)
+            P.FC[irx]  = f2
+
+            # Re-tune rig also - NEW!!!
+            # Need to make into a function!!!
+            if tune_rig and self.follow_freq_cb.isChecked():
+                # Keep track of current rig vfo
+                rig_vfo = self.P.sock.get_vfo()
+                print('Current rig vfo=',rig_vfo)
+
+                # Tune the rig
+                vfo='A'
+                print('&&&&&&&&&&&& Tuning rig',f2,vfo)
+                P.sock.set_freq(.001*f2,vfo)
+                self.itune_cnt=0
+
+                #mode = self.P.sock.get_fldigi_mode()
+                mode = self.P.MODE
+                rig_mode = self.P.sock.get_mode(vfo)
+                #if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
+                #    mode=self.P.MODE
+                print('SDR & RIG MODES:',mode,rig_mode,vfo)
+                if rig_mode!=mode:
+                    self.P.sock.set_mode(mode,vfo)
+
+                # Restore vfo
+                if rig_vfo[0]!=vfo:
+                    self.P.sock.set_vfo(rig_vfo[0])
+
+        # Manage sub-RX(s)
+
+        # NOT SURE WHY THIS IS STILL HERE?
+        #if P.FT8 and new_frq[0]>0:
+        #    band = convert_freq2band(new_frq[0],True)
+        #    new_frq[1] = bands[band]['FT8']
+        #    print('band=',band,new_frq[0],new_frq[1])
+
+        for i in range(0,P.NUM_RX):
+            if i==P.MAIN_RX:
+                # Main RX has already been taken care of
+                continue
+            #elif P.MAIN_RX==0 and not np.isscalar(new_frq):
+            elif not np.isscalar(new_frq):
+                # New freq for this rx
+                f3=1000*new_frq[i]
+            else:
+                # Keep same freq on this rx - still need to do this bx offset is changed when tuning main rx
+                f3=P.FC[i]
+            if f3>0:
+                if P.SOURCE[i]>=0:
+                    frq = P.FC[P.SOURCE[i]] - f3
+                else:
+                    frq = foff + f2 - f3
+                if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
+                    self.mp_comm('setFrequency', i,frq,rx=i)
+                else:
+                    P.rx[i].lo.change_freq( frq )
+                    print('\tChanging Sub-RX',i,' freq from',P.FC[i],' to ',f3)
+                P.FC[i] = f3
+
+                # Re-tune rig also - NEW!!!
+                if tune_rig and self.follow_freq_cb.isChecked():
+                    vfo='B'
+                    print('\n&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& Tuning rig to frq/vfo=',f3,vfo,'\n')
+                    P.sock.set_freq(.001*f3,vfo)
+                    self.itune_cnt=0
+
+                    #mode = self.P.sock.get_fldigi_mode()
+                    mode = self.P.MODE
+                    rig_mode = self.P.sock.get_mode(vfo)
+                    #if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
+                    #    print('SDR & RIG MODES:',mode,rig_mode,vfo)
+                    if rig_mode!=mode:
+                        self.P.sock.set_mode(mode,vfo)
+
+                    # Restore vfo
+                    if rig_vfo[0]!=vfo:
+                        self.P.sock.set_vfo(rig_vfo[0])
+
+                    
+
+        # Manage GUI LCD display
+        if f2>0:
+            self.lcd.set(.001*f2)
+            for i in range(P.NUM_RX):
+                self.rx_frq_box[i].setText( "{0:,.1f} KHz".format(.001*P.FC[i]) )
+
+        # Tune radio to follow SDR - this should be taken care of above except for digi offset but
+        # until we get it working with hamlib working split correctly, just keep capability for VFO A going
+        #if (tune_rig and self.follow_freq_cb.isChecked()) or self.so2v_cb.isChecked():
+        if False:
+            if self.digi_cb.isChecked():
+                #new_frq += self.DIGI_OFFSET
+                new_frq -= 170/2*1e-3
+            if self.so2v_cb.isChecked():
+                if len(VFO)==0:
+                    vfo='B'
+                else:
+                    vfo=VFO
+            else:
+                vfo='A'
+
+            print('Howdy1',f2,vfo)
+            if f2>0:
+                print('&&&&&&&&&&&& Tuning rig',f2,vfo)
+                P.sock.set_freq(.001*f2,vfo)
+                self.itune_cnt=0
+
+    # Function to set demod mode
+    def ModeSelect(self,idx):
+        # If SDR is listening to rig's IF, only change rig freq
+        if self.P.RIG_IF!=0 and idx>=0 and False:
+            vfo='A'
+            txt=self.modes[idx]
+            print('@@@@@@@@@@@@ Changing rig mode',txt,vfo,idx)
+            self.P.sock.set_mode(txt)
+            #self.itune_cnt=0
+            return
+        
+        if self.P.MODE=='RTTY2' or self.P.MODE=='PKTUSB':
+            self.P.MODE='IQ'
+        if idx<0:
+            idx=self.modes.index(self.P.MODE)
+        txt=self.modes[idx]
+
+        self.P.NEW_MODE=txt
+        self.P.MODE_CHANGE = (self.P.MODE != txt)
+        print("Mode select:",idx,txt,self.P.MODE_CHANGE) 
+        self.mode_cb.setCurrentIndex(idx)
+
+        if self.P.ENABLE_RTTY:
+            if self.P.NEW_MODE == 'RTTY' and not self.rtty.active:
+                # Show
+                self.rtty.start()
+            elif self.P.NEW_MODE != 'RTTY' and self.rtty.active:
+                # Hide
+                self.rtty.stop()
+
+        if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
+            self.mp_comm('setMode',self.P.NEW_MODE)
+            self.P.MODE        = self.P.NEW_MODE
+            self.P.MODE_CHANGE = False
+
+        
+    # Set presets
+    def PresetSelect(self,frq,mode,vidbw,afbw):
+        print("\n@@@@ Preset:",frq,mode,vidbw,afbw)
+        #new_frq=np.zeros(self.P.NUM_RX)
+        new_frq=self.P.FC*1e-3
+        new_frq[0]=frq
+        self.FreqSelect(new_frq)
+        if self.P.RIG_IF==0:
+            idx=self.modes.index(mode)
+            self.ModeSelect(idx)
+            idx=self.video_bws.index(vidbw)
+            self.Video_BWSelect(idx)
+            idx=self.af_bws.index(afbw)
+            self.AF_BWSelect(idx)
+            self.rig_retune()
+        else:
+            vfo='A'
+            print('@@@@@@@@@@@@ Changing rig mode',mode,vfo)
+            self.P.sock.set_mode(mode)
+            #self.itune_cnt=0
+            return
+
+        # Check if we need to change RTL direct sampling mode
+        if self.P.SDR_TYPE=='rtlsdr' and False:
+            thresh=30e3
+            if frq>=thresh and self.P.DIRECT_SAMP!=0:
+                self.DirectSelect(0)
+            elif frq<thresh and self.P.DIRECT_SAMP!=2:
+                self.DirectSelect(2)
+
+
+    # Callback to enable/disable AM/FM BCB Notch
+    def EnableBCBnotch(self):
+
+        # Check how the SDR says its set
+        s="rfnotch_ctrl"
+        if self.P.MP_SCHEME==2:
+            notch = self.mp_comm('readSetting',s)
+        else:
+            notch = self.P.sdr.readSetting(s)
+        print('Current notch=',notch)
+
+        if notch=='true':
+            self.BCB_btn.setText('Enable')
+            self.P.sdr.writeSetting(s,"false")
+        else:
+            self.BCB_btn.setText('Disable')
+            self.P.sdr.writeSetting(s,"true")
+
+
+    # Callback to Mute/Unmute Audio
+    def MuteCB(self,irx):
+
+        #print 'MUTE CB:',self.P.MUTED[irx],irx
+        #print irx,self.Mute_btns[irx].text()
+        #print irx,self.Mute_btns[irx].isChecked()
+
+        if self.P.MUTED[irx]:
+            self.Mute_btns[irx].setText('Mute RX'+str(irx+1))
+        else:
+            self.Mute_btns[irx].setText('Un-Mute RX'+str(irx+1))
+
+        self.P.MUTED[irx] = not self.P.MUTED[irx]
+
+    # Select Antenna
+    def AntSelect(self,i):
+        print("\nAntenna Select:",i)
+
+        s1="ant_sel"
+        s2="amport_ctrl"
+        if i<0:
+
+            # Set combo box according to current param setting
+            if not self.P.REPLAY_MODE:
+                if self.P.MP_SCHEME==2:
+                    ant1 = self.mp_comm('getAntenna')
+                else:
+                    ant1 = self.P.sdr.getAntenna(SOAPY_SDR_RX, 0)
+                print('Current ant=',ant1)
+                if ant1=='Antenna A':
+                    ant = 'Ant A'
+                else:
+                    ant = 'Ant B'
+                idx=self.Antennas.index(ant)
+                print(idx)
+            else:
+                idx=0
+            self.Ant_cb.setCurrentIndex(idx)
+                
+        else:
+                
+            # Set current param setting according to combo box 
+            ant = self.Antennas[i] 
+            print('>>>>>>>>>>>>>> Changing SDR Antenna to',ant)
+            if not self.P.REPLAY_MODE:
+                if ant=='Ant A':
+                    ant1='Antenna A'
+                elif ant=='Ant B':
+                    ant1='Antenna B'
+                else:
+                    ant1='Hi-Z'
+                if self.P.MP_SCHEME==2:
+                    self.mp_comm('setAntenna',ant1)
+                else:
+                    self.P.sdr.setAntenna(SOAPY_SDR_RX, 0,ant1)
+                    
+        print(' ')
+                    
+
+    # Set LNA (aka RF gain)
+    def LNASelect(self,i):
+        print("\nLNASelect:",i)
+
+        s="rfgain_sel"
+        if i<0:
+
+            # Set combo box according to current param setting
+            if not self.P.REPLAY_MODE:
+                if self.P.MP_SCHEME==2:
+                    gain = self.mp_comm('readSetting',s)
+                else:
+                    gain = self.P.sdr.readSetting(s)
+                print('Current gain=',gain)
+                print(self.RFgains)
+                idx=self.RFgains.index(str(gain))
+            else:
+                idx=0
+                
+            self.RFgain_cb.setCurrentIndex(idx)
+                
+        else:
+                
+            # Set current param setting according to combo box 
+            if not self.P.REPLAY_MODE:
+                gain = int( self.RFgains[i] )
+                print('>>>>>>>>>>>>>> Changing SDR LNA to',gain)
+                if self.P.MP_SCHEME==2:
+                    self.mp_comm('writeSetting',s,str(i))
+                else:
+                    self.P.sdr.writeSetting(s,str(i))
+        
+
+
+    # Set direct sampling mode
+    def DirectSelect(self,i):
+        print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DirectSelect:",i)
+
+        s="direct_samp"
+        if i<0:
+
+            # Set combo box according to current param setting
+            direct = self.P.sdr.readSetting(s)
+            print('Current direct samp =',direct)
+            print(self.direct)
+                
+        else:
+                
+            # Set current param setting according to combo box 
+            direct = int( self.direct[i] )
+            print('>>>>>>>>>>>>>> Changing direct samp to',direct,i,self.P.DIRECT_SAMP)
+            if self.P.MP_SCHEME==2:
+                self.mp_comm('writeSetting',s,str(i))
+            else:
+                self.P.sdr.writeSetting(s,str(i))
+            self.P.DIRECT_SAMP=direct
+
+        idx=self.direct.index(str(direct))
+        self.direct_cb.setCurrentIndex(idx)
+
+    # Set IF gain
+    def IFGainSelect(self,i):
+        #print "\nIFGainSelect:",i
+
+        if self.P.REPLAY_MODE:
+            gain=1
+            self.IFgain_cb.setCurrentIndex(0)
+        
+        elif i<0:
+
+            # Set combo box according to current param setting
+            if self.P.SDR_TYPE=='sdrplay':
+                stage='IFGR'
+            elif self.P.SDR_TYPE=='rtlsdr':
+                stage='TUNER'
+            print('Reading SDRPlay IF gain...',stage)
+            if self.P.MP_SCHEME==2:
+                gain = self.mp_comm('getGain',stage)
+            else:
+                gain = self.P.sdr.getGain(SOAPY_SDR_RX, 0,stage)
+            print('gain=',gain)
+            if self.P.SDR_TYPE=='sdrplay':
+                if gain==0:
+                    gain=float(self.IFgains[0])
+                print('gain=',gain)
+                s=str( int(gain+0.5) )
+            elif self.P.SDR_TYPE=='rtlsdr':
+                if gain>49.6:
+                    gain=49.6
+                elif gain<0.:
+                    gain=0.
+                s=str( int(gain/self.dgain)*self.dgain )
+            else:
+                gain=1
+                s='1'
+                
+            print('gain=',s)
+            print('Current gain=',gain,s)
+            print('Available gains:',self.IFgains)
+            try:
+                idx=self.IFgains.index(s)
+            except:
+                idx=0
+            self.IFgain_cb.setCurrentIndex(idx)
+                
+        else:
+                
+            # Set current param setting according to combo box 
+            if self.P.SDR_TYPE=='sdrplay':
+                stage='IFGR'
+                gain = int( self.IFgains[i] )
+            elif self.P.SDR_TYPE=='rtlsdr':
+                stage='TUNER'
+                gain = float( self.IFgains[i] )
+            else:
+                gain=1
+                
+            if self.P.MP_SCHEME==2:
+                self.mp_comm('setGain',stage,gain)
+            else:
+                self.P.sdr.setGain(SOAPY_SDR_RX, 0,stage,gain)
+            print('>>>>>>>>>>>>>> Changing SDR IF Gain to',gain)
+        
+    def mp_comm(self,cmd,arg1='',arg2='',arg3='',rx=None):
+        if self.P.MP_SCHEME==2:
+            self.P.pipe.send(('CMD',cmd,arg1,arg2,arg3))
+            msg = self.P.pipe.recv()
+            return msg[1]
+        
+        elif self.P.MP_SCHEME==3:
+            if not rx:
+                rxs = list(range(self.P.NUM_RX))
+            else:
+                rxs = [rx]
+            print('MP_COMM:',rx,rxs)
+            for irx in rxs:
+                print('MP_COMM: Sending',irx,('CMD',cmd,arg1,arg2,arg3),rx)
+                self.P.pipe[irx].send(('CMD',cmd,arg1,arg2,arg3))
+                print('MP_COMM: Waiting for response',irx)
+                msg = self.P.pipe[irx].recv()
+                print('MP_COMM: Got',msg)
+                if rx!=None:
+                    return msg[1]
+                
+            return None
+        
+

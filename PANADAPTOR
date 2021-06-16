@@ -1,0 +1,65 @@
+#! /bin/tcsh
+
+# Startup pySDR as a pan adaptor for CW or RTTY
+# Need to click on Start AF PSD to get Pan Adaptor running
+# Need to disable peak picking
+# Need to click on FOLLOW FLDIGI freq for this to work for RTTY
+
+set PY_SDR = "~/Python/pySDR/pySDR.py"
+
+# 96K only seems to work if we are running pavucontrol
+
+set FS=48
+#set FS=96
+#set FS=192
+
+set LOOPBACK="-loopback"
+#set LOOPBACK=""
+
+set FT8="-ft8"
+set FT8=""
+
+set RIG='-rig HAMLIB'
+#set RIG=''
+
+start_loopback
+
+pkill pySDR
+#pkill bandmap
+
+# For 48k
+#$PY_SDR -mode IQ -fs 2 -IF 0 -foffset -500 -fsout $FS -af_bw 45 -vid_bw 45 -ant B -pan_bw 40 &
+$PY_SDR -mode IQ -fsout $FS -af_bw 45 -vid_bw 45 -ant B -pan -pan_bw 10 $LOOPBACK $FT8 $RIG &
+
+# For 96k
+#$PY_SDR -mode IQ -fs 2 -IF 0 -foffset -500 -fsout $FS -af_bw 50 -vid_bw 50 -ant B -pan_bw 50 &
+
+# For 192k
+#$PY_SDR -mode IQ -fs 2 -IF 0 -foffset -500 -fsout $FS -af_bw 150 -vid_bw 150 -ant B -pan_bw 50 &
+
+exit
+
+
+
+
+
+# Start FT8 monitor on same band as well
+set CLOCK=~/Python/wsmap/wclock.py
+$CLOCK &
+
+sleep 1
+wsjtx -r SDR2 &
+#exit
+set BANDMAP=~/Python/bandmap/bandmap.py
+sleep 1
+$BANDMAP -rig NONE -server WSJT4 -dx &
+
+exit
+
+sleep 5
+
+# Start keyer also
+cd ~/Python/pyKeyer
+set KEYER = "~/Python/pyKeyer/pyKeyer.py"
+$KEYER -wpm 25 -naqp &
+

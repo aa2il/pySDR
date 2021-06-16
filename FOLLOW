@@ -1,0 +1,64 @@
+#! /bin/tcsh
+
+cd ~/Python/pySDR
+#set PY_SDR = "~/Python/pySDR/pySDR.py"
+set PY_SDR = "pySDR.py"
+
+set FRQS = "1840 3573 7074 10136 14074 18100 21074 24915 28075 50313"
+
+set FRQS = "10136 14074 18100"
+#set FRQS = "7074 10136 14074"
+#set FRQS = "14074 18100 21074"
+#set FRQS = "18100 21074 24915"
+
+#set FRQS = "600 640 760 1170"
+#set FRQS = "600 640 760"
+#set FRQS = "600 760"
+#set FRQS = "600"
+
+set HOP_TIME=150
+#set HOP_TIME=30
+
+set RTL="-rtlhf"
+set RTL=""
+
+set LOOPBACK="-loopback"
+set LOOPBACK=""
+
+set FS=8
+
+set HOPPER="-hop -hop_time $HOP_TIME"
+set HOPPER='-ant B -follow'
+#set HOPPER=""
+
+start_loopback
+
+pkill pySDR
+#pkill bandmap
+#pkill rigctld
+
+$PY_SDR $RTL -fc $FRQS -fs $FS -IF 0 -mode USB -fsout 48 -af_bw 4 $HOPPER $LOOPBACK &
+
+exit
+sleep 5
+
+# Sometimes we need to use pavucontrol to direct audio to right place
+wsjtx -r SDR1 &
+sleep 1
+wsjtx -r SDR2 &
+sleep 1
+wsjtx -r SDR3 &
+
+exit
+sleep 5
+
+cd ~/Python/bandmap
+set BANDMAP=~/Python/bandmap/bandmap.py
+#$BANDMAP -rig NONE -server WSJT3 -dx &
+$BANDMAP -rig NONE -wsjt SDR1 -dx &
+sleep 1
+#$BANDMAP -rig NONE -server WSJT4 -dx &
+$BANDMAP -rig NONE -wsjt SDR2 -dx &
+sleep 1
+#$BANDMAP -rig NONE -server WSJT5 -dx &
+$BANDMAP -rig NONE -wsjt SDR3 -dx &

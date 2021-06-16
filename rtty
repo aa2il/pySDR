@@ -1,0 +1,41 @@
+#! /usr/bin/tcsh
+
+# Script to startup replay for RTYY development
+
+pkill pySDR.py
+
+set OPTS="-mode RTTY -rig NONE  -rtty"
+
+set DIR="~/Python/data2"
+set EXT="dat"
+
+set STUB="baseband_iq"
+set SUFFIX = "20170919_221412"                 # One strong sig - easy, bin 559
+#set SUFFIX = "20170919_210138"                 # DX split, 2 sigs - bins 555 and 514
+#set SUFFIX = "20170919_194951"                 # Long - bins 517 & 639
+#set SUFFIX = "20170919_193518"                 # Very long conversation with fades, bin 485
+
+set STUB="rtty_sprint"
+set SUFFIX = "20190308_020606"                # Wide enough bandwidth to support several sigs
+
+#set EXT="wav"
+#set STUB="capture"
+#set SUFFIX = "20170929_00300"
+#set SUFFIX = "2"
+#set SUFFIX = "3"
+#set SUFFIX = "5"                             # A lot of signals on top of each other
+#set SUFFIX = "6"
+#set SUFFIX = "7"
+#set SUFFIX = "8"
+#set SUFFIX = "9"
+#set SUFFIX = "10"
+#set SUFFIX = "11"
+#set SUFFIX = "12"
+#set SUFFIX = "14"
+#set SUFFIX = "15"
+#set SUFFIX = "16"
+#set SUFFIX = "weak"
+#set SUFFIX = "vp6d_17m"                     # This one is really interesting - lots of overlap
+
+pySDR.py $OPTS -replay ${DIR}/${STUB}_${SUFFIX}.${EXT}
+

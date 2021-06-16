@@ -1,0 +1,59 @@
+#! /bin/tcsh
+
+set PY_SDR = "~/Python/pySDR/pySDR.py"
+
+set FRQS = "1840 3573 7074 10136 14074 18100 21074 24915 28075 50313"
+set FRQS = "3573 7074 10136 14074"
+set FRQS = "7074 10136 14074 18100"
+set FRQS = "1840 3573 7074 10136"
+
+set FRQS = "3573 7074 10136 14074"
+set FRQS = "10136 14074 18100 21074"
+set FRQS = "7074"
+#set FRQS = ""
+
+#set HOP_TIME=180
+set HOP_TIME=150
+#set HOP_TIME=10
+
+set RTL="-rtlhf"
+set RTL="-rtl"
+#set RTL=""
+
+set LOOPBACK="-loopback"
+set LOOPBACK=""
+set RIG="-rig NONE"
+
+set FT4="-ft4"
+set FT4="-ft44"
+set FT4=""
+
+set HOPPER="$FT4 -hop -hop_time $HOP_TIME"
+set HOPPER="$FT4"
+
+set SDR_OPTS="-vid_bw 45"
+
+set FS=1.024
+#set FS=2.048
+#set FS=0.25
+
+if( "$LOOPBACK" != "" )then
+    #pactl list sources
+    #pactl list sinks
+    pactl unload-module module-loopback
+    pactl load-module module-loopback latency_msec=1 source=4 sink=2
+endif
+
+pkill pySDR
+$PY_SDR $RTL -fc $FRQS -fs $FS -IF 0 -mode USB -fsout 48 -af_bw 4 $HOPPER $LOOPBACK $RIG $SDR_OPTS &
+
+#exit
+sleep 5
+
+~/Python/bandmap/bandmap.py -rig NONE -wsjt SDR -dx &
+
+wsjtx -r SDR
+
+if( "$LOOPBACK" != "" )then
+    pactl unload-module module-loopback
+endif

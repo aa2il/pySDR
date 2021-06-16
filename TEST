@@ -1,0 +1,33 @@
+#! /bin/tcsh
+
+# Script to try out different capabilities of pySDR
+# Curretnly, trying to monitor both input & output freqs of local repeaters
+# There is a problem where it doesn't seem selective if there is activity on
+# an adjacent channel, e.q. 145280 for ROARS 1
+# yet it is fine in single RX mode
+
+set PY_SDR = "~/Python/pySDR/pySDR.py"
+
+set FS=4
+
+set FRQS = "14230"
+#set FRQS = "145800"
+set FRQS = "600 760"
+
+# CORA 1
+set fout = 145180
+
+# ROARS 1
+set fout = 145300
+
+set fin = `calc $fout -600`
+#set FRQS = "$fin $fout"
+set FRQS = "$fout $fin"
+echo $FRQS
+
+pkill pySDR
+
+$PY_SDR -fc $FRQS -fs $FS -IF 0 -af_bw 5 -mode NFM -fsout 48 -rig NONE &
+
+#$PY_SDR $RTL -fc $FRQS -fs $FS -IF 0 -mode USB -fsout 48 -af_bw 4 $HOPPER $LOOPBACK -rig NONE &
+

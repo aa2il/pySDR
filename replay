@@ -1,0 +1,94 @@
+#! /usr/bin/tcsh
+
+# Script to replay a recorded SDR session
+
+# User params
+set WPM=30
+set MASTER="-master"
+set PRACTICE="-prac"
+set RIG="-rig NONE"
+set HINTS="-nohints"
+#set HINTS=""
+
+#set FNAME="../data/cwt_iq_20190320_190732.dat"      # Vry weak
+set FNAME="../data/cwt_iq_20190320_192351.dat"
+set CONTEST="-CWops"
+set TSKIP=10
+set MODE="-mode CW -bfo 700"
+set BW="-af_bw .1"
+
+#set FNAME="../data/cw_sprint_iq_20190322_023034.dat"
+#set CONTEST="-sprint"
+
+# Sat comm tests
+set FNAME='SatComm2/baseband_iq_20190408_210324.dat'   # CAS-4b
+set FNAME='SatComm2/baseband_iq_20190408_200723.dat'   # CAS-4a
+set FNAME='SatComm2/baseband_iq_20190408_184158.dat'   # FM AO-92, not too good
+set FNAME='SatComm2/baseband_iq_20190408_173949.dat'   # Linear XWE-2? - a lot of activity ***
+set FNAME='SatComm2/baseband_iq_20190408_015108.dat'   # Nothing intereting
+
+set FNAME='SatComm2/baseband_iq_20190412_.dat'   # 
+set FNAME='SatComm2/baseband_iq_20190412_193011.dat'   # Nothing intereting
+set FNAME='SatComm2/baseband_iq_20190412_191755.dat'   # FM AO-91 - good copy
+set FNAME='SatComm2/baseband_iq_20190412_185054.dat'   # FM AO-92 - fair copy
+set FNAME='SatComm2/baseband_iq_20190412_184233.dat'   # Linear - good copy
+
+# Russian ISS SSTV event in April - seems like big carrier but very waek modulation on these
+set FNAME='SatComm2/baseband_iq_20190412_030845.dat'    # SSTV - weak - Doppler is a problem!
+set FNAME='SatComm2/baseband_iq_20190412_013210.dat'    # SSTV - strong - Doppler is a problem!
+set FNAME='SatComm2/baseband_iq_20190411_204151.dat'    # Weak picture with several artifacts
+
+set FNAME='SatComm2/baseband_iq_20190414_030316.dat'     # Very weak, no deocde
+set FNAME='SatComm2/baseband_iq_20190414_012518.dat'     # 1st is fuzzy image - 2nd is fairly good with Doppler issues, 3rd fades out
+set FNAME='SatComm2/baseband_iq_20190413_234821.dat'     # 1st is Fuzzy partial, 2nd starts strong & fades - maybe use this one to improve NFM detector for weak mod? (a la DSB?)
+set FNAME='SatComm2/baseband_iq_20190413_221346.dat'      # partial images that fades in - use this to test NFM det with low mod index
+set FNAME='SatComm2/baseband_iq_20190413_202938.dat'      # 1st is poor fade in, 2nd starts strong & fades
+set FNAME='SatComm2/baseband_iq_20190413_185551.dat'      # 1st image hosed, 2nd is pretty good
+
+# From ISS SSTV event in Feb
+set FNAME='SatComm/ISS_SSTV/baseband_iq_20190216_155604.dat'
+set FNAME='SatComm/ISS_SSTV/baseband_iq_20190217_000352.dat'
+set FNAME='SatComm/ISS_SSTV/baseband_iq_20190215_164802.dat'   # Great image
+
+# Sat comm tests
+set FNAME='SatComm2/baseband_iq_20190413_200653.dat'      # Strong but nothing interesting
+set FNAME='SatComm2/baseband_iq_20190413_195152.dat'      # SO-50? Only hear some CW?
+set FNAME='SatComm2/baseband_iq_20190413_193907.dat'      # AO-91 - useful to improve NFM det
+#set FNAME='SatComm2/baseband_iq_20190413_191611.dat'      # CAS-4a - not much interest
+
+# Selected tests
+set FNAME='SatComm2/baseband_iq_20190408_173949.dat'   # Linear XWE-2? - a lot of activity ***
+set FNAME='SatComm2/baseband_iq_20190413_193907.dat'      # AO-91 - useful to improve NFM det
+set FNAME='SatComm2/baseband_iq_20190413_221346.dat'      # partial images that fades in - use this to test NFM det with low mod index
+set FNAME='junk.dat'
+
+
+set TSKIP=0
+set MODE="-mode IQ"
+set BW="-af_bw 45 -vid_bw 45"
+set MODE="-mode CW -bfo 700"
+set BW="-af_bw .5 -vid_bw 45"
+set MODE="-mode USB"
+set BW="-af_bw 2 -vid_bw 45"
+set MODE="-mode NFM"                        # For SSTV & NFM
+set BW="-af_bw 10 -vid_bw 45"
+
+#set TSKIP=7
+
+# Start fldigi - mainly to measure speed
+set FLDIGI="~/fldigi-4.1.00/src/fldigi"
+#$FLDIGI --config-dir ~/.fldigi99 >& /tmp/FLDIGI99y &
+#sleep 1
+
+# Start keyer
+if( 0 )then
+    cd ~/Python/pyKeyer
+    set OPTS="-wpm ${WPM} $PRACTICE ${CONTEST} $RIG $MASTER $HINTS"
+    pyKeyer.py $OPTS &
+    sleep 1
+endif
+
+# Replay data through pySDR
+cd ~/Python/pySDR
+echo pySDR.py -replay $FNAME $TSKIP $MODE $BW
+pySDR.py -replay $FNAME $TSKIP $MODE $BW
