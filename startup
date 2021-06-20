@@ -1,5 +1,21 @@
 #! /usr/bin/tcsh
 
+# Record control on/off development
+#pkill rigctl
+#pkill rigctld
+pkill pySDR
+
+pySDR >& /tmp/SDR &
+echo "Waiting for pySDR to start ..."
+set id=`find_windows pySDR 20`
+
+#$HAMLIB_DIR/rigctld -m $MODEL -r /dev/$c >& /tmp/HAMLIB
+#rigctl -m 2 -r localhost:4532 m
+
+~/hamlib-4.2/tests/rigctl -m 2 -vvvvv -r localhost:4575
+
+exit
+
 # CW devel
 #pySDR.py -fc 14030 -audio 2 -fs 1 -mode IQ -pan
 #pySDR.py -fc 14029.5 -bfo 700 -mode CW -af_bw 1 -pan_bw 4

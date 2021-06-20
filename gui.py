@@ -943,15 +943,19 @@ class pySDR_GUI(QMainWindow):
         self.P.SAVE_BASEBAND = not self.P.SAVE_BASEBAND
         
     # Callback for Start/Stop Demod Save button
-    def StartStopSave_Demod(self):
-        if not self.P.SAVE_DEMOD:
+    def StartStopSave_Demod(self,iopt=None):
+        if (iopt==None and not self.P.SAVE_DEMOD) or iopt==1:
             self.btn7.setText('Stop Demod Save')
+            self.P.SAVE_DEMOD = True
+            print('Saving demod started ...')
         else:
-            #self.btn7.setText('Resume Demod Save')
             self.btn7.setText('Start Demod Save')
             self.P.demod_io.close()
+            self.P.SAVE_DEMOD = False
+            print('Saving demod stopped ...')
 
-        self.P.SAVE_DEMOD = not self.P.SAVE_DEMOD
+        self.btn7.setChecked(self.P.SAVE_DEMOD)
+        #self.P.SAVE_DEMOD = not self.P.SAVE_DEMOD
         
     # Function to update PSD display
     def UpdatePSD(self):
