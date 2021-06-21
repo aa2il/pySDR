@@ -238,10 +238,13 @@ class sdr_fileio:
 
         # Convert data to 32-bit floats & write it out
         if len(x)>0:
-            if self.nchan==1:
-                x.real.astype(self.dtype).tofile(self.fp)
-            else:
-                x.astype(self.dtype).tofile(self.fp)
+
+            # Disabled for now - don't seem to be using this format much lately
+            if True:
+                if self.nchan==1:
+                    x.real.astype(self.dtype).tofile(self.fp)
+                else:
+                    x.astype(self.dtype).tofile(self.fp)
                 
             if self.WAVE_OUT:
                 # In Python3, this seemed to get a whole lot easier - or maybe I was just over thinking it!

@@ -1644,9 +1644,13 @@ class pySDR_GUI(QMainWindow):
             self.P.sock.set_mode(txt)
             #self.itune_cnt=0
             return
-        
+
+        # Some modes require the SDR to be set to something else
         if self.P.MODE=='RTTY2' or self.P.MODE=='PKTUSB':
             self.P.MODE='IQ'
+        elif self.P.MODE=='FM':
+            self.P.MODE='NFM'
+            
         if idx<0:
             idx=self.modes.index(self.P.MODE)
         txt=self.modes[idx]

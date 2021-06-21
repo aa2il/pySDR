@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/python3 -u
 
 # This is the gui version of pySDR. This is threaded version.
 # Seems to work on both python 2 & 3 under linux.  Had some problems

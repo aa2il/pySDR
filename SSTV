@@ -1,8 +1,24 @@
 #! /bin/tcsh
-
+############################################################################
+#
+# Rotor - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Script to set up SDR to listen to SSTV
-
-##############################################################################################################
+#
+############################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+############################################################################
 
 set PY_SDR = "~/Python/pySDR/pySDR.py"
 
@@ -12,9 +28,32 @@ set FRQS = "145800"
 set RTL="-rtlhf"
 set RTL=""
 
-set REPLAY=1
+set REPLAY=0
 
-##############################################################################################################
+set SATELLITE="ISS"
+
+set START_MMSSTV  = 0
+set START_QSSTV   = 0
+set START_CLOCK   = 0
+set START_PAVU    = 0
+set KILL_OLD      = 1
+set START_SAT9    = 1
+
+############################################################################
+
+# Kill old stuff
+echo " "
+echo "Cleaning up old junk ..."
+if( $KILL_OLD )then
+    pkill pySDR
+    pkill wclock.py
+    pkill qsstv
+    pkill MMSSTV
+    pkill pavucontrol 
+    sleep 1
+endif
+
+############################################################################
 
 # Replay mode
 if( $REPLAY )then
@@ -33,20 +72,15 @@ if( $REPLAY )then
     exit
 endif
 
-##############################################################################################################
+############################################################################
 
-# Might have to use pavucontrol to redirect audio to MMSSTV
+# Setup and start SDR
 set LOOPBACK='-loopback'
 set LOOPBACK=''
-
 #start_loopback
-
-pkill pySDR
-#pkill bandmap
 
 echo Starting pySDR ...
 $PY_SDR $RTL -fc $FRQS -mode NFM -fsout 48 $LOOPBACK -rig NONE -af_bw 10 -vid_bw 45 &
-#sleep 2
 
 echo "Waiting for pySDR to start ..."
 set id=`find_windows pySDR 20`
@@ -56,18 +90,39 @@ if ( $#id == 0 ) then
     exit
 endif
 
+############################################################################
+
+# Might have to use pavucontrol to redirect audio to MMSSTV
+if( $START_PAVU )then
+    pavucontrol &
+endif
+
 #env WINEPREFIX="/home/joea/.wine"
 #wine C:\\windows\\command\\start.exe /Unix /home/joea/.wine/dosdevices/c:/users/Public/Desktop/MMSSTV.lnk
 
-echo Starting MMSSTV ...
-~/.wine/drive_c/Ham/MMSSTV/MMSSTV.EXE >& /tmp/MMSSTV &
-sleep 1
+if( $START_MMSSTV )then
+    echo Starting MMSSTV ...
+    wine ~/.wine/drive_c/Ham/MMSSTV/MMSSTV.EXE >& /tmp/MMSSTV &
+endif
 
-echo Starting QSSTV ...
-qsstv >& /tmp/QSSTV &
+if( $START_QSSTV )then
+    echo Starting QSSTV ...
+    qsstv >& /tmp/QSSTV &
+endif
 
-wclock >& /tmp//WCLOCK &
+if( $START_CLOCK )then
+    echo Starting WCLOCK ...
+    wclock.py >& /tmp//WCLOCK &
+endif
+
+if( $START_SAT9 )then
+    echo Starting SAT9 ...
+    ~/Python/predict/sat9.py -sat $SATELLITE -rig HAMLIB -port 4575  >& /tmp/SAT9 &
+endif
+
 exit
+
+############################################################################
 
 # Replay:
 

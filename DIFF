@@ -23,7 +23,7 @@ echo OLD=$old
 #set OLD="work2"
 
 rm -f DIFFS
-foreach i (*.py)
+foreach i (*.py SSTV FT8*)
     echo $i
     set n=`diff -w $old/$i $i | wc -l`
     if( $n>0 ) then
