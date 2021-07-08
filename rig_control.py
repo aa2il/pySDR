@@ -1,4 +1,26 @@
-# Portion of GUI related to rig controls
+################################################################################
+#
+# rig_control.py - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# Portion of GUI related to rig controls - Qt version
+#
+# To Do:  There are a couple of versions of this module floating around -
+#         need to combine them.
+#
+################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+################################################################################
 
 if False:
     # use Qt4 
@@ -271,12 +293,12 @@ class RIG_CONTROL():
 
         self.mode = self.sock.get_mode()
         print('RIG_STATUS: mode=',self.mode)
-        if self.mode=='PKT-U' or self.mode=='PKTUSB':
+        if self.mode in ['PKT-U','PKTUSB','PSK-U']:
             self.mode='RTTY'
-        if self.mode=='CWR':
+        elif self.mode=='CWR':
             self.mode='CW'
-        if self.mode=='SSB':
-            print('freq=',self.sock.freq)
+        elif self.mode=='SSB':
+            #print('freq=',self.sock.freq)
             if self.sock.freq<10e6:
                 self.mode='LSB'
             else:

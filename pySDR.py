@@ -1,5 +1,11 @@
 #! /usr/bin/python3 -u
-
+############################################################################
+#
+# pySDR.py - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# A complete SDR written in Python.
+#
 # This is the gui version of pySDR. This is threaded version.
 # Seems to work on both python 2 & 3 under linux.  Had some problems
 # getting to work on RPi 400 but had to do with 1) margianal usb cable
@@ -29,13 +35,27 @@
 #         - Check sample source and sink at higher fs out rate (96 & 192 KHz)
 #           Seems input stream is out of sink and RB size is quite large?
 #         - Why isn't filtered spectrum clean if UP!=1 ?
+#         - There is already a package with this same name.  Need to think
+#           of a new name.
 #
 ################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+############################################################################
 
-# Maintain compatability with python2 for now
+# Maintain compatability with python2 for now - can probably jettision this
 from __future__ import print_function
 
-# Suppress warnings from latest version of SciPy
+# Suppress warnings from latest version of SciPy - not sure if we need this anymore
 import warnings
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -52,6 +72,8 @@ import rig_io.hamlibserver as rigctl
 import datetime
 import threading
 from profiler import *
+
+################################################################################
 
 VERSION='DEVELOPMENT 1.3'
 

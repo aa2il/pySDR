@@ -14,7 +14,8 @@ set ROOT="/media/${USER}/marconi"
 # Add path down to old version
 set N=`echo $HOME | wc -c`
 echo N=$N
-set PTH=`pwd | cut -c ${N}-`
+#set PTH=`pwd | cut -c ${N}-`
+set PTH=`pwd | sed 's/\/home2//g' | cut -c ${N}-`
 echo PTH=$PTH
 set old=${ROOT}${PTH}
 echo OLD=$old

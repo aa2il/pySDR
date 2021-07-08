@@ -1,5 +1,52 @@
 #! /usr/bin/tcsh
 
+# SO2V development
+# Need to make sure rig is in PKT-U mode for both VFOs!!!!
+# And that widest bandwidth is selected!!!!
+# Perhaps add setup option to find_rig?
+# Will also want to make sure correct antenna is selected if we
+# try to use adjacent bands.
+#
+# Need to fix third BANDMAP so uses VFO B freq
+# Perhaps Bandmap should be reading wsjtx's freq and not the rig?
+
+    echo " "
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Starting SDR ..."
+    cd ~/Python/pySDR
+    start_loopback
+
+    set FS=48
+    # set LOOPBACK = "-loopback -follow_freq -aux"
+    set LOOPBACK = "-loopback -so2v -aux"
+    set LOOPBACK = "-loopback -so2v"
+    set PY_SDR   = "~/Python/pySDR/pySDR.py"
+    #set RIG      = "-rig HAMLIB -no_hamlib -no_rigctl"
+    set RIG      = "-rig FLRIG -no_hamlib -no_rigctl -digi"
+    set CMD = "$PY_SDR -mode IQ -fsout $FS -af_bw 45 -vid_bw 45 -ant B -pan -pan_bw 10 $LOOPBACK $RIG"
+    echo $CMD >& /tmp/SDR
+    $CMD >>& /tmp/SDR &
+
+    echo "Waiting for SDR to start ..."
+    set id=`find_windows "pySDR" 10`
+    while( $#id<1 )
+        set id=`find_windows "pySDR" 10`
+        sleep 1
+    end
+
+    #exit
+
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Starting another copy of WSJTX ..."
+    set VERSION="2.4.0"
+    set EXE_DIR="~/wsjtx-${VERSION}/build/wsjtx-prefix/src/wsjtx-build"
+    $EXE_DIR/wsjtx -r CONTEST2 &
+
+    # This is pretty good, needs a little more work
+    /home/joea/Python/bandmap/bandmap.py -rig HAMLIB -port 4533 -wsjt CONTEST2 2238 -dx >& /tmp/BANDMAP3 &
+
+    exit
+
+##############################################################################
+
 # Record control on/off development
 #pkill rigctl
 #pkill rigctld
@@ -15,6 +62,8 @@ set id=`find_windows pySDR 20`
 ~/hamlib-4.2/tests/rigctl -m 2 -vvvvv -r localhost:4575
 
 exit
+
+##############################################################################
 
 # CW devel
 #pySDR.py -fc 14030 -audio 2 -fs 1 -mode IQ -pan
@@ -33,12 +82,15 @@ pySDR.py -fc 600 600 -mode CW -fsout 48 -af_bw 1 -vid_bw 45 -ant B -pan -pan_bw 
 
 exit
 
+##############################################################################
+
 # Listen to two AM stations
 pySDR.py -fc 600 760 -audio 2 -fs 1
 
 exit
 
 
+##############################################################################
 
 # Pan adaptor for TS850
 
@@ -48,4 +100,5 @@ pkill pySDR
 pySDR.py -mode IQ -fsout $FS -af_bw 45 -vid_bw 45 -ant B -pan -pan_bw 50 -rigIF -8.83 -rig DIRECT -port 1 -ant B
 
 exit
+
 

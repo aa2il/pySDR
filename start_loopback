@@ -1,7 +1,11 @@
 #! /bin/tcsh
 
 # Script to start loopback devices
-
+#
+# Setting up loopback devices is a bit tedious.  See "Install Hints/0-Notes.txt" for the
+# complete procedure.
+#
+# This USED TO WORK BUT DOESN'T anymore.  Leaving it here in case things change again.
 # Need to add this to get sounddevice or pyAudio to recognize 4 loopback devices:
 # Pattern is obvious for more than 4 devices
 #

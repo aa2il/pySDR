@@ -1,4 +1,23 @@
+############################################################################
+#
+# receiver.py - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Top level receiver routines
+#
+############################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+############################################################################
 
 import SoapySDR
 from SoapySDR import *                # SOAPY_SDR_ constants
@@ -581,28 +600,38 @@ class SDR_EXECUTIVE:
         
         #print 'SDR RX 2'
         if P.MODE_CHANGE:
-            print("@@@@@@@@@@@@@@@@@ MODE CHANGE @@@@@@@@@@@@@@@@@@@@@@")
-            print('OLD:',P.MODE,'\tNEW:',P.NEW_MODE)
-            P.MODE=P.NEW_MODE
+            # Filter out spurious changes
+            if P.NEW_MODE=='FM':
+                P.NEW_MODE='NFM'
+            if P.MODE!=P.NEW_MODE:
+                print("@@@@@@@@@@@@@@@@@ MODE CHANGE @@@@@@@@@@@@@@@@@@@@@@")
+                print('OLD:',P.MODE,'\tNEW:',P.NEW_MODE)
+                P.MODE=P.NEW_MODE
+                if P.MP_SCHEME==1:
+                    P.gui.ModeSelect(-1)
+                if P.MP_SCHEME==1 or P.MP_SCHEME==2:
+                    P.rx[0].agc.reset()
+                    P.rx[0].demod.am_pll.reset()
             P.MODE_CHANGE=False
-            if P.MP_SCHEME==1:
-                P.gui.ModeSelect(-1)
-            if P.MP_SCHEME==1 or P.MP_SCHEME==2:
-                P.rx[0].agc.reset()
-                P.rx[0].demod.am_pll.reset()
 
         # We also add a capability to change freq at a specific time - used when under external control
         if P.FREQ_CHANGE:
-            print("@@@@@@@@@@@@@@@@@ FREQ CHANGE @@@@@@@@@@@@@@@@@@@@@@")
-            print('OLD:',P.FC_OLD,'\tNEW:',P.NEW_FREQ,'\tVFO:',P.VFO)
-            frq1 = .001*np.array( P.NEW_FREQ )
-            if P.MP_SCHEME==1:
-                P.gui.FreqSelect(frq1,True,P.VFO)
+            # Dont bother with tiny changes
+            df = np.abs( np.array( P.NEW_FREQ ) + np.array( P.FC_OLD ))
+            NEED_CHANGE=False       # Should be able to do this with any!
+            for d in df:
+                if d>=20:
+                    NEED_CHANGE=True
+            if NEED_CHANGE:
+                print("@@@@@@@@@@@@@@@@@ FREQ CHANGE @@@@@@@@@@@@@@@@@@@@@@")
+                print('OLD:',-P.FC_OLD,'\tNEW:',P.NEW_FREQ,'\tVFO:',P.VFO)
+                frq1 = .001*np.array( P.NEW_FREQ )
+                if P.MP_SCHEME==1:
+                    P.gui.FreqSelect(frq1,True,P.VFO)
+                print('df=',df,P.NEW_FREQ)
+                P.FC_OLD = -np.array( P.NEW_FREQ )
+                
             P.FREQ_CHANGE=False
-
-            df = np.array( P.NEW_FREQ ) + np.array( P.FC_OLD )
-            print('df=',df,P.NEW_FREQ)
-            P.FC_OLD = -np.array( P.NEW_FREQ )
 
         # Check if we need to change RTL direct sampling mode
         if P.SDR_TYPE=='rtlsdr':
@@ -775,19 +804,20 @@ class SDR_EXECUTIVE:
             else:
                 device = None
             rb = dsp.ring_buffer2('Audio'+str(irx+1),P.RB_SIZE)
-            player = dsp.AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,rb,device,'B')
+            print('Opening audio playback for rx',irx,' ...')
+            player = dsp.AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,rb,device,'B',Tag='RX '+str(irx))
             P.players.append(player)
 
         # Provide Audio playback on speakers also
-        if P.LOOPBACK:
-            if P.AUX_AUDIO:
-                P.aux_rb = dsp.ring_buffer2('Audio Aux',P.RB_SIZE)
-                P.aux_player = dsp.AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,P.aux_rb,None,'B')
-            
-                P.AUX_USE_BPF=True
-                if P.AUX_USE_BPF:
-                    hbpf = dsp.bpf(800.,1300.,P.FS_OUT,1001)
-                    P.aux_bpf = dsp.convolver(hbpf,np.float32)
+        if P.LOOPBACK and P.AUX_AUDIO:
+            print('Providing audio playback on both loopback and speakers ...')
+            P.aux_rb = dsp.ring_buffer2('Audio Aux',P.RB_SIZE)
+            P.aux_player = dsp.AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,P.aux_rb,
+                                           None,'B',Tag='LOOPBACK AUX')
+            P.AUX_USE_BPF=True
+            if P.AUX_USE_BPF:
+                hbpf = dsp.bpf(800.,1300.,P.FS_OUT,1001)
+                P.aux_bpf = dsp.convolver(hbpf,np.float32)
 
         # Export various internal vars for analysis in Octave
         if False:

@@ -1,6 +1,11 @@
-#! /usr/bin/python
-
+#! /usr/bin/python -u
+############################################################################
+#
+# mp.py - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Multiprocessing version of pySDR
+#
 # Notes:
 #    - For whatever reason, we need to use -IF=0 for SRATE = 0.25 or >=2 MHz
 #          Examples on how to make this work:
@@ -18,8 +23,21 @@
 #         - Check sample source and sink at higher fs out rate (96 & 192 KHz)
 #           Seems input stream is out of sink and RB size is quite large?
 #         - Why isn't filtered spectrum clean if UP!=1 ?
+#         - This pathway hasn't been tested/maintained in a while
 #
-################################################################################
+############################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+############################################################################
 
 import sig_proc as dsp
 import numpy as np

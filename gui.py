@@ -1,4 +1,23 @@
+############################################################################
+#
+# gui.py - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # GUI-related functions for pySDR
+#
+############################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+############################################################################
 
 from collections import OrderedDict
 import sys
@@ -531,7 +550,7 @@ class pySDR_GUI(QMainWindow):
         # Check box to add offset for digi modes
         self.DIGI_OFFSET=1000*1e-3
         self.digi_cb = QCheckBox("Add Digi Offset")
-        self.digi_cb.setChecked(False)
+        self.digi_cb.setChecked(self.P.DIGI_OFFSET)
         self.grid.addWidget(self.digi_cb,row,ncols)
 
         # Check boxes to follow center freq of transceiver
@@ -546,7 +565,7 @@ class pySDR_GUI(QMainWindow):
 
         row+=1
         self.so2v_cb = QCheckBox("RIG VFO-B follows SDR freq")
-        self.so2v_cb.setChecked(False)
+        self.so2v_cb.setChecked(self.P.SO2V)
         self.grid.addWidget(self.so2v_cb,row,ncols)
 
         ################################################################################
@@ -577,9 +596,12 @@ class pySDR_GUI(QMainWindow):
         if self.P.FOLLOW_FREQ:
             self.follow_freq_cb.setChecked(True)
 
-        if self.P.SO2V:
-            self.so2v_cb.setChecked(True)
+        #if self.P.SO2V:
+        #    self.so2v_cb.setChecked(True)
 
+        #if self.P.DIGI_OFFSET:
+        #    self.digi_cb.setChecked(True)
+        
         # Connect 'x' close box to close down event
         #self.connect(self, SIGNAL('triggered()'), self.closeEvent)
         #print('GUI - Need some help with connect!!! or maybe not')
@@ -945,17 +967,18 @@ class pySDR_GUI(QMainWindow):
     # Callback for Start/Stop Demod Save button
     def StartStopSave_Demod(self,iopt=None):
         if (iopt==None and not self.P.SAVE_DEMOD) or iopt==1:
-            self.btn7.setText('Stop Demod Save')
-            self.P.SAVE_DEMOD = True
-            print('Saving demod started ...')
+            if not self.P.SAVE_DEMOD:
+                self.btn7.setText('Stop Demod Save')
+                self.P.SAVE_DEMOD = True
+                print('Saving demod started ...')
+                self.btn7.setChecked(self.P.SAVE_DEMOD)
         else:
-            self.btn7.setText('Start Demod Save')
-            self.P.demod_io.close()
-            self.P.SAVE_DEMOD = False
-            print('Saving demod stopped ...')
-
-        self.btn7.setChecked(self.P.SAVE_DEMOD)
-        #self.P.SAVE_DEMOD = not self.P.SAVE_DEMOD
+            if self.P.SAVE_DEMOD:
+                self.btn7.setText('Start Demod Save')
+                self.P.demod_io.close()
+                self.P.SAVE_DEMOD = False
+                print('Saving demod stopped ...')
+                self.btn7.setChecked(self.P.SAVE_DEMOD)
         
     # Function to update PSD display
     def UpdatePSD(self):
@@ -1531,13 +1554,16 @@ class pySDR_GUI(QMainWindow):
 
             # Re-tune rig also - NEW!!!
             # Need to make into a function!!!
-            if tune_rig and self.follow_freq_cb.isChecked():
+            if tune_rig and (self.follow_freq_cb.isChecked() or
+                             self.so2v_cb.isChecked() ):
                 # Keep track of current rig vfo
                 rig_vfo = self.P.sock.get_vfo()
                 print('Current rig vfo=',rig_vfo)
 
                 # Tune the rig
                 vfo='A'
+                if self.so2v_cb.isChecked():
+                    vfo='B'
                 print('&&&&&&&&&&&& Tuning rig',f2,vfo)
                 P.sock.set_freq(.001*f2,vfo)
                 self.itune_cnt=0

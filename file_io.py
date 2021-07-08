@@ -1,6 +1,25 @@
-###################################################################
-
+############################################################################
+#
+# file_io.py - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Functions related to file I/O
+#
+# To Do - Merge this with the version in libs
+#
+############################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+############################################################################
 
 import time
 import numpy as np
@@ -9,8 +28,6 @@ import struct
 import os
 import sys
 from scipy.io import wavfile
-
-#import limits
 
 ###################################################################
 
@@ -79,9 +96,11 @@ class sdr_fileio:
         if self.fp:
             print('Closing',self.fname2)
             self.fp.close()
-            if self.WAVE_OUT and False:
+            self.fp=None
+            if self.WAVE_OUT and True:       # Was False
                 wave.close(self.fp_wav)
                 print('Closed',self.wave_fname)
+                self.WAVE_OUT=False
 
     # Functions to read data from disk
     def read_header(self):
@@ -240,7 +259,7 @@ class sdr_fileio:
         if len(x)>0:
 
             # Disabled for now - don't seem to be using this format much lately
-            if True:
+            if False:
                 if self.nchan==1:
                     x.real.astype(self.dtype).tofile(self.fp)
                 else:

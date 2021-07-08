@@ -1,6 +1,25 @@
+############################################################################
+#
+# support.py - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Support routines for pySDR
+#
+############################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+############################################################################
 
-# Maintain compatability with python2 for now
+# Maintain compatability with python2 for now - probably can jettison this
 from __future__ import print_function
 
 import argparse
@@ -17,7 +36,9 @@ from rig_io.util import convert_freq2band
 from rig_io.ft_tables import bands
 from multiprocessing import active_children
 
-MAX_RX=6
+############################################################################
+
+MAX_RX=6              # max number of receivers to open
 
 ############################################################################
 
@@ -29,16 +50,23 @@ class RUN_TIME_PARAMS:
         # Can add required=True to anything that is required
         arg_proc = argparse.ArgumentParser()
 
-        arg_proc.add_argument('-sdrplay', action='store_true',help='SDRPlay RSP Device')
-        arg_proc.add_argument('-rtl', action='store_true',help='RTL Dongle Device above 25 MHz')
-        arg_proc.add_argument('-rtlhf', action='store_true',help='RTL Dongle Device below 30 MHz')
+        arg_proc.add_argument('-sdrplay', action='store_true',
+                              help='SDRPlay RSP Device')
+        arg_proc.add_argument('-rtl', action='store_true',
+                              help='RTL Dongle Device above 25 MHz')
+        arg_proc.add_argument('-rtlhf', action='store_true',
+                              help='RTL Dongle Device below 30 MHz')
         arg_proc.add_argument('-replay', help="Replay",
                               type=str,default="",nargs='+')
         arg_proc.add_argument('-test', action='store_true')
-        arg_proc.add_argument('-ft8', action='store_true',help='Sub RX follows FT8 subband')
-        arg_proc.add_argument('-ft4', action='store_true',help='Sub RX follows FT4 subband')
-        arg_proc.add_argument('-ft44', action='store_true',help='Last Sub RX follows FT4 subband')
-        arg_proc.add_argument('-aux', action='store_true',help='Send loopback audio to speakers also')
+        arg_proc.add_argument('-ft8', action='store_true',
+                              help='Sub RX follows FT8 subband')
+        arg_proc.add_argument('-ft4', action='store_true',
+                              help='Sub RX follows FT4 subband')
+        arg_proc.add_argument('-ft44', action='store_true',
+                              help='Last Sub RX follows FT4 subband')
+        arg_proc.add_argument('-aux', action='store_true',
+                              help='Send loopback audio to speakers also')
         arg_proc.add_argument("-audio", help="Audio Scheme for routing RXs",
                               type=int,default=1)
         
@@ -117,6 +145,8 @@ class RUN_TIME_PARAMS:
         arg_proc.add_argument('-follow_band', help='Follow rig band',
                               action='store_true')
         arg_proc.add_argument('-so2v', help='VFO-B follows SDR',
+                              action='store_true')
+        arg_proc.add_argument('-digi', help='Add 1KHz digi offset',
                               action='store_true')
         arg_proc.add_argument('-rtty', help='Enable wideband RTTY decoder',
                               action='store_true')
@@ -271,6 +301,7 @@ class RUN_TIME_PARAMS:
         self.FOLLOW_FREQ     = args.follow_freq
         self.FOLLOW_BAND     = args.follow_band
         self.SO2V            = args.so2v
+        self.DIGI_OFFSET     = args.digi
         self.ENABLE_RTTY     = args.rtty
         if self.REPLAY_MODE:
             self.RIG_CONNECTION  = 'NONE'

@@ -1,10 +1,10 @@
 #! /bin/tcsh
 ############################################################################
 #
-# Rotor - Rev 1.0
+# SSTV - Rev 1.0
 # Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
 #
-# Script to set up SDR to listen to SSTV
+# Script to set up SDR to listen to SSTV from either the ISS or HF 
 #
 ############################################################################
 #
@@ -33,11 +33,12 @@ set REPLAY=0
 set SATELLITE="ISS"
 
 set START_MMSSTV  = 0
-set START_QSSTV   = 0
+set START_QSSTV   = 1
 set START_CLOCK   = 0
-set START_PAVU    = 0
+set START_PAVU    = 1
 set KILL_OLD      = 1
 set START_SAT9    = 1
+set USE_ROTOR     = 1
 
 ############################################################################
 
@@ -57,18 +58,19 @@ endif
 
 # Replay mode
 if( $REPLAY )then
-    ~/.wine/drive_c/Ham/MMSSTV/MMSSTV.EXE >& /tmp/MMSSTV &
+    wine ~/.wine/drive_c/Ham/MMSSTV/MMSSTV.EXE >& /tmp/MMSSTV &
     qsstv >& /tmp/QSSTV &
     
     set OPTS="-mode NFM -rig NONE -af_bw 10 -vid_bw 45 -fsout 48"
     set fname = "SatComm/ISS_SSTV/baseband_iq_20190209_184402.dat"
     set fname = "SatComm/ISS_SSTV/baseband_iq_20190215_182952.dat"       
     set fname = "SatComm3/baseband_iq_20200101_170517.dat"
+    set fname = 'SatComm4/demod_20210621_143645.dat'
     
     #pySDR.py -mode NFM -replay SatComm/iss_sstv1.dat
     #pySDR.py -mode NFM -rig NONE -af_bw 10 -fsout 48 -replay SatComm/ISS_SSTV/junk.dat
 
-    $PY_SDR $OPTS -replay $fname
+    $PY_SDR $OPTS -replay $fname 
     exit
 endif
 
@@ -80,7 +82,7 @@ set LOOPBACK=''
 #start_loopback
 
 echo Starting pySDR ...
-$PY_SDR $RTL -fc $FRQS -mode NFM -fsout 48 $LOOPBACK -rig NONE -af_bw 10 -vid_bw 45 &
+$PY_SDR $RTL -fc $FRQS -mode NFM -fsout 48 $LOOPBACK -rig NONE -af_bw 10 -vid_bw 45 >& /tmp/SDR &
 
 echo "Waiting for pySDR to start ..."
 set id=`find_windows pySDR 20`
@@ -92,9 +94,18 @@ endif
 
 ############################################################################
 
+# Start hamlib for rotor
+if( $USE_ROTOR )then
+    ~/Python/pyRig/rotor >& /tmp/ROTOR &
+    set ROTOR="-rotor HAMLIB"
+else
+    set ROTOR=" "
+    sleep 
+endif
+
 # Might have to use pavucontrol to redirect audio to MMSSTV
 if( $START_PAVU )then
-    pavucontrol &
+    pavucontrol >& /tmp/PAVUCONTROL &
 endif
 
 #env WINEPREFIX="/home/joea/.wine"
@@ -106,6 +117,12 @@ if( $START_MMSSTV )then
 endif
 
 if( $START_QSSTV )then
+    echo " "
+    echo "*** For QSSTV, the following settings are recommend: ***"
+    echo "    Auto Slant"
+    echo "    Auto Save"
+    echo "    High or DX Sensitity"
+    echo " "
     echo Starting QSSTV ...
     qsstv >& /tmp/QSSTV &
 endif
@@ -117,7 +134,9 @@ endif
 
 if( $START_SAT9 )then
     echo Starting SAT9 ...
-    ~/Python/predict/sat9.py -sat $SATELLITE -rig HAMLIB -port 4575  >& /tmp/SAT9 &
+    set CMD="~/Python/predict/sat9.py -sat $SATELLITE -rig HAMLIB -port 4575 $ROTOR"
+    echo $CMD >& /tmp/SAT9
+    $CMD >>& /tmp/SAT9 &
 endif
 
 exit
