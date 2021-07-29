@@ -75,6 +75,15 @@ from profiler import *
 
 ################################################################################
 
+import logging               
+
+# Setup basic logging
+logging.basicConfig(
+    format="%(asctime)-15s [%(levelname)s] %(funcName)s:\t(message)s",
+    level=logging.INFO)
+
+################################################################################
+
 VERSION='DEVELOPMENT 1.3'
 
 ################################################################################
@@ -165,7 +174,7 @@ if not P.sock.active:
 # Over time, we need to move more of these things here
 def RIG_Updater(P):
         
-    print('Rig Updater...')
+    logging.info('Starting ...')
     while not P.Stopper.isSet():
 
         # Need to reconcile this also
@@ -174,16 +183,18 @@ def RIG_Updater(P):
             P.frqArx = P.sock.get_freq('A')*1e-3
         else:
             # This is better for DX split ops
+            print('')
+            logging.info('Calling GetInfo ...')
             frx,ftx = GetInfo(P)
             if frx>0:
                 P.frqArx = frx
             if ftx>0:
                 P.frqAtx = ftx
             
-        #print 'RIG_Updater',P.frqArx,P.frqAtx
+        logging.info('Resetting timer '+str(P.frqArx)+' '+str(P.frqAtx))
         time.sleep(1.)
 
-    print('Exiting RIG_Updater.')
+    logging.info('Exiting.')
 
 ############################################################################
     

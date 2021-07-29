@@ -318,7 +318,7 @@ class three_box_plot():
 
     # Routine to plot next chunk
     def plot(self,x,y,fc,show_time_series,show_psd):
-        #print 'PLOT 1:',fc,show_time_series,show_psd
+        #print('PLOT 1:',fc,show_time_series,show_psd)
         P=self.P
 
         # Plot the time series data 
@@ -483,7 +483,6 @@ class three_box_plot():
     def shift_waterfall(self,frq):
         df    = self.psd.frq[1]-self.psd.frq[0]
         nbins = int( float(frq - self.wf_fc)/df + 0.5 )
-        #nbins = int( float(frq - self.wf_fc)/self.psd.df + 0.5 )
         if nbins!=0:
             print('SHIFT_WATERFALL:',self.wf_fc,frq,df,nbins)
             self.wf = np.roll( self.wf,-nbins,axis=0)

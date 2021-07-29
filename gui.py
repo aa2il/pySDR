@@ -39,11 +39,6 @@ import collections
 
 ################################################################################
 
-# There are some unreolved ambiguities that need attention - fudged for now
-UNRESOLVED_AMBIGUITY = True
-
-################################################################################
-
 # The GUI 
 class pySDR_GUI(QMainWindow):
     def __init__(self,app,P,parent=None):
@@ -993,13 +988,13 @@ class pySDR_GUI(QMainWindow):
             fc = self.lcd.get()
         else:
             fc = P.frqArx
+        #print('UpdatePSD:',P.SO2V,fc)
 
         # Determine what plots to show
         if self.pan_cb.isChecked():
             show_time_series = False
             show_psd = False
             P.PSD_BB_FC3=fc
-            #if P.MODE=='IQ' or (P.MODE=='USB' and UNRESOLVED_AMBIGUITY):
             if self.P.PANADAPTOR:
                 P.PSD_AF_FC2 = fc
             else:
@@ -1091,8 +1086,8 @@ class pySDR_GUI(QMainWindow):
 
     # Function to retune rig if necessary
     def rig_retune(self):
-        #print('RIG RETUNE in...')
-        #if self.follow_freq_cb.isChecked():
+        #print('RIG RETUNE ...')
+
         if not self.P.sock:
             print('&&&&&&&&&&&&&&&& RIG_RETUNE: WARNING - No socket to rig &&&&&&&&&&&&&&&&&')
             return
@@ -1446,10 +1441,12 @@ class pySDR_GUI(QMainWindow):
                 # Left click as an SDR - shift SDR center freq
                 print("\tLeft button - Setting SDR freq to",frq)
                 vfo='A'
-                if self.so2v_cb.isChecked():
-                    vfo='B'
+                #if self.so2v_cb.isChecked():
+                #    vfo='B'
                 self.FreqSelect(frq,True,vfo)
-                if self.P.RIG_IF==0:
+                
+                # Not quite sure what this is for?
+                if self.P.RIG_IF==0 and False:
                     self.lcd.set(frq)
 
             else:
@@ -1472,15 +1469,15 @@ class pySDR_GUI(QMainWindow):
                 self.FreqSelect(new_frq,True)
                 
             # Right click - shift RIG center freq
-            # Need to reconcile this
-            elif UNRESOLVED_AMBIGUITY:
+            elif self.so2v_cb.isChecked():
+
                 # This is how it was for S02V
-                print("\tRight button - Setting Rig Freq",frq)
-                vfo='A'
-                #self.FreqSelect(frq,True,'A')
+                vfo='B'
+                print("\tRight button - Setting Rig Freq",frq,'\tVFO=',vfo)
                 self.P.sock.set_freq(float(frq),vfo)
 
             else:
+                
                 # Would like this for DX split ops
                 frq1 = self.P.sock.get_freq()*1e-3
                 df = frq-frq1
@@ -1513,12 +1510,12 @@ class pySDR_GUI(QMainWindow):
         P = self.P
         print('&&&&&&&&&&&&&&&&&& RX UPDATE FREQ &&&&&&&&&&&&&&&&',P.FC,new_frq,VFO,tune_rig)
 
-        # If SDR is listening to rig's IF, only change rig freq
-        if P.RIG_IF!=0:
+        # If SO2V and VFO A or SDR is listening to rig's IF, only change rig freq
+        if P.RIG_IF!=0 or (self.so2v_cb.isChecked() and VFO=='A'):
             #print 'Howdy Ho!'
             vfo='A'
             if new_frq>0:
-                print('@@@@@@@@@@@@ Tuning rig',new_frq,vfo)
+                print('@@@@@@@@@@@@ Tuning rig only',new_frq,vfo)
                 P.sock.set_freq(float(new_frq),vfo)
                 P.frqArx = new_frq
                 self.itune_cnt=0
@@ -1561,9 +1558,12 @@ class pySDR_GUI(QMainWindow):
                 print('Current rig vfo=',rig_vfo)
 
                 # Tune the rig
-                vfo='A'
-                if self.so2v_cb.isChecked():
-                    vfo='B'
+                if len(VFO)==0:
+                    vfo='A'
+                    if self.so2v_cb.isChecked():
+                        vfo='B'
+                else:
+                    vfo=VFO
                 print('&&&&&&&&&&&& Tuning rig',f2,vfo)
                 P.sock.set_freq(.001*f2,vfo)
                 self.itune_cnt=0

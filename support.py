@@ -150,6 +150,8 @@ class RUN_TIME_PARAMS:
                               action='store_true')
         arg_proc.add_argument('-rtty', help='Enable wideband RTTY decoder',
                               action='store_true')
+        arg_proc.add_argument('-mute', help='Mute the audio replay',
+                              action='store_true')
         arg_proc.add_argument("-rig", help="Connection Type",
                       type=str,default="ANY",
                       choices=['FLDIGI','FLRIG','DIRECT','HAMLIB','ANY','NONE'])
@@ -367,7 +369,7 @@ class RUN_TIME_PARAMS:
         self.NEW_MODE          = self.MODE
         self.AF_GAIN           = 0.5                     # AF slider in the middle
         self.RX_HOLD           = False                   # RX is not held
-        self.MUTED             = MAX_RX*[False]          # Audio is not muted
+        self.MUTED             = MAX_RX*[args.mute]      # Start with audio muted?
         self.INTERNALS         = 'internals.mat'         # Output file where we dump internal vars such as filter coeffs
 
         self.fnames            = ['raw_iq','baseband_iq','demod']
