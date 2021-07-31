@@ -71,7 +71,7 @@ pkill bandmap
 pkill rigctld
 
 echo Starting pySDR ...
-set cmd="$PY_SDR $RTL -fc $FRQS -fs $FS -IF 0 -foffset 0 -mode USB -fsout 48 -af_bw 4 $HOPPER $LOOPBACK $RIG $SDR_OPTS"
+set cmd="$PY_SDR $RTL -fc $FRQS -fs $FS -IF 0 -foffset 0 -mode USB -fsout 48 -af_bw 5 $HOPPER $LOOPBACK $RIG $SDR_OPTS"
 echo $cmd
 echo $cmd >& /tmp/SDR 
 $cmd >>& /tmp/SDR &

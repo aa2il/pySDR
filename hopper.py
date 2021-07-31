@@ -60,6 +60,7 @@ class FreqHopper:
             self.Hopper()            # Init hop list according to current time
 
         self.align_clock()
+        #time.sleep(1.)               # Add a delay so ALL.TXT freqs will be correct
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.Hopper)
@@ -170,8 +171,8 @@ class FreqHopper:
         print('------ HOPPING:',t,P.NEW_FREQ)
 
     # Function to delay start of timer so we are aligned with WSJT clock
-    def align_clock(self,nsecs=15,offset=1.5):
-        print('Aligning clock...',nsecs,offset)
+    def align_clock(self,nsecs=15,offset=0.5):
+        print('Aligning clock: nsecs=',nsecs,'\toffset=',offset,' ...')
     
         t1 = datetime.datetime.now()
         print('t1=',t1)
@@ -183,5 +184,4 @@ class FreqHopper:
         time.sleep(delay)
         t2 = datetime.datetime.now()
         print('t2=',t2)
-
 
