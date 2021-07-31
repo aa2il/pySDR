@@ -1,12 +1,18 @@
 #! /bin/tcsh
-
+###############################################################################
+#
+# FT8 - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Script to start single band monitoring of FT8 and, optionally, FT4
-
+#
 # WSJTX Settings:
 #       SDR1  - localhost:4575,  monitor for aloop_0
 #       SDR14 - localhost:4576,  monitor for aloop_1
-
+#
 ###############################################################################
+
+# User Params
 
 # Set rig to HAMLIB if want to compare decodes from SDR and rig
 #set RIG="-rig HAMLIB"
@@ -37,11 +43,13 @@ set FS=1
 
 # Turn this on to monitor FT4 sub-bands also
 set FT4=""
-#set FT4="-ft4"
+set FT4="-ft4"
 #set FT4="-ft44"
 
 set HOPPER="$FT4 -hop -hop_time $HOP_TIME"
 set HOPPER="$FT4"
+
+set VERSION="2.4.0"
 
 ###############################################################################
 
@@ -56,7 +64,7 @@ pkill bandmap
 pkill rigctld
 
 echo Starting pySDR ...
-set cmd="$PY_SDR $RTL -fc $FRQS -fs $FS -IF 0 -mode USB -fsout 48 -af_bw 4 $HOPPER $LOOPBACK $RIG"
+set cmd="$PY_SDR $RTL -fc $FRQS -fs $FS -IF 0 -mode USB -fsout 48 -af_bw 5 $HOPPER $LOOPBACK $RIG"
 echo $cmd
 echo $cmd >& /tmp/SDR 
 $cmd >>& /tmp/SDR &
@@ -73,11 +81,12 @@ set id=`find_windows "pySDR" 20`
 ###############################################################################
 
 # Sometimes we need to use pavucontrol to direct audio to right place
+set EXE_DIR="~/wsjtx-${VERSION}/build/wsjtx-prefix/src/wsjtx-build"
 echo Starting WSJT-X ...
-wsjtx -r SDR1 &
+$EXE_DIR/wsjtx -r SDR1 &
 #if( "$FT4" == "-ft4" )then
 if( "$FT4" != "" )then
-    wsjtx -r SDR14 &
+    $EXE_DIR/wsjtx -r SDR14 &
 endif
 
 ###############################################################################
@@ -91,7 +100,7 @@ set cmd="$BANDMAP -rig NONE -wsjt SDR1 2238 -dx"
 # The control buttons on bandmap do not work yet - ok since this mainly meant as a monitor
 #set cmd="$BANDMAP -rig HAMLIB -port 4575 -wsjt SDR1 2238 -dx"
 
-echo $cmd >& /tmp/BANDMAP3 &
+echo $cmd >& /tmp/BANDMAP3
 $cmd >>& /tmp/BANDMAP3 &
 
 if( "$FT4" != "" )then

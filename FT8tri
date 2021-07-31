@@ -1,7 +1,11 @@
 #! /bin/tcsh
-
+###############################################################################
+#
+# FT8tri - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Script to start 3-band monitoring of FT8
-
+#
 # WSJTX Settings:
 #       SDR1  - localhost:4575,  monitor for aloop_0, udp port 2238
 #       SDR2  - localhost:4576,  monitor for aloop_1, udp port 2239
@@ -9,8 +13,10 @@
 #       SDR14 - localhost:4577,  monitor for aloop_3, udp port TBD
 #       SDR24 - localhost:4578,  monitor for aloop_4, udp port TBD
 #       SDR34 - localhost:4578,  monitor for aloop_5, udp port TBD
-
+#
 ###############################################################################
+
+# User Params
 
 # Set rig to HAMLIB if want to compare decodes from SDR and rig
 #set RIG="-rig HAMLIB"
@@ -49,6 +55,8 @@ set HOPPER="$FT4 -hop -hop_time $HOP_TIME"
 
 set SDR_OPTS="-vid_bw 45"
 
+set VERSION="2.4.0"
+
 ###############################################################################
 
 cd ~/Python/pySDR
@@ -81,19 +89,20 @@ set id=`find_windows "pySDR" 20`
 
 # Sometimes we need to use pavucontrol to direct audio to right place
 echo Starting WSJT-X ...
-wsjtx -r SDR1 &
+set EXE_DIR="~/wsjtx-${VERSION}/build/wsjtx-prefix/src/wsjtx-build"
+$EXE_DIR/wsjtx -r SDR1 &
 sleep 1
-wsjtx -r SDR2 &
+$EXE_DIR/wsjtx -r SDR2 &
 sleep 1
-wsjtx -r SDR3 &
+$EXE_DIR/wsjtx -r SDR3 &
 sleep 1
 
 if( "$FT4" != "" )then
-    wsjtx -r SDR14 &
+    $EXE_DIR/wsjtx -r SDR14 &
     sleep 1
-    wsjtx -r SDR24 &
+    $EXE_DIR/wsjtx -r SDR24 &
     sleep 1
-    wsjtx -r SDR34 &
+    $EXE_DIR/wsjtx -r SDR34 &
     sleep 1
     #exit
 endif
@@ -116,12 +125,12 @@ $cmd >>& /tmp/BANDMAP1 &
 sleep 1
 
 set cmd="$BANDMAP -rig NONE -wsjt SDR2 2239 -dx"
-echo $cmd >& /tmp/BANDMAP2 &
+echo $cmd >& /tmp/BANDMAP2 
 $cmd >>& /tmp/BANDMAP2 &
 sleep 1
 
 set cmd="$BANDMAP -rig NONE -wsjt SDR3 2240 -dx"
-echo $cmd >& /tmp/BANDMAP3 &
+echo $cmd >& /tmp/BANDMAP3 
 $cmd >>& /tmp/BANDMAP3 &
 sleep 1
 

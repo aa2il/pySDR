@@ -606,12 +606,16 @@ class pySDR_GUI(QMainWindow):
         self.show()
 
         # Make sure rig settings are reasonable
-        if True:
-            self.P.sock.set_vfo('A','A')
-            self.rig_retune()
+        self.P.sock.set_vfo('A','A')
+        self.rig_retune()
+        if False:
+            # Not sure why I thought we needed to do this
+            # It sets all the rx's to the same freq 
             fc = self.lcd.get()
+            print('BURP1: FC=',fc,P.FC)
             for i in range(1,P.NUM_RX):
                 self.P.FC[i]=1000*fc
+            print('BURP2: FC=',fc,P.FC)
             self.FreqSelect(fc,False)
         
         if self.P.ENABLE_RTTY:

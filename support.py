@@ -211,6 +211,7 @@ class RUN_TIME_PARAMS:
         if np.isscalar(fc):
             fc = np.array( [fc] )
         self.NUM_RX          = len(fc)
+        print('SUPPORT: fc=',fc)
 
         self.FT8             = args.ft8
         self.FT4             = args.ft4
