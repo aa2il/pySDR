@@ -49,6 +49,8 @@ set FT4="-ft4"
 set HOPPER="$FT4 -hop -hop_time $HOP_TIME"
 set HOPPER="$FT4"
 
+set SDR_OPTS="-vid_bw 45"
+
 set VERSION="2.4.0"
 
 ###############################################################################
@@ -60,6 +62,7 @@ set PY_SDR = "pySDR.py"
 start_loopback
 
 pkill pySDR
+pkill mp.py
 pkill bandmap
 pkill rigctld
 
@@ -71,27 +74,36 @@ $cmd >>& /tmp/SDR &
 #exit
 
 sleep 1
-echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo Waiting for SDR to start up ...
-echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 set id=`find_windows "pySDR" 20`
+while( $#id<1 )
+    set id=`find_windows "pySDR" 10`
+    sleep 1
+end
 
 ###############################################################################
 
 # Sometimes we need to use pavucontrol to direct audio to right place
+echo "\nStarting WSJT-X ..."
 set EXE_DIR="~/wsjtx-${VERSION}/build/wsjtx-prefix/src/wsjtx-build"
-echo Starting WSJT-X ...
 $EXE_DIR/wsjtx -r SDR1 &
-#if( "$FT4" == "-ft4" )then
+set NWIN=1
+
 if( "$FT4" != "" )then
     $EXE_DIR/wsjtx -r SDR14 &
+    set NWIN=2
 endif
+
+echo Waiting for WSJT to start...
+set id=`find_windows "WSJT" 10`
+while( $#id < $NWIN )
+    set id=`find_windows "WSJT" 10`
+    sleep 1
+end
 
 ###############################################################################
 
-echo Starting BANDMAPS ...
+echo "\nStarting BANDMAPS ..."
 rm /tmp/BANDMAP*
 cd ~/Python/bandmap
 set BANDMAP=~/Python/bandmap/bandmap.py
@@ -102,17 +114,23 @@ set cmd="$BANDMAP -rig NONE -wsjt SDR1 2238 -dx"
 
 echo $cmd >& /tmp/BANDMAP3
 $cmd >>& /tmp/BANDMAP3 &
+set NWIN=1
 
 if( "$FT4" != "" )then
     set cmd="$BANDMAP -rig NONE -wsjt SDR14 2264 -dx"
     echo $cmd >& /tmp/BANDMAP14 &
     $cmd >>& /tmp/BANDMAP14 &
+    set NWIN=2
 endif
-exit
+
+echo Waiting for bandmaps to start...
+set id=`find_windows "Band Map" 10`
+while( $#id < $NWIN )
+    set id=`find_windows "Band Map" 10`
+    sleep 1
+end
 
 ###############################################################################
 
 # Organize windows
-echo Waiting for bandmaps to start...
-set id=`find_windows "Band Map" 20`
 organize_windows

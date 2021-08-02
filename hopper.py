@@ -60,7 +60,6 @@ class FreqHopper:
             self.Hopper()            # Init hop list according to current time
 
         self.align_clock()
-        #time.sleep(1.)               # Add a delay so ALL.TXT freqs will be correct
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.Hopper)
@@ -130,6 +129,7 @@ class FreqHopper:
             print(WSJT_LOGFILE3,sz3-self.sz3,sz4-self.sz4,sz5-self.sz5)
 
         # Set new frqs 
+        time.sleep(1.)            # Add a delay so ALL.TXT freqs will be correct
         print('------ HOPPING1:',self.hop_idx,NUM_RX,P.NUM_RX)
         if self.hop_idx+NUM_RX>nfrqs:
             self.hop_idx=nfrqs - NUM_RX
@@ -170,7 +170,12 @@ class FreqHopper:
 
         print('------ HOPPING:',t,P.NEW_FREQ)
 
-    # Function to delay start of timer so we are aligned with WSJT clock
+    # Function to delay start of timer so we are aligned with WSJT clock (15-sec intervals).
+    # Note that there will always be some time skew bx of delay through the SDR
+    # Seems to be about 1 to 1.5 secs not matter what I do, compared to spot-on when listening
+    # to the rig.  wsjt-x should be able to handle this but may want to consider how to
+    # shorten delay at some point, or simply retard the system clock via
+    #     sudo date --set="-1 seconds"
     def align_clock(self,nsecs=15,offset=0.5):
         print('Aligning clock: nsecs=',nsecs,'\toffset=',offset,' ...')
     

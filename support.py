@@ -20,7 +20,7 @@
 ############################################################################
 
 # Maintain compatability with python2 for now - probably can jettison this
-from __future__ import print_function
+#from __future__ import print_function
 
 import argparse
 import SoapySDR
