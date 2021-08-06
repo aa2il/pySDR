@@ -98,7 +98,8 @@ class sdr_fileio:
             self.fp.close()
             self.fp=None
             if self.WAVE_OUT and True:       # Was False
-                wave.close(self.fp_wav)
+                #wave.close(self.fp_wav)
+                self.fp_wav.close()
                 print('Closed',self.wave_fname)
                 self.WAVE_OUT=False
 
