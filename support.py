@@ -118,7 +118,7 @@ class RUN_TIME_PARAMS:
         arg_proc.add_argument("-pan_bw", help="Pan Adaptor Bandwidth (KHz)",
                               type=float,default=0)
         arg_proc.add_argument("-pan_dr", help="Pan Adaptor Dynamic Range (dB)",
-                              type=float,default=60)
+                              type=int,default=60)
         arg_proc.add_argument("-ppm", help="Clock Freq Correction (PPM)",
                               type=float,default=0)
         arg_proc.add_argument("-fsout", help="Output rate (KHz)",
