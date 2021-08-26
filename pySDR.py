@@ -184,14 +184,14 @@ def RIG_Updater(P):
         else:
             # This is better for DX split ops
             print('')
-            logging.info('Calling GetInfo ...')
+            #logging.info('Calling GetInfo ...')
             frx,ftx = GetInfo(P)
             if frx>0:
                 P.frqArx = frx
             if ftx>0:
                 P.frqAtx = ftx
             
-        logging.info('Resetting timer '+str(P.frqArx)+' '+str(P.frqAtx))
+        #logging.info('Resetting timer '+str(P.frqArx)+' '+str(P.frqAtx))
         time.sleep(1.)
 
     logging.info('Exiting.')

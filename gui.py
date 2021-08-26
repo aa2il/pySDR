@@ -369,40 +369,22 @@ class pySDR_GUI(QMainWindow):
 
         # Add presets
         ncols2=6
-        if False:
-            # Old way
-            presets = read_presets(None)
-            for grp in list(presets.keys()):
-                #print grp
-                if grp=='HAM':
-                    ham_bands=make_ham_presets(['160m','80m','40m','20m','15m','10m'],
-                                               bands,P.PAN_BW,P.RIG_IF)
-                    self.create_presets('Ham 1',ham_bands,ncols2)
-                    ham_bands=make_ham_presets(['60m','30m','17m','12m','6m','2m','1.25m','70cm','33cm','23cm'],
-                                               bands,P.PAN_BW,P.RIG_IF)
-                    self.create_presets('Ham 2',ham_bands,ncols2)
-                else:
-                    self.create_presets(grp,presets[grp],ncols2)
-        else:
-            # New way
-            presets = read_presets2(None,'Presets')
-            for line in presets:
-                grp=line['Group']
-                if grp=='Sats':
-                    continue     # Skip this group
-                elif grp=='HAM':
-                    for b in ['160m','80m','40m','20m','15m','10m']:
-                        ham_band=make_ham_presets2(b,bands,P.PAN_BW,P.RIG_IF)
-                        for sub_band in ham_band:
-                            self.create_presets2('Ham 1',sub_band,ncols2)
-                    for b in ['60m','30m','17m','12m','6m','2m','1.25m','70cm','33cm','23cm']:
-                        ham_band=make_ham_presets2(b,bands,P.PAN_BW,P.RIG_IF)
-                        for sub_band in ham_band:
-                            self.create_presets2('Ham 2',sub_band,ncols2)
-                else:
-                    self.create_presets2(grp,line,ncols2)
-
-            
+        presets = read_presets2(None,'Presets')
+        for line in presets:
+            grp=line['Group']
+            if grp=='Sats':
+                continue     # Skip this group
+            elif grp=='HAM':
+                for b in ['160m','80m','40m','20m','15m','10m']:
+                    ham_band=make_ham_presets2(b,bands,P.PAN_BW,P.RIG_IF)
+                    for sub_band in ham_band:
+                        self.create_presets2('Ham 1',sub_band,ncols2)
+                for b in ['60m','30m','17m','12m','6m','2m','1.25m','70cm','33cm','23cm']:
+                    ham_band=make_ham_presets2(b,bands,P.PAN_BW,P.RIG_IF)
+                    for sub_band in ham_band:
+                        self.create_presets2('Ham 2',sub_band,ncols2)
+            else:
+                self.create_presets2(grp,line,ncols2)
 
         # Volume control
         lb=QLabel("AF Gain:")
@@ -782,6 +764,8 @@ class pySDR_GUI(QMainWindow):
             
         f1=station['Freq1 (KHz)']              # Freq 1
         m=station['Mode']                      # Mode
+        if m=='AM-N':
+            m='AM'
         f2=station['Freq2 (KHz)']              # Freq 2
         if f2==0:
             f2=f1
