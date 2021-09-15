@@ -407,10 +407,11 @@ class pySDR_GUI(QMainWindow):
         for i in range(MAX_RX):
             self.Mute_btns[i] = QPushButton('Mute RX'+str(i+1))
             self.Mute_btns[i].setToolTip('Click to Mute/Unmute Audio')
-            self.Mute_btns[i].clicked.connect( functools.partial( self.MuteCB,i ))
+            self.Mute_btns[i].clicked.connect( functools.partial( self.MuteCB,i,False ))
             self.Mute_btns[i].setCheckable(True)
             if i>=P.NUM_RX:
                 self.Mute_btns[i].setEnabled(False)
+            self.MuteCB(i,True)
 
             self.grid.addWidget(self.Mute_btns[i],irow,icol)
             icol=icol+1
@@ -1691,6 +1692,10 @@ class pySDR_GUI(QMainWindow):
     # Set presets
     def PresetSelect(self,frq,mode,vidbw,afbw):
         print("\n@@@@ Preset:",frq,mode,vidbw,afbw)
+        print('modes=',self.modes)
+        if mode in ['PKTUSB','PKT-U']:
+            mode='USB'
+        
         #new_frq=np.zeros(self.P.NUM_RX)
         new_frq=self.P.FC*1e-3
         new_frq[0]=frq
@@ -1739,18 +1744,21 @@ class pySDR_GUI(QMainWindow):
 
 
     # Callback to Mute/Unmute Audio
-    def MuteCB(self,irx):
+    def MuteCB(self,irx,Reset=False):
 
-        #print 'MUTE CB:',self.P.MUTED[irx],irx
+        print('MUTE CB: irx=',irx,'\tReset=',Reset,'\tMUTED=',self.P.MUTED[irx])
         #print irx,self.Mute_btns[irx].text()
         #print irx,self.Mute_btns[irx].isChecked()
 
-        if self.P.MUTED[irx]:
-            self.Mute_btns[irx].setText('Mute RX'+str(irx+1))
+        if Reset:
+            self.Mute_btns[irx].setChecked(self.P.MUTED[irx])
         else:
+            self.P.MUTED[irx] = not self.P.MUTED[irx]
+            
+        if self.P.MUTED[irx]:
             self.Mute_btns[irx].setText('Un-Mute RX'+str(irx+1))
-
-        self.P.MUTED[irx] = not self.P.MUTED[irx]
+        else:
+            self.Mute_btns[irx].setText('Mute RX'+str(irx+1))
 
     # Select Antenna
     def AntSelect(self,i):

@@ -10,6 +10,9 @@
 set ROOT="/media/${USER}/pi2"
 #set ROOT="/media/${USER}/pi"
 set ROOT="/media/${USER}/marconi"
+if( !(-e $ROOT) )then
+    set ROOT="${ROOT}2"
+endif
 
 # Add path down to old version
 set N=`echo $HOME | wc -c`
