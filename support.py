@@ -33,7 +33,7 @@ from Tables import MODES,SDRplaysrates,RTLsrates
 import io
 from threading import enumerate
 from rig_io.util import convert_freq2band
-from rig_io.ft_tables import bands
+from rig_io.ft_tables import bands,CONNECTIONS,RIGS
 from multiprocessing import active_children
 
 ############################################################################
@@ -153,8 +153,9 @@ class RUN_TIME_PARAMS:
         arg_proc.add_argument('-mute', help='Mute the audio replay',
                               action='store_true')
         arg_proc.add_argument("-rig", help="Connection Type",
-                      type=str,default="ANY",
-                      choices=['FLDIGI','FLRIG','DIRECT','HAMLIB','ANY','NONE'])
+                              type=str,default="ANY",nargs='+',
+                              choices=CONNECTIONS+['NONE']+RIGS)
+        #choices=['FLDIGI','FLRIG','DIRECT','HAMLIB','ANY','NONE'])
         arg_proc.add_argument("-port", help="Connection Port",
                               type=int,default=0)
         arg_proc.add_argument("-xlmrpc", help="Try to open xlmrpc port(s)",
@@ -309,7 +310,11 @@ class RUN_TIME_PARAMS:
         if self.REPLAY_MODE:
             self.RIG_CONNECTION  = 'NONE'
         else:
-            self.RIG_CONNECTION  = args.rig
+            self.RIG_CONNECTION  = args.rig[0]
+        if len(args.rig)>=2:
+            self.RIG         = args.rig[1]
+        else:
+            self.RIG         = None
         self.PORT            = args.port
         self.frqArx          = None
         self.frqAtx          = None

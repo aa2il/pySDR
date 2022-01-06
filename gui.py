@@ -1109,6 +1109,7 @@ class pySDR_GUI(QMainWindow):
                 print('RIG_RETUNE: mode=',mode,'rig_mode=',rig_mode,'sdr_mode=',self.P.MODE)
 
         if self.follow_band_cb.isChecked():
+            print('RIG RETUNE - following rig band ...')
             if not self.P.sock.active:
                 print('RIG_RETUNE 2: *** No connection to rig *** ')
                 self.follow_band_cb.setChecked(False)
@@ -1121,13 +1122,21 @@ class pySDR_GUI(QMainWindow):
             b2 = str(band2)+'m'
             if band!=band2:
                 f = self.P.sock.get_freq()*1e-3
-                print('RIG_RETUNE: Follow band:',band,band2,f)
-                if self.P.PAN_BW == 0:
+                mode = self.P.sock.get_fldigi_mode()
+                if True:
+                    frq=f
+                elif self.P.PAN_BW == 0:
                     frq = (bands[b]["CW1"] + bands[b]["CW2"])/2
                 else:
                     frq = bands[b]["CW1"] + self.P.PAN_BW/2000.
-                self.FreqSelect(frq,False)
-                mode = self.P.sock.get_fldigi_mode()
+                print('RIG_RETUNE: Follow band - rig band=',band,'\tSDR band=',band2,\
+                      '\trig freq=',f,'\rnew SDR frq=',frq,'\trig mode=',mode)
+                if self.so2v_cb.isChecked():
+                    self.FreqSelect(frq,True,'B')             # Tune VFO B on rig also
+                    self.P.sock.set_mode(mode,'B')
+                else:
+                    self.FreqSelect(frq,False)                # Only tune the SDR frq
+                
                 self.P.sock.set_mode(mode)
                 print('mode=',mode,self.P.MODE)
         #print('RIG RETUNE ...out')
@@ -1430,8 +1439,10 @@ class pySDR_GUI(QMainWindow):
                 # Left click as an SDR - shift SDR center freq
                 print("\tLeft button - Setting SDR freq to",frq)
                 vfo='A'
-                #if self.so2v_cb.isChecked():
-                #    vfo='B'
+                if self.so2v_cb.isChecked() and True:                   # Was disabled - perhaps for CW scheme - not sure ?
+                    vfo='B'                              # For so2v, VFO B follows the SDR
+                else:
+                    vfo='A'                              # most of the time, VFO A follows the sdr
                 self.FreqSelect(frq,True,vfo)
                 
                 # Not quite sure what this is for?

@@ -7,9 +7,9 @@
 #
 # Specify root where old version exists
 #set ROOT="/media/${USER}/305f60b3-8413-4edb-afc1-4e4ce064aab3/home/${USER}"
-set ROOT="/media/${USER}/pi2"
 #set ROOT="/media/${USER}/pi"
-set ROOT="/media/${USER}/marconi"
+set ROOT="/media/${USER}/aa2il"
+#set ROOT="/media/${USER}/marconi"
 if( !(-e $ROOT) )then
     set ROOT="${ROOT}2"
 endif
@@ -41,5 +41,7 @@ foreach i (*.py SSTV FT8*)
         #kompare $i $old/$i
     endif
 end
+
+chmod +x pySDR.py DIFF
 
 cat DIFFS

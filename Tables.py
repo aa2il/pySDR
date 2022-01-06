@@ -21,7 +21,7 @@
 ############################################################################
 
 from collections import OrderedDict
-import csv
+#import csv
 import numpy as np
 import xlrd
 from unidecode import unidecode
