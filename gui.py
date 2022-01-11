@@ -574,12 +574,6 @@ class pySDR_GUI(QMainWindow):
         if self.P.FOLLOW_FREQ:
             self.follow_freq_cb.setChecked(True)
 
-        #if self.P.SO2V:
-        #    self.so2v_cb.setChecked(True)
-
-        #if self.P.DIGI_OFFSET:
-        #    self.digi_cb.setChecked(True)
-        
         # Connect 'x' close box to close down event
         #self.connect(self, SIGNAL('triggered()'), self.closeEvent)
         #print('GUI - Need some help with connect!!! or maybe not')
@@ -1026,6 +1020,11 @@ class pySDR_GUI(QMainWindow):
                     self.plots_rf.plot(x,y,fc1,self.SHOW_RF_IQ,True)
                     
         if P.SHOW_AF_PSD:
+
+            # Shift offset of waterfall to effect 1-KHz offset for digi programs
+            if self.digi_cb.isChecked():
+                self.plots_af.foff = self.DIGI_OFFSET
+            
             N=self.plots_af.psd.chunk_size
             new_samps=self.plots_af.psd.new_samps
             if P.MP_SCHEME==1:
@@ -1082,6 +1081,7 @@ class pySDR_GUI(QMainWindow):
             return
         
         if self.follow_freq_cb.isChecked() or self.so2v_cb.isChecked():
+            print('RIG RETUNE - following rig freq or so2v ...')
             if not self.P.sock.active:
                 print('RIG_RETUNE 1: *** No connection to rig *** ')
                 self.follow_freq_cb.setChecked(False)
@@ -1092,11 +1092,9 @@ class pySDR_GUI(QMainWindow):
             if self.so2v_cb.isChecked():
                 vfo='B'
             frq=self.P.sock.get_freq(vfo)*1e-3
-            if self.digi_cb.isChecked():
-                frq -= self.DIGI_OFFSET
-            #if int(1000*frq) != int(1000*fc):
+
             if np.abs(frq-fc)>=1e-3:
-                print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RIG & SDR Center Freqs:",frq,fc,vfo)
+                print("\n%%%%%%%%% RIG_RETUNE: RIG Center Frq=",frq,'\tSDR frq=',fc,'\tVFO=',vfo)
                 #print self.P.sock.freq,self.P.sock.mode,self.P.sock.connection
                 self.FreqSelect(frq,False,vfo)
                 
@@ -1129,6 +1127,7 @@ class pySDR_GUI(QMainWindow):
                     frq = (bands[b]["CW1"] + bands[b]["CW2"])/2
                 else:
                     frq = bands[b]["CW1"] + self.P.PAN_BW/2000.
+                    
                 print('RIG_RETUNE: Follow band - rig band=',band,'\tSDR band=',band2,\
                       '\trig freq=',f,'\rnew SDR frq=',frq,'\trig mode=',mode)
                 if self.so2v_cb.isChecked():
@@ -1443,6 +1442,7 @@ class pySDR_GUI(QMainWindow):
                     vfo='B'                              # For so2v, VFO B follows the SDR
                 else:
                     vfo='A'                              # most of the time, VFO A follows the sdr
+                    
                 self.FreqSelect(frq,True,vfo)
                 
                 # Not quite sure what this is for?
@@ -1638,27 +1638,6 @@ class pySDR_GUI(QMainWindow):
             self.lcd.set(.001*f2)
             for i in range(P.NUM_RX):
                 self.rx_frq_box[i].setText( "{0:,.1f} KHz".format(.001*P.FC[i]) )
-
-        # Tune radio to follow SDR - this should be taken care of above except for digi offset but
-        # until we get it working with hamlib working split correctly, just keep capability for VFO A going
-        #if (tune_rig and self.follow_freq_cb.isChecked()) or self.so2v_cb.isChecked():
-        if False:
-            if self.digi_cb.isChecked():
-                #new_frq += self.DIGI_OFFSET
-                new_frq -= 170/2*1e-3
-            if self.so2v_cb.isChecked():
-                if len(VFO)==0:
-                    vfo='B'
-                else:
-                    vfo=VFO
-            else:
-                vfo='A'
-
-            print('Howdy1',f2,vfo)
-            if f2>0:
-                print('&&&&&&&&&&&& Tuning rig',f2,vfo)
-                P.sock.set_freq(.001*f2,vfo)
-                self.itune_cnt=0
 
     # Function to set demod mode
     def ModeSelect(self,idx):

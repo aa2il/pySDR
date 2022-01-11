@@ -27,7 +27,8 @@ import time
 from support import MAX_RX
 import numpy as np
 import sys
-from rig_io.socket_io import find_fldigi_port
+from rig_io.socket_io import find_fldigi_port,convert_freq2band
+from Tables import BANDS
 
 ############################################################################
 
@@ -199,13 +200,13 @@ class WatchDog:
         if P.sock and P.FOLLOW_BAND and P.sock.active:
             freq = P.sock.get_freq()*1e-3
             mode = P.sock.get_mode()
-            band = socket_io.convert_freq2band(freq,True)
+            band = convert_freq2band(freq,True)
             #print BANDS
             #print "Rig    :\tFreq =",freq,"\tBand =",band,"\tMode =",mode
             bands2=[]
             for i in range(P.NUM_RX):
                 fc=P.FC[i]*1e-3
-                bands2.append( socket_io.convert_freq2band(fc,True) )
+                bands2.append( convert_freq2band(fc,True) )
                 idx = BANDS.index(bands2[i])
                 print('RX',i,':\tFreq =',fc,"\tBand =",bands2[i],"\tMode =",P.MODE,'\tidx=',idx)
 
