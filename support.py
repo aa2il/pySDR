@@ -86,7 +86,7 @@ class RUN_TIME_PARAMS:
                               type=str,default="A",
                               choices=['A','B','Z'])
         arg_proc.add_argument("-bfo", help="CW pitch",
-                              type=float,default=700)
+                              type=float,default=0)
         arg_proc.add_argument("-t", help="Play duration (sec)",
                               type=float,default=1e38)
 
@@ -277,6 +277,9 @@ class RUN_TIME_PARAMS:
             print(fc,fo)
 
         self.BFO             = args.bfo
+        if self.MODE=='CW' and self.BFO==0:
+            self.BFO         = 700
+        
         self.DURATION        = args.t
         self.IF_BW           = args.if_bw*1e3
         self.VIDEO_BW        = args.vid_bw*1e3
@@ -361,6 +364,7 @@ class RUN_TIME_PARAMS:
 
         self.XLMRPC_LIST  = args.xlmrpc
         self.XLMRPC_SOCKS = [None]*len(self.XLMRPC_LIST)
+        self.XLMRPC_CNTRS = [0]*len(self.XLMRPC_LIST)
         self.sock1        = None
         
         # Set other defaults

@@ -1024,6 +1024,9 @@ class pySDR_GUI(QMainWindow):
             # Shift offset of waterfall to effect 1-KHz offset for digi programs
             if self.digi_cb.isChecked():
                 self.plots_af.foff = self.DIGI_OFFSET
+            else:
+                self.plots_af.foff = 0
+            #print('AF foff=',self.plots_af.foff)
             
             N=self.plots_af.psd.chunk_size
             new_samps=self.plots_af.psd.new_samps
@@ -1047,6 +1050,12 @@ class pySDR_GUI(QMainWindow):
         if P.SHOW_BASEBAND_PSD:
             P.PSD_BB_FC3 += 0*0.001*P.FOFFSET
             n=self.plots_bb.psd.chunk_size
+
+            # Shift offset of waterfall to effect 1-KHz offset for digi programs
+            print('BB foff=',self.plots_bb.foff)
+            #if self.digi_cb.isChecked():
+            #    self.plots_bb.foff = self.DIGI_OFFSET
+                        
             if P.MP_SCHEME==1:
                 # Should eventually be able to eliminate this path
                 if P.rb_baseband.ready(2*n):
@@ -1574,7 +1583,7 @@ class pySDR_GUI(QMainWindow):
                 #if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
                 #    mode=self.P.MODE
                 print('SDR & RIG MODES:',mode,rig_mode,vfo)
-                if rig_mode!=mode:
+                if rig_mode!=mode and mode!='IQ':
                     self.P.sock.set_mode(mode,vfo)
 
                 # Restore vfo

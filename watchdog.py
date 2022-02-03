@@ -238,17 +238,53 @@ class WatchDog:
                 print('New FOFFSET=',P.FOFFSET)
                 #P.gui.FreqSelect(frq1,False,frq2,frq3,frq4)
 
+        # Sync serial counters
+        if len(P.XLMRPC_LIST)>1:
+            try:
+                self.sync_counters()
+            except:
+                print('WatchDog: Unable to sync counters')
+                
+
+        # That's a wrap for this time around ...
+        self.Last_Time = t
+        #print('Monitor: ...out')
+        
+                
+    # Routine to sync serial counters over multiple instances of FLDIGI
+    def sync_counters(self):
+        P=self.P
+        
         # Try to open xlmrpc ports if they aren't yet
+        # If they are, make sure serial counters stay in sync
+        #print('WatchDog: XLMRPC_LIST=',P.XLMRPC_LIST)
+        max_cntr=0
         for i in range(len(P.XLMRPC_LIST)):
-            if not P.XLMRPC_SOCKS[i]:
-                port = P.XLMRPC_LIST[i]
+            port = P.XLMRPC_LIST[i]
+            if P.XLMRPC_SOCKS[i]:
+                
+                print('WatchDog: xlmrpc port',port,' is open ...')
+                cntr=P.XLMRPC_SOCKS[i].get_counter()
+                P.XLMRPC_CNTRS[i]=cntr
+                if cntr>max_cntr:
+                    max_cntr=cntr
+                print('WatchDog: cntr=',cntr,'\tmax=',max_cntr)
+                
+            else:
+                
                 print('WatchDog: Attempting to open xlmrpc port',port,' ...')
                 P.XLMRPC_SOCKS[i] = find_fldigi_port(0,port,port,'A: ',False)
                 if P.XLMRPC_SOCKS[i]:
                     print('Got it!!!')
-                    if i==0:
-                        P.gui.rig.sock1=P.XLMRPC_SOCKS[i]
+                    #if i==0:
+                    #    P.gui.rig.sock1=P.XLMRPC_SOCKS[i]
+
+        for i in range(len(P.XLMRPC_LIST)):
+            if P.XLMRPC_SOCKS[i]:
+                port = P.XLMRPC_LIST[i]
+                if P.XLMRPC_CNTRS[i]<max_cntr:
+                    print('WatchDog: Updating counter on port',port,'to',max_cntr)
+                    P.XLMRPC_SOCKS[i].set_counter(max_cntr)
                 
-        self.Last_Time = t
-        #print('Monitor: ...out')
+                    
 
