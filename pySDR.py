@@ -53,7 +53,7 @@
 ############################################################################
 
 # Maintain compatability with python2 for now - can probably jettision this
-from __future__ import print_function
+#from __future__ import print_function
 
 # Suppress warnings from latest version of SciPy - not sure if we need this anymore
 import warnings
@@ -62,7 +62,8 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 import sig_proc as dsp
 import numpy as np
-from support import *
+from params import *
+#from utils import *
 from gui import *
 from hopper import *
 from watchdog import *
@@ -84,89 +85,97 @@ logging.basicConfig(
 
 ################################################################################
 
-VERSION='DEVELOPMENT 1.3'
+VERSION='DEVELOPMENT 1.4'
 
 ################################################################################
 
-# Create various objects
-print('\n****************************************************************************')
-print('\n   pySDR',VERSION,'beginning ...\n')
+# Initialization for pySDR
+def init_sdr():
 
-# Set-up run-time params
-P=RUN_TIME_PARAMS()
-P.MP_SCHEME=1            # For now
+    # Create various objects
+    print('\n****************************************************************************')
+    print('\n   pySDR',VERSION,'beginning ...\n')
 
-# Ring buffers to throttle between data capture and playback/display
-# Seems like this should use blocking???
-if P.MP_SCHEME==1: 
-    P.rb_rf       = dsp.ring_buffer2('RF',8*P.IN_CHUNK_SIZE)
-    P.rb_baseband = dsp.ring_buffer2('BB',8*P.IN_CHUNK_SIZE)
-    P.rb_af       = dsp.ring_buffer2('AF',P.RB_SIZE)
-elif P.MP_SCHEME==2: 
-    P.rb_rf       = dsp.ring_buffer3('RF',8*P.IN_CHUNK_SIZE)
-    P.rb_baseband = dsp.ring_buffer3('BB',8*P.IN_CHUNK_SIZE)
-    P.rb_af       = dsp.ring_buffer3('AF',P.RB_SIZE)
-    P.rf_psd_Q    = P.rb_rf.buf
-    P.bb_psd_Q    = P.rb_baseband.buf
-    P.af_psd_Q    = P.rb_af.buf
-else:
-    print('pySDR - Unknown MP SCHEME',P.MP_SCHEME)
-    sys.exit(0)
+    # Set-up run-time params
+    P=RUN_TIME_PARAMS()
+    P.MP_SCHEME=1            # For now
 
-# Open writers for data we might want to save
-P.raw_iq_io      = io.sdr_fileio('raw_iq','w',P,2,'RAW_IQ')
-P.baseband_iq_io = io.sdr_fileio('baseband_iq','w',P,2,'BASEBAND_IQ')
-if P.MODE=='IQ':
-    P.demod_io       = io.sdr_fileio('demod','w',P,2,P.MODE)
-else:
-    P.demod_io       = io.sdr_fileio('demod','w',P,1,P.MODE)
+    # Ring buffers to throttle between data capture and playback/display
+    # Seems like this should use blocking???
+    if P.MP_SCHEME==1: 
+        P.rb_rf       = dsp.ring_buffer2('RF',8*P.IN_CHUNK_SIZE)
+        P.rb_baseband = dsp.ring_buffer2('BB',8*P.IN_CHUNK_SIZE)
+        P.rb_af       = dsp.ring_buffer2('AF',P.RB_SIZE)
+    elif P.MP_SCHEME==2: 
+        P.rb_rf       = dsp.ring_buffer3('RF',8*P.IN_CHUNK_SIZE)
+        P.rb_baseband = dsp.ring_buffer3('BB',8*P.IN_CHUNK_SIZE)
+        P.rb_af       = dsp.ring_buffer3('AF',P.RB_SIZE)
+        P.rf_psd_Q    = P.rb_rf.buf
+        P.bb_psd_Q    = P.rb_baseband.buf
+        P.af_psd_Q    = P.rb_af.buf
+    else:
+        print('pySDR - Unknown MP SCHEME',P.MP_SCHEME)
+        sys.exit(0)
 
+    # Open writers for data we might want to save
+    P.raw_iq_io      = io.sdr_fileio('raw_iq','w',P,2,'RAW_IQ')
+    P.baseband_iq_io = io.sdr_fileio('baseband_iq','w',P,2,'BASEBAND_IQ')
+    if P.MODE=='IQ':
+        P.demod_io       = io.sdr_fileio('demod','w',P,2,P.MODE)
+    else:
+        P.demod_io       = io.sdr_fileio('demod','w',P,1,P.MODE)
+
+    # Experiment with Soapy interface
+    if P.TEST_MODE:
+        #from sdr_playpen import *
+        sdrPlayPen(P)
+
+    return P
+        
 ############################################################################
 
-# Experiment with Soapy interface
-if P.TEST_MODE:
-    from sdr_playpen import *
-    sdrPlayPen(P)
-
-# Instantiate servers allowing external control of each RX
-P.threads=[]
-P.Stopper = threading.Event()
-#print "P=",pprint(vars(P))
-if P.HAMLIB_SERVERS:
-    # Full suite
-    for i in range(P.NUM_RX+1):
-        if i<P.NUM_RX:
-            port = 4575 + i
-        else:
-            port = 4675 + i-P.NUM_RX
+# Open various threads
+def start_threads(P):
+    
+    # Instantiate servers allowing external control of each RX
+    P.threads=[]
+    P.Stopper = threading.Event()
+    #print "P=",pprint(vars(P))
+    if P.HAMLIB_SERVERS:
+        # Full suite
+        for i in range(P.NUM_RX+1):
+            if i<P.NUM_RX:
+                port = 4575 + i
+            else:
+                port = 4675 + i-P.NUM_RX
+            th = threading.Thread(target=rigctl.HamlibServer(P,port).Run, args=(),name='Hamlib '+str(port))
+            th.setDaemon(True)
+            th.start()
+            P.threads.append(th)
+    elif not P.REPLAY_MODE:
+        # Just one to communicate with SDR
+        port=4533
         th = threading.Thread(target=rigctl.HamlibServer(P,port).Run, args=(),name='Hamlib '+str(port))
         th.setDaemon(True)
         th.start()
         P.threads.append(th)
-elif not P.REPLAY_MODE:
-    # Just one to communicate with SDR
-    port=4533
-    th = threading.Thread(target=rigctl.HamlibServer(P,port).Run, args=(),name='Hamlib '+str(port))
-    th.setDaemon(True)
-    th.start()
-    P.threads.append(th)
 
-# Instantiate the receive processor
-P.evt = threading.Event()
-P.sdr=None
-#worker = threading.Thread(target=SDR_RX, args=(P,True,),name='SDR_RX')
-worker = threading.Thread(target=SDR_EXECUTIVE(P,True).Run,args=(), name='SDR_EXEC')
-worker.setDaemon(True)
-worker.start()
-P.threads.append(worker)
+    # Instantiate the receive processor
+    P.evt = threading.Event()
+    P.sdr=None
+    #worker = threading.Thread(target=SDR_RX, args=(P,True,),name='SDR_RX')
+    worker = threading.Thread(target=SDR_EXECUTIVE(P,True).Run,args=(), name='SDR_EXEC')
+    worker.setDaemon(True)
+    worker.start()
+    P.threads.append(worker)
 
-# Instantiate a profiler
-P.pr = Profiler(P)
+    # Instantiate a profiler
+    P.pr = Profiler(P)
     
-# Open connection to rig
-P.sock = socket_io.open_rig_connection(P.RIG_CONNECTION,0,P.PORT,0,'pySDR: ')
-if not P.sock.active:
-    print('*** No connection to rig ***')
+    # Open connection to rig
+    P.sock = socket_io.open_rig_connection(P.RIG_CONNECTION,0,P.PORT,0,'pySDR: ')
+    if not P.sock.active:
+        print('*** No connection to rig ***')
 
 ############################################################################
         
@@ -197,10 +206,20 @@ def RIG_Updater(P):
     logging.info('Exiting.')
 
 ############################################################################
-    
+
+# Top-level main for pySDR
 def main():
+
+    # Put pu splash screen
     app = QApplication(sys.argv)
+    splash=splash_screen(app)
+
+    # Start the processing app
+    P=init_sdr()
     P.app=app
+    start_threads(P)
+
+    # Construct the gui
     if P.HOPPER:
         P.gui     = None
         P.hopper  = FreqHopper(P)
@@ -223,6 +242,10 @@ def main():
         
     # Start the RX
     P.gui.StartStopRX()
+
+    # Clobber splash screen
+    #splash.destroy()
+    splash.hide()
 
     return app.exec_()
 

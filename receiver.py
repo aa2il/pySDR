@@ -28,7 +28,7 @@ from sig_proc import up_dn
 from Tables import MODES,VIDEO_BWs,AF_BWs
 import file_io
 from pprint import pprint
-from support import setupSDR,check_sdr_settings
+from utils import setupSDR,check_sdr_settings
 import sig_proc as dsp
 from scipy.io import savemat
 from Tables import AF_BWs

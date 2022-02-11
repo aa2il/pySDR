@@ -29,13 +29,13 @@ from pprint import pprint
 from Tables import *
 from rig_control import *
 from Plotting import *
-from support import *
 from receiver import *
 from rig_io.ft_tables import *
 from rig_io.presets import *
 from rtty import *
 from widgets import *
 import collections
+from utils import  show_threads
 
 ################################################################################
 
@@ -401,10 +401,10 @@ class pySDR_GUI(QMainWindow):
         self.VolumeControl()
 
         # Mute Buttons
-        self.Mute_btns = [None]*MAX_RX
+        self.Mute_btns = [None]*P.MAX_RX
         irow=nrows-2
         icol=ncols-1
-        for i in range(MAX_RX):
+        for i in range(P.MAX_RX):
             self.Mute_btns[i] = QPushButton('Mute RX'+str(i+1))
             self.Mute_btns[i].setToolTip('Click to Mute/Unmute Audio')
             self.Mute_btns[i].clicked.connect( functools.partial( self.MuteCB,i,False ))

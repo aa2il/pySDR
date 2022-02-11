@@ -19,12 +19,8 @@
 #
 ############################################################################
 
-# Maintain compatability with python2 for now - probably can jettison this
-from __future__ import print_function
-
 from pyqtgraph.Qt import QtCore
 import time
-from support import MAX_RX
 import numpy as np
 import sys
 from rig_io.socket_io import find_fldigi_port,convert_freq2band
@@ -61,7 +57,7 @@ class WatchDog:
         # Ring buffer diagnostics
         self.nin_prev=0
         self.nout_prev=0
-        self.avg_latency = [0]*MAX_RX
+        self.avg_latency = [0]*P.MAX_RX
         self.zz = np.zeros(P.OUT_CHUNK_SIZE, np.complex64)
 
     # Function to monitor audio ring buffers

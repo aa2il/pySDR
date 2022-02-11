@@ -26,7 +26,7 @@ from unidecode import unidecode
 import sys
 import datetime
 import time
-from support import adjust_foffset,expand_ft4
+from utils import adjust_foffset,expand_ft4
 
 from dx.wsjt_helper import WSJT_LOGFILE3,WSJT_LOGFILE4,WSJT_LOGFILE5
 import os

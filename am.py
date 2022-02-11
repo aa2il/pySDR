@@ -26,7 +26,6 @@
 import sig_proc as dsp
 import numpy as np
 if False:
-#if True:
     import threading
     MP_SCHEME=1
 elif True:
@@ -38,7 +37,7 @@ else:
     MP_SCHEME=2
 import time
 
-from support import *
+from params import *
 from receiver import *
 
 ############################################################################
