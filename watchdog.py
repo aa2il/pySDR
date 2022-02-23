@@ -97,7 +97,8 @@ class WatchDog:
 
         if not self.quiet:
             #print('Watch Dog:',tag,'Latency =',nsamps,'samps =',latency,' sec')
-            print('Watch Dog: %s Latency = %5d samp = %4.2f sec' % (tag,nsamps,latency),end='',flush=True)
+            print('Watch Dog: %s Latency = %5d samp = %4.2f sec' % \
+                  (tag,nsamps,latency),end='',flush=True)
         self.P.LOG2.write('%f,%d,%f,%f\n' % (t,nsamps,latency,self.avg_latency[irx]) )
         self.P.LOG2.flush()
 
@@ -149,6 +150,9 @@ class WatchDog:
     def Monitor(self):
         #print('Monitor: in...')
         P=self.P
+
+        #vfo=P.sock.get_vfo()
+        #print('WATCHDOG->MONITOR: vfo=',vfo)
         
         t=time.time()
         if not self.quiet and False:

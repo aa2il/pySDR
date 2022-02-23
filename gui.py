@@ -36,6 +36,7 @@ from rtty import *
 from widgets import *
 import collections
 from utils import  show_threads
+#from rig_io.socket_io import SetVFO
 
 ################################################################################
 
@@ -533,16 +534,20 @@ class pySDR_GUI(QMainWindow):
 
         # Check boxes to follow center freq of transceiver
         row+=1
-        self.follow_freq_cb = QCheckBox("Follow RIG freq")
+        self.follow_freq_cb = QCheckBox("Follow RIG Freq")
         self.follow_freq_cb.setChecked(self.P.FOLLOW_FREQ)
         self.grid.addWidget(self.follow_freq_cb,row,ncols-1)
 
-        self.follow_band_cb = QCheckBox("Follow RIG band")
+        self.follow_band_cb = QCheckBox("Follow RIG Band")
         self.follow_band_cb.setChecked(self.P.FOLLOW_BAND) 
         self.grid.addWidget(self.follow_band_cb,row,ncols)
 
         row+=1
-        self.so2v_cb = QCheckBox("RIG VFO-B follows SDR freq")
+        self.split_cb = QCheckBox("CLAR Follows SDR Freq")
+        self.split_cb.setChecked(False)
+        self.grid.addWidget(self.split_cb,row,ncols-1)
+
+        self.so2v_cb = QCheckBox("VFO-B Follows SDR Freq")
         self.so2v_cb.setChecked(self.P.SO2V)
         self.grid.addWidget(self.so2v_cb,row,ncols)
 
@@ -584,6 +589,8 @@ class pySDR_GUI(QMainWindow):
 
         # Make sure rig settings are reasonable
         self.P.sock.set_vfo('A','A')
+        self.P.sock.set_vfo(op='A->B')
+        self.P.sock.set_sub_dial(func='CLAR')
         self.rig_retune()
         if False:
             # Not sure why I thought we needed to do this
@@ -1052,7 +1059,7 @@ class pySDR_GUI(QMainWindow):
             n=self.plots_bb.psd.chunk_size
 
             # Shift offset of waterfall to effect 1-KHz offset for digi programs
-            print('BB foff=',self.plots_bb.foff)
+            #print('BB foff=',self.plots_bb.foff)
             #if self.digi_cb.isChecked():
             #    self.plots_bb.foff = self.DIGI_OFFSET
                         
@@ -1083,14 +1090,15 @@ class pySDR_GUI(QMainWindow):
 
     # Function to retune rig if necessary
     def rig_retune(self):
-        #print('RIG RETUNE ...')
+        #vfo_in= self.P.sock.get_vfo()
+        #print('RIG RETUNE ... vfo_in=',vfo_in)
 
         if not self.P.sock:
             print('&&&&&&&&&&&&&&&& RIG_RETUNE: WARNING - No socket to rig &&&&&&&&&&&&&&&&&')
             return
         
         if self.follow_freq_cb.isChecked() or self.so2v_cb.isChecked():
-            print('RIG RETUNE - following rig freq or so2v ...')
+            #print('RIG RETUNE - following rig freq or so2v ...')
             if not self.P.sock.active:
                 print('RIG_RETUNE 1: *** No connection to rig *** ')
                 self.follow_freq_cb.setChecked(False)
@@ -1100,8 +1108,21 @@ class pySDR_GUI(QMainWindow):
             vfo='A'
             if self.so2v_cb.isChecked():
                 vfo='B'
-            frq=self.P.sock.get_freq(vfo)*1e-3
+                self.P.sock.set_sub_dial(func='VFO-B')
 
+            if self.split_cb.isChecked():
+                df_rx,df_tx=self.P.sock.read_clarifier()
+                self.P.sock.set_sub_dial(func='CLAR')
+                if df_tx!=0:
+                    df=df_tx
+                else:
+                    df=df_rx
+                #print('SPLIT - Clarifier df=',df_rx,df_tx,df)
+            else:
+                df=0
+
+            frq=(self.P.sock.get_freq(vfo) + df)*1e-3
+                
             if np.abs(frq-fc)>=1e-3:
                 print("\n%%%%%%%%% RIG_RETUNE: RIG Center Frq=",frq,'\tSDR frq=',fc,'\tVFO=',vfo)
                 #print self.P.sock.freq,self.P.sock.mode,self.P.sock.connection
@@ -1147,7 +1168,9 @@ class pySDR_GUI(QMainWindow):
                 
                 self.P.sock.set_mode(mode)
                 print('mode=',mode,self.P.MODE)
-        #print('RIG RETUNE ...out')
+
+        #vfo_out= self.P.sock.get_vfo()
+        #print('RIG RETUNE out ... vfo_out=',vfo_out)
  
     # Function to set RF sampling rate
     def SrateSelect(self,i):
@@ -1446,11 +1469,12 @@ class pySDR_GUI(QMainWindow):
                 
                 # Left click as an SDR - shift SDR center freq
                 print("\tLeft button - Setting SDR freq to",frq)
-                vfo='A'
-                if self.so2v_cb.isChecked() and True:                   # Was disabled - perhaps for CW scheme - not sure ?
+                if self.so2v_cb.isChecked():    # or self.split_cb.isChecked(): 
                     vfo='B'                              # For so2v, VFO B follows the SDR
+                    vfo='A'                              # For so2v, Set rig freq
+                    # See note below on how it might be more intuitive to use L&R buttons
                 else:
-                    vfo='A'                              # most of the time, VFO A follows the sdr
+                    vfo='A'                              # For everything else, VFO A follows the SDR
                     
                 self.FreqSelect(frq,True,vfo)
                 
@@ -1474,28 +1498,36 @@ class pySDR_GUI(QMainWindow):
                 irx=self.P.MAIN_RX
                 new_frq[irx]   = .001*self.P.FC[irx]
                 new_frq[1-irx] = frq
-                print('Right click: irx/frq/new_frq=',irx,frq,new_frq)
+                print('MouseClickRF: Right click - irx/frq/new_frq=',irx,frq,new_frq)
                 self.FreqSelect(new_frq,True)
                 
-            # Right click - shift RIG center freq
+            # Right click and using SO2V - set rig center freq for VFO A
+            # Let's see how this works - it might be more intuitive to swap roles of L & R buttons for SO2V
+            # since l & R ears will be listening to rig & sdr respectively
+            # If we decide to change this, also change 'B' to 'A' above under button 1
             elif self.so2v_cb.isChecked():
 
                 # This is how it was for S02V
+                vfo='A'
                 vfo='B'
-                print("\tRight button - Setting Rig Freq",frq,'\tVFO=',vfo)
+                print("MouseClickRF: Right click - Setting Rig Freq",\
+                      frq,'\tVFO=',vfo)
                 self.P.sock.set_freq(float(frq),vfo)
 
-            else:
+            elif self.split_cb.isChecked():
                 
-                # Would like this for DX split ops
+                # Use this for DX split ops
+                vfo='A'
                 frq1 = self.P.sock.get_freq()*1e-3
                 df = frq-frq1
-                print("\tRight button - Setting Split",frq,frq1,df)
+                print("Right button - Setting Split",frq,frq1,df)
                 SetTXSplit(self.P,df)
+                #print("Right button - Freq Select ...",frq,True,vfo)
+                #self.FreqSelect(frq,True,vfo)
                 
         elif button==4:
-            # Middle button with 2 RXs - swap rig VFO
-            if self.P.NUM_RX==2:
+            # Middle button with 2 RXs or SO2V - swap rig VFOs
+            if self.P.NUM_RX==2 or self.so2v_cb.isChecked():
                 rig_vfo = self.P.sock.get_vfo()
                 if rig_vfo[0]=='A':
                     new_vfo='B'
@@ -1506,13 +1538,20 @@ class pySDR_GUI(QMainWindow):
                 elif rig_vfo[0]=='S':
                     new_vfo='M'
                 else:
-                    print('Middle button - unknown rig vfo????',rig_vfo)
+                    print('MouseClickRF: Middle button - unknown rig vfo????',rig_vfo)
                     return
                 
-                print('Middle button - changing vfo from',rig_vfo,' to ',new_vfo)
-                self.P.sock.set_vfo(new_vfo,new_vfo)
+                print('MouseClickRF: Middle button - changing vfo from',\
+                      rig_vfo,' to ',new_vfo)
+                self.P.sock.set_vfo(new_vfo)
+
+                # Debug only
+                if False:
+                    new_vfo = self.P.sock.get_vfo()
+                    print('MouseClickRF: Old vfo=',rig_vfo,'\tNew vfo=',new_vfo)
+                
             else:
-                print("\tMiddle button - TBD")
+                print("MouseClickRF: Middle button - TBD")
 
     # Callback to change center freq
     def FreqSelect(self,new_frq,tune_rig=True,VFO=[]):
