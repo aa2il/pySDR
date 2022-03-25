@@ -176,7 +176,7 @@ class RUN_TIME_PARAMS:
         if self.SDR_TYPE=='rtlsdr':
             print('RTL     rates =',RTLsrates)
             if fs==0:
-                fs=1
+                fs=2
             #if not args.fs in RTLsrates:
             idx = np.argmin( np.abs( np.array(RTLsrates) - fs ) )
             self.SRATE = 1e6*RTLsrates[idx]

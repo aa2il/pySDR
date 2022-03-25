@@ -334,7 +334,13 @@ def splash_screen(app):
     
     splash = QSplashScreen(QPixmap('splash.png'))
     splash.show()
-    time.sleep(.01)
+    #splash.showMessage('Splish Splash I was taking a bath ...')
+    time.sleep(.1)
     app.processEvents()
 
+    # This shows how to put a new message - need to figur out fonts but seems to work
+    #time.sleep(3)
+    #splash.showMessage('Init SDR ..')
+    #app.processEvents()
+    
     return splash

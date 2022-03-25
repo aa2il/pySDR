@@ -63,7 +63,6 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 import sig_proc as dsp
 import numpy as np
 from params import *
-#from utils import *
 from gui import *
 from hopper import *
 from watchdog import *
@@ -210,10 +209,10 @@ def RIG_Updater(P):
 # Top-level main for pySDR
 def main():
 
-    # Put pu splash screen
+    # Put up splash screen
     app = QApplication(sys.argv)
-    splash=splash_screen(app)
-
+    splash=splash_screen(app)              # In util.py
+    
     # Start the processing app
     P=init_sdr()
     P.app=app
@@ -225,6 +224,7 @@ def main():
         P.hopper  = FreqHopper(P)
     P.logger = Logger(P)
     P.gui = pySDR_GUI(app,P) 
+    splash.finish(P.gui)               # Splash will close when main window of gui is open
     P.monitor = WatchDog(P,2000)
 
     # Timer for PSD plotting - Calls updater every 1000/PSD_RATE millisec
@@ -244,8 +244,9 @@ def main():
     P.gui.StartStopRX()
 
     # Clobber splash screen
-    #splash.destroy()
-    splash.hide()
+    #splash.finish(P.gui)
+    #splash.close()
+    #splash.hide()
 
     return app.exec_()
 

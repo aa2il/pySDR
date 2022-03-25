@@ -1137,7 +1137,7 @@ class pySDR_GUI(QMainWindow):
                 print('RIG_RETUNE: mode=',mode,'rig_mode=',rig_mode,'sdr_mode=',self.P.MODE)
 
         if self.follow_band_cb.isChecked():
-            print('RIG RETUNE - following rig band ...')
+            #print('RIG RETUNE - following rig band ...')
             if not self.P.sock.active:
                 print('RIG_RETUNE 2: *** No connection to rig *** ')
                 self.follow_band_cb.setChecked(False)
