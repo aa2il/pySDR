@@ -143,6 +143,8 @@ class RUN_TIME_PARAMS:
                               action='store_true')
         arg_proc.add_argument('-mute', help='Mute the audio replay',
                               action='store_true')
+        arg_proc.add_argument('-nosplash', help='Dont put up splash screen',
+                              action='store_true')
         arg_proc.add_argument("-rig", help="Connection Type",
                               type=str,default="ANY",nargs='+',
                               choices=CONNECTIONS+['NONE']+RIGS)
@@ -192,6 +194,7 @@ class RUN_TIME_PARAMS:
             #sys.exit(0)
         
         # Convert user params to base units
+        self.SHOW_SPLASH     = not args.nosplash
         #self.MAIN_LEFT       = args.left
         #self.MAIN_RIGHT      = args.right
         self.RIG_IF          = args.rigIF*1e3

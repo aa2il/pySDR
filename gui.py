@@ -42,6 +42,8 @@ from utils import  show_threads
 
 # The GUI 
 class pySDR_GUI(QMainWindow):
+
+    # Routine to draw the GUI
     def __init__(self,app,P,parent=None):
         super(pySDR_GUI, self).__init__(parent)
         self.gui_closed=False
@@ -72,16 +74,13 @@ class pySDR_GUI(QMainWindow):
         print('pySDR_GUI: ShowParams...')
         self.ShowParams()
         self.SHOW_RF_IQ=False
-        #self.SHOW_RF_IQ=True
         self.SHOW_BASEBAND_PLOTS=False
-        #self.SHOW_BASEBAND_PLOTS=True
         self.itune_cnt=0
 
         # Start by putting up the root window
         self.win  = QWidget()
         self.setCentralWidget(self.win)
         self.setWindowTitle('pySDR by AA2IL')
-        #self.win.show()
 
         # We use a simple grid to layout controls
         self.grid = QGridLayout()
@@ -558,26 +557,21 @@ class pySDR_GUI(QMainWindow):
         self.plots_rf=three_box_plot(P,"RF - AA2IL","RF Time Series","RF PSD", \
                                      P.SRATE/1000.,P.FOFFSET/1000.,P.IN_CHUNK_SIZE,
                                      2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF)
+        self.plots_rf.hide()
         OVERLAP = 0.5   # 0.75
         self.plots_af=three_box_plot(P,"Demod Audio - AA2IL","AF Time Series","AF PSD", \
                                      P.FS_OUT/1000.,0,4*P.OUT_CHUNK_SIZE,
                                      8*P.OUT_CHUNK_SIZE,OVERLAP,self.MouseClickRF)
+        self.plots_af.hide()
         self.plots_bb=three_box_plot(P,"Baseband IQ - AA2IL","Baseband Time Series", \
                                      "Baseband PSD", P.FS_OUT/1000.,0,P.IN_CHUNK_SIZE,
                                      2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF)
+        self.plots_bb.hide()
 
         screen_resolution = app.desktop().screenGeometry()
-        width, height = screen_resolution.width(), screen_resolution.height()
-        print("Screen Res:",screen_resolution,width, height)
-        self.plots_af.pwin.setGeometry(0,0,width-1,height/5)
-        self.plots_bb.pwin.setGeometry(0,0,width-1,height/5)
-
-        # Activate various options
-        if self.P.PANADAPTOR:
-            self.StartStopAF_PSD()
-            
-        if self.P.FOLLOW_FREQ:
-            self.follow_freq_cb.setChecked(True)
+        self.screen_width  = screen_resolution.width()
+        self.screen_height = screen_resolution.height()
+        print("Screen Res:",screen_resolution,self.screen_width, self.screen_height)
 
         # Connect 'x' close box to close down event
         #self.connect(self, SIGNAL('triggered()'), self.closeEvent)
@@ -585,12 +579,27 @@ class pySDR_GUI(QMainWindow):
 
         # Finally, we're ready to show the gui
         print('------------------------- here we go !!!!!!!!!!!!!!!!!!!!!!')
+        #self.win.show()
         self.show()
 
+    ################################################################################
+
+    # Routine to start the GUI
+    def StartGUI(self):
+
+        P=self.P
+        
+        # Activate various options
+        if P.PANADAPTOR:
+            self.StartStopAF_PSD()
+            
+        if P.FOLLOW_FREQ:
+            self.follow_freq_cb.setChecked(True)
+
         # Make sure rig settings are reasonable
-        self.P.sock.set_vfo('A','A')
-        self.P.sock.set_vfo(op='A->B')
-        self.P.sock.set_sub_dial(func='CLAR')
+        P.sock.set_vfo('A','A')
+        P.sock.set_vfo(op='A->B')
+        P.sock.set_sub_dial(func='CLAR')
         self.rig_retune()
         if False:
             # Not sure why I thought we needed to do this
@@ -598,11 +607,11 @@ class pySDR_GUI(QMainWindow):
             fc = self.lcd.get()
             print('BURP1: FC=',fc,P.FC)
             for i in range(1,P.NUM_RX):
-                self.P.FC[i]=1000*fc
+                P.FC[i]=1000*fc
             print('BURP2: FC=',fc,P.FC)
             self.FreqSelect(fc,False)
         
-        if self.P.ENABLE_RTTY:
+        if P.ENABLE_RTTY:
             if self.rtty.active:
                 self.rtty.raise_()
         print('pySDR: GUI ready ... ')
@@ -906,6 +915,7 @@ class pySDR_GUI(QMainWindow):
         if not self.P.SHOW_BASEBAND_PSD:
             self.btn4.setText('Stop BB IQ PSD')
             self.plots_bb.pwin.show()
+            self.plots_bb.pwin.setGeometry(0,0,self.screen_width-1,self.screen_height/5)
         else:
             self.btn4.setText('Start BB IQ PSD')
             self.plots_bb.pwin.hide()
@@ -916,14 +926,17 @@ class pySDR_GUI(QMainWindow):
 
     # Callback for AF PSD Start/Stop button
     def StartStopAF_PSD(self):
-        if not self.P.SHOW_AF_PSD:
+        self.P.SHOW_AF_PSD = not self.P.SHOW_AF_PSD
+        if self.P.SHOW_AF_PSD:
             self.btn3.setText('Stop AF PSD')
             self.plots_af.pwin.show()
+            self.plots_af.pwin.setGeometry(0,0,self.screen_width-1,self.screen_height/5)
+            self.btn3.setChecked(True)
         else:
             self.btn3.setText('Start AF PSD')
             self.plots_af.pwin.hide()
+            self.btn3.setChecked(False)
 
-        self.P.SHOW_AF_PSD = not self.P.SHOW_AF_PSD
         if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
             self.mp_comm('showAFpsd',self.P.SHOW_AF_PSD )
         

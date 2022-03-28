@@ -330,9 +330,9 @@ def find_sdr_device(self,args):
 
 
 # Put up splash screen until we're ready
-def splash_screen(app):
+def splash_screen(app,fname):
     
-    splash = QSplashScreen(QPixmap('splash.png'))
+    splash = QSplashScreen(QPixmap(fname))
     splash.show()
     #splash.showMessage('Splish Splash I was taking a bath ...')
     time.sleep(.1)

@@ -169,7 +169,7 @@ def start_threads(P):
     P.threads.append(worker)
 
     # Instantiate a profiler
-    P.pr = Profiler(P)
+    #P.pr = Profiler(P)
     
     # Open connection to rig
     P.sock = socket_io.open_rig_connection(P.RIG_CONNECTION,0,P.PORT,0,'pySDR: ')
@@ -211,8 +211,10 @@ def main():
 
     # Put up splash screen
     app = QApplication(sys.argv)
-    splash=splash_screen(app)              # In util.py
-    
+    splash=None
+    splash=splash_screen(app,'splash.png')              # In util.py
+    #splash=splash_screen(app,'splash.jpg')              # In util.py
+
     # Start the processing app
     P=init_sdr()
     P.app=app
@@ -223,8 +225,14 @@ def main():
         P.gui     = None
         P.hopper  = FreqHopper(P)
     P.logger = Logger(P)
-    P.gui = pySDR_GUI(app,P) 
-    splash.finish(P.gui)               # Splash will close when main window of gui is open
+
+    #P.sock=None
+    P.gui = pySDR_GUI(app,P)
+    #start_threads(P)
+
+    if splash:
+        splash.finish(P.gui)               # Splash will close when main window of gui is open
+    P.gui.StartGUI()
     P.monitor = WatchDog(P,2000)
 
     # Timer for PSD plotting - Calls updater every 1000/PSD_RATE millisec
@@ -242,11 +250,6 @@ def main():
         
     # Start the RX
     P.gui.StartStopRX()
-
-    # Clobber splash screen
-    #splash.finish(P.gui)
-    #splash.close()
-    #splash.hide()
 
     return app.exec_()
 

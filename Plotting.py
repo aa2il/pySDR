@@ -314,8 +314,14 @@ class three_box_plot():
             self.proxy2 = pg.SignalProxy(self.p2.scene().sigMouseClicked,
                                         rateLimit=60, slot=self.mouseClicked)
 
-        
 
+    def hide(self):
+        self.pwin.hide()
+        
+    def show(self):
+        self.pwin.show()
+
+        
     # Routine to plot next chunk
     def plot(self,x,y,fc,show_time_series,show_psd):
         #print('PLOT 1:',fc,show_time_series,show_psd)
