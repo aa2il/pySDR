@@ -65,7 +65,8 @@ class pySDR_GUI(QMainWindow):
         else:
             print('GUI - Unknown MP SCHEME',P.MP_SCHEME)
             sys.exit(0)
-        
+
+        # Init
         self.P=P
         #        locale.setlocale(locale.LC_NUMERIC, 'English')
         #print(locale.getlocale())
@@ -76,6 +77,7 @@ class pySDR_GUI(QMainWindow):
         self.SHOW_RF_IQ=False
         self.SHOW_BASEBAND_PLOTS=False
         self.itune_cnt=0
+        self.P.AF_FILTER_NUM = None
 
         # Start by putting up the root window
         self.win  = QWidget()
@@ -188,7 +190,7 @@ class pySDR_GUI(QMainWindow):
             self.Ant_cb = QComboBox()
             self.Ant_cb.addItems(self.Antennas)
             self.Ant_cb.currentIndexChanged.connect(self.AntSelect)
-            self.AntSelect(-1)
+            #self.AntSelect(-1)
             row+=1
             self.grid.addWidget(lb,row,0)
             self.grid.addWidget(self.Ant_cb,row,1)
@@ -211,7 +213,7 @@ class pySDR_GUI(QMainWindow):
             self.RFgain_cb = QComboBox()
             self.RFgain_cb.addItems(self.RFgains)
             self.RFgain_cb.currentIndexChanged.connect(self.LNASelect)
-            self.LNASelect(-1)
+            #self.LNASelect(-1)
             row+=1
             self.grid.addWidget(lb,row,0)
             self.grid.addWidget(self.RFgain_cb,row,1)
@@ -253,7 +255,7 @@ class pySDR_GUI(QMainWindow):
         self.srate_cb = QComboBox()
         self.srate_cb.addItems(self.srates)
         self.srate_cb.currentIndexChanged.connect(self.SrateSelect)
-        self.SrateSelect(-1)
+        #self.SrateSelect(-1)
         row+=1
         self.grid.addWidget(lb,row,0)
         self.grid.addWidget(self.srate_cb,row,1)
@@ -282,7 +284,7 @@ class pySDR_GUI(QMainWindow):
             self.BW_cb = QComboBox()
             self.BW_cb.addItems(self.bws)
             self.BW_cb.currentIndexChanged.connect(self.IF_BWSelect)
-            self.IF_BWSelect(-1)
+            #self.IF_BWSelect(-1)
             row+=1
             self.grid.addWidget(lb,row,0)
             self.grid.addWidget(self.BW_cb,row,1)
@@ -293,7 +295,7 @@ class pySDR_GUI(QMainWindow):
         self.IF_cb = QComboBox()
         self.IF_cb.addItems(self.IFs)
         self.IF_cb.currentIndexChanged.connect(self.IFSelect)
-        self.IFSelect(-1)
+        #self.IFSelect(-1)
         row+=1
         self.grid.addWidget(lb,row,0)
         self.grid.addWidget(self.IF_cb,row,1)
@@ -326,7 +328,7 @@ class pySDR_GUI(QMainWindow):
         self.IFgain_cb = QComboBox()
         self.IFgain_cb.addItems(self.IFgains)
         self.IFgain_cb.currentIndexChanged.connect(self.IFGainSelect)
-        self.IFGainSelect(-1)
+        #self.IFGainSelect(-1)
         row+=1
         self.grid.addWidget(lb,row,0)
         self.grid.addWidget(self.IFgain_cb,row,1)
@@ -363,7 +365,6 @@ class pySDR_GUI(QMainWindow):
         self.grid.addWidget(self.tabs,6,2,nrows-6,ncols-3)
 
         # Add tab for rig control
-        #if P.RIG_CONTROL_MENU:
         if P.sock and P.sock.connection!='NONE' and P.RIG_CONTROL_MENU:
             self.rig = RIG_CONTROL(self.tabs,P)
 
@@ -443,7 +444,7 @@ class pySDR_GUI(QMainWindow):
         self.mode_cb.addItems(self.modes)
         self.mode_cb.currentIndexChanged.connect(self.ModeSelect)
         self.grid.addWidget(self.mode_cb,row,ncols)
-        self.ModeSelect(-1)
+        #self.ModeSelect(-1)
 
         # Add vidio bandwidth selector
         row+=1
@@ -454,7 +455,7 @@ class pySDR_GUI(QMainWindow):
         self.vidbw_cb.addItems(self.video_bws)
         self.vidbw_cb.currentIndexChanged.connect(self.Video_BWSelect)
         self.grid.addWidget(self.vidbw_cb,row,ncols)
-        self.Video_BWSelect(-1)
+        #self.Video_BWSelect(-1)
 
         # Add audio bandwidth selector
         row+=1
@@ -465,7 +466,7 @@ class pySDR_GUI(QMainWindow):
         self.afbw_cb.addItems(self.af_bws)
         self.afbw_cb.currentIndexChanged.connect(self.AF_BWSelect)
         self.grid.addWidget(self.afbw_cb,row,ncols)
-        self.AF_BWSelect(-1)
+        #self.AF_BWSelect(-1)
 
         ################################################################################
 
@@ -492,7 +493,7 @@ class pySDR_GUI(QMainWindow):
         self.PanBW_cb.addItems(self.PanBWs)
         self.PanBW_cb.currentIndexChanged.connect(self.PanBWSelect)
         print('----------------- PAN BW=',P.PAN_BW)
-        self.PanBWSelect(-1)
+        #self.PanBWSelect(-1)
         self.grid.addWidget(lb,row,ncols-1)
         self.grid.addWidget(self.PanBW_cb,row,ncols)
 
@@ -503,7 +504,7 @@ class pySDR_GUI(QMainWindow):
         self.PanDR_cb = QComboBox()
         self.PanDR_cb.addItems(self.PanDRs)
         self.PanDR_cb.currentIndexChanged.connect(self.PanDRSelect)
-        self.PanDRSelect(-1)
+        #self.PanDRSelect(-1)
         self.grid.addWidget(lb,row,ncols-1)
         self.grid.addWidget(self.PanDR_cb,row,ncols)
 
@@ -514,14 +515,13 @@ class pySDR_GUI(QMainWindow):
         self.PeakDist_cb = QComboBox()
         self.PeakDist_cb.addItems(self.PeakDists)
         self.PeakDist_cb.currentIndexChanged.connect(self.PeakDistSelect)
-        self.PeakDistSelect(-1)
+        #self.PeakDistSelect(-1)
         self.grid.addWidget(lb,row,ncols-1)
         self.grid.addWidget(self.PeakDist_cb,row,ncols)
 
         # Check box to use peaks for tuning
         row+=1
         self.Use_Peaks_cb = QCheckBox("Use Peaks for Tuning")
-        #self.Use_Peaks_cb.setChecked(True)
         self.Use_Peaks_cb.setChecked(False)
         self.grid.addWidget(self.Use_Peaks_cb,row,ncols-1)
 
@@ -588,6 +588,21 @@ class pySDR_GUI(QMainWindow):
     def StartGUI(self):
 
         P=self.P
+
+        # Set various gui checkboxes, etc.
+        self.SrateSelect(-1)
+        self.IFSelect(-1)
+        self.IFGainSelect(-1)
+        self.ModeSelect(-1)
+        self.Video_BWSelect(-1)
+        self.AF_BWSelect(-1)
+        self.PanBWSelect(-1)
+        self.PanDRSelect(-1)
+        self.PeakDistSelect(-1)
+        if self.P.SDR_TYPE=='sdrplay':
+            self.AntSelect(-1)
+            self.LNASelect(-1)
+            self.IF_BWSelect(-1)
         
         # Activate various options
         if P.PANADAPTOR:
@@ -595,7 +610,7 @@ class pySDR_GUI(QMainWindow):
             
         if P.FOLLOW_FREQ:
             self.follow_freq_cb.setChecked(True)
-
+            
         # Make sure rig settings are reasonable
         P.sock.set_vfo('A','A')
         P.sock.set_vfo(op='A->B')

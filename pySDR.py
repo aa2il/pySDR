@@ -225,17 +225,17 @@ def main():
         P.gui     = None
         P.hopper  = FreqHopper(P)
     P.logger = Logger(P)
-
-    #P.sock=None
     P.gui = pySDR_GUI(app,P)
-    #start_threads(P)
 
     if splash:
         splash.finish(P.gui)               # Splash will close when main window of gui is open
+#    time.sleep(1.)                         # Delay to mitigate start-up problem with Mint 20.3?
     P.gui.StartGUI()
+#    time.sleep(1.)                         # Delay to mitigate start-up problem with Mint 20.3?
     P.monitor = WatchDog(P,2000)
 
     # Timer for PSD plotting - Calls updater every 1000/PSD_RATE millisec
+#    time.sleep(1.)                         # Delay to mitigate start-up problem with Mint 20.3?
     PSD_RATE=20   # was 10 Hz
     msec = round( 1000./PSD_RATE )
     P.PSDtimer = QtCore.QTimer()
