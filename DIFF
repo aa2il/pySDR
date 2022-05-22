@@ -11,6 +11,7 @@
 #set ROOT="/media/${USER}/aa2il"
 set ROOT="/media/${USER}/marconi"
 #set ROOT="/media/${USER}/3D76-ECB1/Xfer"
+set ROOT="/media/${USER}/acer"
 if( !(-e $ROOT) )then
     set ROOT="${ROOT}2"
 endif
@@ -22,13 +23,13 @@ echo N=$N
 set PTH=`pwd | sed 's/\/home2//g' | cut -c ${N}-`
 echo PTH=$PTH
 set old=${ROOT}${PTH}
-echo OLD=$old
 
 # Overide if necessary
-#set OLD="work2"
+set old="save52"
+echo OLD=$old
 
 rm -f DIFFS
-foreach i (DIFF *.py SSTV FT8*)
+foreach i (DIFF *.py SSTV FT8* *.bat)
     echo $i
     set n=`diff -w $old/$i $i | wc -l`
     if( $n>0 ) then

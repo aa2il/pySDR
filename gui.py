@@ -1459,12 +1459,16 @@ class pySDR_GUI(QMainWindow):
             
         else:
             a=self.af_bws[i].split(" ")
-            bw = int(a[0])
-            if a[1]=="KHz":
-                bw *= 1e3 
-            elif a[1]=="MHz":
-                bw *= 1e6
-            idx=i
+            if a[0]=='Max':
+                bw=0
+                idx=0
+            else:
+                bw = int(a[0])
+                if a[1]=="KHz":
+                    bw *= 1e3 
+                elif a[1]=="MHz":
+                    bw *= 1e6
+                idx=i
                 
         print("AF BW select:",i,idx,bw)
         self.afbw_cb.setCurrentIndex(idx)
@@ -1868,7 +1872,7 @@ class pySDR_GUI(QMainWindow):
                 else:
                     self.P.sdr.setAntenna(SOAPY_SDR_RX, 0,ant1)
                     
-        print(' ')
+        #print(' ')
                     
 
     # Set LNA (aka RF gain)

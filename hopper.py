@@ -38,10 +38,6 @@ from PyQt5.QtCore import QTimer
 
 ############################################################################
 
-PRESETS_FNAME = 'data/presets.xls'
-
-############################################################################
-
 # Freq Hopping
 class FreqHopper:
     def __init__(self,P):
@@ -69,6 +65,8 @@ class FreqHopper:
     def read_hop_pattern(self,Expand_FT4):
         pattern = OrderedDict()
 
+        MY_CALL = self.P.SETTINGS['MY_CALL'].replace('/','_')
+        PRESETS_FNAME =os.path.expanduser('~/'+MY_CALL+'/presets.xls')
         book  = xlrd.open_workbook(PRESETS_FNAME,formatting_info=True)
         sheet2 = book.sheet_by_name('Hops')
 
@@ -98,7 +96,7 @@ class FreqHopper:
                 print(key,pattern[key])
                 pattern[key] = expand_ft4( pattern[key] )
                 print(pattern[key])
-                print(' ')
+                print('-')
             #sys.exit(0)
             
         return pattern

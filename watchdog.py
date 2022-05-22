@@ -122,7 +122,7 @@ class WatchDog:
             self.P.LOG1.flush()
 
         else:
-            print(' ')
+            print(' ...')
 
         # Check on plotting ring buffs
         if False:

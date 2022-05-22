@@ -231,8 +231,8 @@ def demodulate_data(P,x,irx):
 
     # Save data for PSD routines
     if P.SHOW_AF_PSD and irx==P.PLOT_RX:
-        if P.PANADAPTOR and True:
-            # Shouldn't need this any more but need some more testing to make sure we don't break it contests
+        if P.PANADAPTOR:
+            # This allows us to see the wider specturm if we are using the SDR as a pan-adpater
             P.rb_af.push(rx.iq)
         else:
             if P.MP_SCHEME==1: 

@@ -191,7 +191,7 @@ def RIG_Updater(P):
             P.frqArx = P.sock.get_freq('A')*1e-3
         else:
             # This is better for DX split ops
-            print('')
+            #print(' ')
             #logging.info('Calling GetInfo ...')
             frx,ftx = GetInfo(P)
             if frx>0:
