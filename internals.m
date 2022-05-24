@@ -29,8 +29,8 @@ NFFT=1024*4;
 N=NFFT;
 frq = ((0:(N-1))/N - 0.5)*double(fsout)/1000. ;
 
-hh = h_bank_r;
-hh = h_bank_c;
+hh = h_bank_r;           % Demod filters - real
+hh = h_bank_c;           % Demod filters - complex
 
 c='brgmkycbrgmkyc'
 lgd={};
@@ -52,11 +52,11 @@ for i=1:size(hh,1)
 end
 
 figure(fh1)
-title('Impulse Response')
+title('Demod Filters - Impulse Response')
 xlabel('Sample Number')
 
 figure(fh2)
-title('Frequency Response')
+title('Demod Filters - Frequency Response')
 xlabel('f (KHz)')
 ylabel('dB')
 legend(lgd)
