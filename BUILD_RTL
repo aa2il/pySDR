@@ -1,0 +1,94 @@
+#! /bin/tcsh
+
+# Script to build support for RTL SDR
+
+##########################################################################################
+
+# SoapySDR - version that will find RTL libs
+if( 1 )then
+    echo "\n------------------------------------ Installing SoapSDR for RTL part 1 ...\n"
+    cd ~/Dev
+    sudo apt-get install rtl-sdr librtlsdr-dev
+
+    sudo rm -rf SoapyRTLSDR
+    git clone https://github.com/pothosware/SoapyRTLSDR.git
+    cd SoapyRTLSDR
+
+    rm -rf build
+    mkdir build
+    cd build
+
+    cmake ../ 
+    make VERBOSE=1
+
+    sudo make install
+    sudo ldconfig
+    rehash
+    SoapySDRUtil --info
+    SoapySDRUtil --probe="driver=rtlsdr"
+    
+    #exit
+endif
+
+# For the RTL-SDR dongle
+if( 1 )then
+    echo "\n------------------------------------ Installing SoapSDR for RTL part 2 ...\n"
+    cd ~/Dev
+    sudo apt-get install libusb-1.0-0-dev
+
+    sudo rm -rf rtl-sdr
+    git clone git://git.osmocom.org/rtl-sdr.git
+    cd rtl-sdr/
+
+    rm -rf build
+    mkdir build
+    cd build
+
+    cmake ../ -DINSTALL_UDEV_RULES=ON
+    make
+    sudo make install
+    sudo ldconfig
+    sudo cp ../rtl-sdr.rules /etc/udev/rules.d/
+    # sudo make install-udev-rules
+
+    sudo chmod -R go+rx /usr/local/lib/SoapySDR
+    sudo chmod -R go+rx /usr/local/share/cmake
+    rehash
+    SoapySDRUtil --find
+    SoapySDRUtil --probe="driver=rtlsdr"
+    #exit
+endif
+
+# Also need to do this once 
+if( 0 )then
+    sudo -i
+    echo "blacklist dvb_usb_rtl28xxu" > /etc/modprobe.d/blacklist-rtl.conf
+    echo "&&&&& Need to reboot for blacklist to take affect &&&&&&"
+    reboot
+endif
+
+# Test it
+rehash
+rtl_test -t
+
+
+# Play with rtl_fm
+if( 0 )then
+
+    # This works
+    rtl_fm -M wbfm -f 100.7M | play -r 32k -t raw -e s -b 16 -c 1 -V1 -
+    rtl_fm -f 100.7e6 -M wbfm -s 200000 -r 48000 - | aplay -r 48k -f S16_LE
+
+    # This doesn't
+    rtl_fm -M wbfm -f 100.7M | sox -traw -r24k -es -b16 -c1 -V1 - -tmp3 - 
+
+    # This works
+    rtl_fm -M wbfm -f 100.7M | sox -r 32k -t raw -e s -b 16 -c 1 -V1 - junk.wav
+    soxi junk.wav
+    sox junk.wav -n stats
+    play junk.wav
+
+    # So this is how the NOAA sat data should be collected:
+    rtl_fm -f 137.1M -s 60k -g 45 -p 55 -E wav -E deemp -F 9 - | sox -r 60k -t raw -e s -b 16 -c 1 -V1 - junk.wav rate 11025
+endif
+

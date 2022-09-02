@@ -10,8 +10,9 @@
 #set ROOT="/media/${USER}/pi"
 #set ROOT="/media/${USER}/aa2il"
 set ROOT="/media/${USER}/marconi"
-#set ROOT="/media/${USER}/3D76-ECB1/Xfer"
-set ROOT="/media/${USER}/acer"
+#set ROOT="/media/${USER}/3D76-ECB1"
+#set ROOT="/media/${USER}/acer"
+set ROOT="/media/${USER}/cartman"
 if( !(-e $ROOT) )then
     set ROOT="${ROOT}2"
 endif
@@ -25,11 +26,11 @@ echo PTH=$PTH
 set old=${ROOT}${PTH}
 
 # Overide if necessary
-set old="save52"
+#set old="save52"
 echo OLD=$old
 
 rm -f DIFFS
-foreach i (DIFF *.py SSTV FT8* *.bat *.m)
+foreach i (DIFF *.py SSTV FT8* *.bat *.m BUILD* *.txt)
     echo $i
     set n=`diff -w $old/$i $i | wc -l`
     if( $n>0 ) then
@@ -39,11 +40,11 @@ foreach i (DIFF *.py SSTV FT8* *.bat *.m)
         diff -w $old/$i $i >> DIFFS
         echo " " >> DIFFS
         
-        kompare $old/$i $i
-        #kompare $i $old/$i
+        #kompare $old/$i $i
+        kompare $i $old/$i
     endif
 end
 
-chmod +x pySDR.py DIFF
+chmod +x pySDR.py DIFF BUILD*
 
 cat DIFFS

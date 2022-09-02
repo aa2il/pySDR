@@ -1,0 +1,108 @@
+#! /bin/tcsh
+
+# Script to build support for SDR Play
+
+##########################################################################################
+
+# Goto SDRplay website and download driver from sdrplay.com ....
+# wget command should take care of this for us now!
+# Soapy support for latest driver has lagged behind and still isn't quite right.
+# That was OK with Mint 18.3 since we could just downgrade but not with Mint 19.3.  Things seem ok in Mint 20 & 21
+#set VER=2.11
+#set VER=2.13
+set VER=3.07
+set SUBVER=2
+set ARCH="Linux"
+#set ARCH="ARM32"
+set ARCH="NONE"                      # Do this to skip download from SDRPlay
+if( $ARCH == "Linux")then
+
+    echo "Installing SDRPlay driver version ${ARCH}-$VER ..."
+    pushd ~/AA2IL/SDR/SDRplay/
+    chmod 755 ./SDRplay_RSP_API-${ARCH}-${VER}.1.run
+    ./SDRplay_RSP_API-${ARCH}-${VER}.1.run
+    popd
+    sudo reboot
+    exit
+
+else if( $ARCH == "ARM32")then
+
+    echo "Installing SDRPlay driver version ${ARCH}-$VER ..."
+    wget https://www.sdrplay.com/software/SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
+    ls
+    chmod 755 ./SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
+    ./SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
+
+    # Didn't need the reboot on RPi bulleye
+    popd
+    #sudo reboot        
+    exit
+    
+endif
+
+##########################################################################################
+
+# SoapySDRPlay 
+if( 1 )then
+    echo "\n------------------------------------ Installing SoapySDR for SDRPlay ...\n"
+    cd ~/Dev
+    sudo rm -rf SoapySDRPlay
+    if( $VER == 3.07 )then
+    
+        # The current Soapy seems to work with the newer driver
+        git clone https://github.com/pothosware/SoapySDRPlay.git ./SoapySDRPlay
+        
+    elseif( 0 )then
+    
+        # There is a problem with the older SoapySDRplay and the 2.13 version of the driver.
+        # Just use what worked before for now
+        #cp -r /media/joea/0090ec56-66df-4bdd-a4cb-106cae0fbdb7/home/joea/Dev/SoapySDRPlay .
+        #tar cvf OLD_SoapySDRPlay.tar SoapySDRPlay
+        tar xvf OLD_SoapySDRPlay.tar
+
+        # not sure the pothos SoapySDRplay works with API 3 yet, try with the SDRPlay devs repo.
+        #https://github.com/SDRplay/SoapySDRPlay
+        
+    else
+    
+        # Not sure what this was, perhaps for RPi?
+        echo "I dont know what I am doing here!"
+        exit
+        #tar xzvf SoapySDRPlay-soapy-sdrplay-0.1.0.tar.gz 
+        #ln -s SoapySDRPlay-soapy-sdrplay-0.1.0 SoapySDRPlay
+    
+    endif
+
+    # Build it
+    cd ~/Dev/SoapySDRPlay
+    sudo rm -rf build
+    mkdir build
+
+    cd build
+    cmake ../
+    make
+
+    sudo make install
+    sudo ldconfig
+
+    # Permissions were a real problem when trying to get this to
+    # work on the RPi.
+    sudo chmod -R go+rx /usr/local/lib/SoapySDR
+    sudo chmod -R go+rx /usr/local/share/cmake
+
+    # Need to rehash to find new stuff
+    rehash
+
+    echo " "
+    echo "Testing Soapy SDRplay Driver ... "
+    echo SoapySDRUtil --find
+    SoapySDRUtil --find
+    echo " "
+    echo SoapySDRUtil --probe="driver=sdrplay"
+    SoapySDRUtil --probe="driver=sdrplay"
+
+    #echo --- If we are getting permission errors here, try rebooting ---
+
+    exit
+endif
+

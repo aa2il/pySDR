@@ -1,0 +1,29 @@
+# Under Mint 21, tried this but didn't work - "Illegal Instruction"
+
+# sudo apt -y install python3-soapysdr soapysdr-module-rtlsdr
+# libsoapysdr-doc libsoapysdr-dev soapysdr-tools rtl-sdr librtlsdr-dev
+
+# Had to resort to building from source.  Hopefully this will get
+# resolved some day.
+
+# BUILD_Soapy
+# BUILD_RTL
+# BUILD_SDRplay
+
+# pip3 install -r requirements.txt
+
+pyqt5
+matplotlib
+pyqtgraph
+basemap
+pyserial
+xlrd
+unidecode
+pyhamtools
+
+pandas
+scipy
+levenshtein
+
+
+
