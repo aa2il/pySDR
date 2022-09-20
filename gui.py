@@ -36,7 +36,7 @@ from rtty import *
 from widgets import *
 import collections
 from utils import  show_threads
-#from rig_io.socket_io import SetVFO
+from utilities import freq2band
 
 ################################################################################
 
@@ -1172,12 +1172,14 @@ class pySDR_GUI(QMainWindow):
                 return
             
             fc = self.lcd.get()
-            band = self.P.sock.get_band()
-            b = str(band)+'m'
-            band2 = convert_freq2band(fc)
-            b2 = str(band2)+'m'
+            #band = self.P.sock.get_band()
+            #b = str(band)+'m'
+            #band2 = convert_freq2band(fc)
+            #b2 = str(band2)+'m'
+            f = self.P.sock.get_freq()*1e-3
+            band = freq2band(1e-3*f)
+            band2 = freq2band(1e-6*fc)
             if band!=band2:
-                f = self.P.sock.get_freq()*1e-3
                 mode = self.P.sock.get_fldigi_mode()
                 if True:
                     frq=f

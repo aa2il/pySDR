@@ -30,11 +30,11 @@ import time
 from Tables import MODES,SDRplaysrates,RTLsrates
 import io
 from threading import enumerate
-from rig_io.util import convert_freq2band
 from rig_io.ft_tables import bands,CONNECTIONS,RIGS
 from multiprocessing import active_children
 from PyQt5.QtWidgets import QMessageBox,QSplashScreen
 from PyQt5.QtGui import QIcon, QPixmap
+from utilities import freq2band
 
 ############################################################################
 
@@ -206,7 +206,8 @@ def show_threads():
 def expand_ft4(frqs):  
     frqs2 = []
     for fc in frqs:
-        b = convert_freq2band(fc,True)
+        #b = convert_freq2band(fc,True)
+        b = freq2band(fc*1e-3)
         f = float(bands[b]['FT4'])
         #        frqs2.append(fc)
         #        frqs2.append(f)

@@ -31,8 +31,9 @@ from utils import adjust_foffset,expand_ft4
 from dx.wsjt_helper import WSJT_LOGFILE3,WSJT_LOGFILE4,WSJT_LOGFILE5
 import os
 import numpy as np
-from rig_io.util import convert_freq2band
+#from rig_io.util import convert_freq2band
 from rig_io.ft_tables import bands
+from utilities import freq2band
 
 from PyQt5.QtCore import QTimer
 
@@ -148,7 +149,8 @@ class FreqHopper:
         if P.FT4:
             P.NEW_FREQ=expand_ft4( np.array(fc)*1e-3 )*1e3
         elif P.FT44 and NUM_RX==3:
-            b = convert_freq2band(np.array(fc)*1e-3,True)
+            #b = convert_freq2band(np.array(fc)*1e-3,True)
+            b = freq2band(1e-6*fc)
             if '20m' in b:
                 f4 = float(bands['20m']['FT4'])
             elif '40m' in b:

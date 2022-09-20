@@ -30,6 +30,7 @@ else:
     from PyQt5.QtCore import * 
     from PyQt5.QtWidgets import *
 from rig_io.socket_io import *
+from utilities import freq2band
 
 ################################################################################
 
@@ -61,7 +62,9 @@ class RIG_CONTROL():
         lab = QLabel("Band:")
         grid.addWidget(lab,row,0)
         self.band_buttons={};
-        bb = str( self.sock.get_band() )+'m'
+        #bb = str( self.sock.get_band() )+'m'
+        f = self.P.sock.get_freq()*1e-6
+        bb = freq2band(f)
         print('bb=',bb)
 
         ALL_BANDS=CONTEST_BANDS + NON_CONTEST_BANDS
@@ -282,7 +285,9 @@ class RIG_CONTROL():
     def rig_status(self):
         print('RIG_STATUS: band=',self.sock.band,self.sock.band=='MW')
         if False:
-            self.band = str( self.sock.get_band() )+'m'
+            #self.band = str( self.sock.get_band() )+'m'
+            f = self.P.sock.get_freq()*1e-6
+            self.band = freq2band(f)
         else:
             if self.sock.band=='MW':
                 self.band='160m'
