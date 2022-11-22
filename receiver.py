@@ -636,7 +636,8 @@ class SDR_EXECUTIVE:
         # Check if we need to change RTL direct sampling mode
         if P.SDR_TYPE=='rtlsdr':
             frq=.001*P.FC[0]
-            if frq>=29.7e3 and P.DIRECT_SAMP!=0:
+            #if frq>=29.7e3 and P.DIRECT_SAMP!=0:
+            if frq>=28.0e3 and P.DIRECT_SAMP!=0:
                 P.gui.DirectSelect(0)
             elif frq<28e3 and P.DIRECT_SAMP!=2:
                 P.gui.DirectSelect(2)

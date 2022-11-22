@@ -17,3 +17,6 @@
 /demod_*.dat
 /demod_*.wav
 /*.mp3
+/build/*
+/pySDR.spec
+/dist/pySDR
