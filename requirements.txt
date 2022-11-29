@@ -12,6 +12,15 @@
 
 # pip3 install -r requirements.txt
 
+# There are some changes in the latest pyqtgraph so for now, we use
+# the older version untile I can catch up
+
+# pip3 install --upgrade pyqtgraph==0.12.4
+
+# Once these are resolved, should be able to use 
+
+# pip3 install --upgrade pyqtgraph
+
 pyqt5
 matplotlib
 pyqtgraph

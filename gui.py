@@ -930,7 +930,8 @@ class pySDR_GUI(QMainWindow):
         if not self.P.SHOW_BASEBAND_PSD:
             self.btn4.setText('Stop BB IQ PSD')
             self.plots_bb.pwin.show()
-            self.plots_bb.pwin.setGeometry(0,0,self.screen_width-1,self.screen_height/5)
+            self.plots_bb.pwin.setGeometry(
+                QRect(0,0,self.screen_width-1,int(self.screen_height/5)))
         else:
             self.btn4.setText('Start BB IQ PSD')
             self.plots_bb.pwin.hide()
@@ -945,7 +946,8 @@ class pySDR_GUI(QMainWindow):
         if self.P.SHOW_AF_PSD:
             self.btn3.setText('Stop AF PSD')
             self.plots_af.pwin.show()
-            self.plots_af.pwin.setGeometry(0,0,self.screen_width-1,self.screen_height/5)
+            self.plots_af.pwin.setGeometry(
+                QRect(0,0,self.screen_width-1,int(self.screen_height/5)))
             self.btn3.setChecked(True)
         else:
             self.btn3.setText('Start AF PSD')
@@ -1503,11 +1505,14 @@ class pySDR_GUI(QMainWindow):
                 
                 # Left click as an SDR - shift SDR center freq
                 print("\tLeft button - Setting SDR freq to",frq)
-                if self.so2v_cb.isChecked():    # or self.split_cb.isChecked(): 
-                    vfo='B'                              # For so2v, VFO B follows the SDR
+                if self.so2v_cb.isChecked() or self.split_cb.isChecked():
+                    
+                    # SO2V or DX split - Set rig VFO A
+                    #vfo='B'                              # For so2v, VFO B follows the SDR
                     vfo='A'                              # For so2v, Set rig freq
                     # See note below on how it might be more intuitive to use L&R buttons
                 else:
+                    
                     vfo='A'                              # For everything else, VFO A follows the SDR
                     
                 self.FreqSelect(frq,True,vfo)
@@ -1541,8 +1546,8 @@ class pySDR_GUI(QMainWindow):
             # If we decide to change this, also change 'B' to 'A' above under button 1
             elif self.so2v_cb.isChecked():
 
-                # This is how it was for S02V
-                vfo='A'
+                # SO2V - Set rig VFO B
+                #vfo='A'
                 vfo='B'
                 print("MouseClickRF: Right click - Setting Rig Freq",\
                       frq,'\tVFO=',vfo)
@@ -1550,16 +1555,20 @@ class pySDR_GUI(QMainWindow):
 
             elif self.split_cb.isChecked():
                 
-                # Use this for DX split ops
-                vfo='A'
+                # DX split - Adjust Clarifier
                 frq1 = self.P.sock.get_freq()*1e-3
                 df = frq-frq1
                 print("Right button - Setting Split",frq,frq1,df)
                 SetTXSplit(self.P,df)
+
+                # Also tune SDR to pile-up so we can listen to it
+                #vfo='A'
+                vfo='B'
                 #print("Right button - Freq Select ...",frq,True,vfo)
-                #self.FreqSelect(frq,True,vfo)
+                self.FreqSelect(frq,True,vfo)
                 
         elif button==4:
+
             # Middle button with 2 RXs or SO2V - swap rig VFOs
             if self.P.NUM_RX==2 or self.so2v_cb.isChecked():
                 rig_vfo = self.P.sock.get_vfo()
@@ -1587,6 +1596,7 @@ class pySDR_GUI(QMainWindow):
             else:
                 print("MouseClickRF: Middle button - TBD")
 
+                
     # Callback to change center freq
     def FreqSelect(self,new_frq,tune_rig=True,VFO=[]):
         P = self.P

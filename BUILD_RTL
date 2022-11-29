@@ -8,7 +8,7 @@
 if( 1 )then
     echo "\n------------------------------------ Installing SoapSDR for RTL part 1 ...\n"
     cd ~/Dev
-    sudo apt-get install rtl-sdr librtlsdr-dev
+    sudo apt-get -y install rtl-sdr librtlsdr-dev
 
     sudo rm -rf SoapyRTLSDR
     git clone https://github.com/pothosware/SoapyRTLSDR.git

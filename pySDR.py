@@ -183,7 +183,8 @@ def start_threads(P):
 def RIG_Updater(P):
         
     logging.info('Starting ...')
-    while not P.Stopper.isSet():
+    #while not P.Stopper.isSet():
+    while not P.Stopper.is_set():
 
         # Need to reconcile this also
         if False:

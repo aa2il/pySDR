@@ -1,7 +1,7 @@
 ############################################################################
 #
 # Plotting.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Plotting related functions for pySDR
 #
@@ -21,20 +21,13 @@
 
 import sys
 import pyqtgraph as pg
-if False:
-    # use Qt4 
-    from PyQt4.QtGui import QLCDNumber,QLabel
-    from PyQt4.QtCore import * 
-else:
-    # use Qt5
-    from PyQt5.QtWidgets import QLCDNumber,QLabel
-    from PyQt5.QtCore import * 
+from PyQt5.QtGui import QTransform
+from PyQt5.QtWidgets import QLCDNumber,QLabel
+from PyQt5.QtCore import * 
 from Tables import *
 import sig_proc as dsp
 import numpy as np
 import scipy.signal as signal
-
-# sudo pip install --upgrade numpy scipy pyqtgraph
 
 ################################################################################
 
@@ -55,8 +48,9 @@ def get_color_map(key, pos_min, pos_max):
 class plot1d():
     def __init__(self,win_label='Plot 1-D',TITLE=None,symbols=[None,None],pens=['r','g']):
 
-        self.pwin = pg.GraphicsWindow(title=win_label)
-        self.pwin.show()
+        #self.pwin = pg.GraphicsWindow(title=win_label)
+        #self.pwin.show()
+        self.pwin = pg.GraphicsLayoutWidget(show=True,title=win_label)
 
         # Create plot for (potentially complex-valued) time series
         self.p1 = self.pwin.addPlot(title=TITLE)
@@ -109,7 +103,8 @@ class imager():
         # Otherwise, we get multiple calls
 
         if not pwin:
-            pwin = pg.GraphicsWindow()
+            #pwin = pg.GraphicsWindow()
+            pwin = pg.GraphicsLayoutWidget()
         self.pwin=pwin
 
         self.img = pg.ImageItem(border='w')
@@ -152,21 +147,32 @@ class imager():
             
         # Adjust pixel scaling so image lines use with axis
         if len(xdata)>0:
-            xsc = (xdata[-1]-xdata[0])/data.shape[0] 
+            xsc = float(xdata[-1]-xdata[0])/data.shape[0] 
             xt = xdata[0]/xsc
             if xsc!=self.xscale or  xt!=self.xtrans:
                 # print "Re-scaling"
 
                 # Undo previous shift & scale
-                self.img.translate(-self.xtrans, 0)
-                self.img.scale(1./self.xscale,1)
+                if False:
+                    self.img.translate(-self.xtrans, 0)
+                    self.img.scale(1./self.xscale,1)
+                else:
+                    tr1 = QTransform()
+                    tr1.translate(-self.xtrans, 0)
+                    tr1.scale(1./self.xscale,1)
+                    self.img.setTransform(tr1)
 
                 # Apply new shift and scale
-                self.img.scale(xsc,1)
                 self.xscale = xsc
-
                 self.xtrans= xt
-                self.img.translate(self.xtrans, 0)
+                if False:
+                    self.img.scale(self.xscale,1)
+                    self.img.translate(self.xtrans, 0)
+                else:
+                    tr2 = QTransform()
+                    tr2.scale(self.xscale,1)
+                    tr2.translate(self.xtrans, 0)
+                    self.img.setTransform(tr2)
 
                 # print self.xscale,self.xtrans,frq[0],frq[-1],len(frq),npsd
 
@@ -224,8 +230,9 @@ class three_box_plot():
         self.fc=0
 
         # Create plot window and start out with it hidden
-        self.pwin = pg.GraphicsWindow(title=win_label)
-        self.pwin.hide()
+        #self.pwin = pg.GraphicsWindow(title=win_label)
+        #self.pwin.hide()
+        self.pwin = pg.GraphicsLayoutWidget(show=False,title=win_label)
 
         # Create plot for (potentially complex-valued) time series
         self.p1 = self.pwin.addPlot(title=TITLE1)
