@@ -1503,18 +1503,9 @@ class pySDR_GUI(QMainWindow):
             # Left click - What we do depends on how SDR is being used
             if self.P.RIG_IF==0 or True:
                 
-                # Left click as an SDR - shift SDR center freq
+                # Left click as an SDR - shift SDR & Rig center freq
                 print("\tLeft button - Setting SDR freq to",frq)
-                if self.so2v_cb.isChecked() or self.split_cb.isChecked():
-                    
-                    # SO2V or DX split - Set rig VFO A
-                    #vfo='B'                              # For so2v, VFO B follows the SDR
-                    vfo='A'                              # For so2v, Set rig freq
-                    # See note below on how it might be more intuitive to use L&R buttons
-                else:
-                    
-                    vfo='A'                              # For everything else, VFO A follows the SDR
-                    
+                vfo='A'                           # VFO A always follows left click
                 self.FreqSelect(frq,True,vfo)
                 
                 # Not quite sure what this is for?
