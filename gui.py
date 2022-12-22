@@ -682,6 +682,10 @@ class pySDR_GUI(QMainWindow):
                     time.sleep(1)
                     self.P.app.processEvents() 
 
+        if self.P.UDP_CLIENT and self.P.udp_client:
+            #self.P.udp_client.Close()
+            self.P.udp_client.Stopper.set()
+                    
         # Loop through all the threads and close (join) them
         print("Waiting for threads to quit...")
         show_threads()

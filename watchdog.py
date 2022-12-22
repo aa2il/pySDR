@@ -26,6 +26,7 @@ import sys
 from rig_io.socket_io import find_fldigi_port   # convert_freq2band
 from Tables import BANDS
 from utilities import freq2band
+from udp import open_udp_client
 
 ############################################################################
 
@@ -61,6 +62,21 @@ class WatchDog:
         self.avg_latency = [0]*P.MAX_RX
         self.zz = np.zeros(P.OUT_CHUNK_SIZE, np.complex64)
 
+
+    # Function to monitor udp connection
+    def check_udp_client(self):
+
+        if self.P.UDP_CLIENT:
+            if not self.P.udp_client:
+                self.P.udp_ntries+=1
+                if self.P.udp_ntries<=1000:
+                    ok=open_udp_client(self.P,7474)
+                    if ok:
+                        self.P.udp_ntries=0
+                else:
+                    print('Unable to open UDP client - too many attempts',self.P.udp_ntries)
+
+        
     # Function to monitor audio ring buffers
     def check_ringbuff(self,t,irx,verbosity):
 
@@ -196,6 +212,10 @@ class WatchDog:
             elif mode=='RTTY' and rig_mode!='PKT-U':
                 print('WATCHDOG: Setting rig to match FLDIGI decoder',mode,rig_mode,P.MODE,'...')
                 P.sock.set_mode(mode)
+
+        # Check UDP client
+        if P.UDP_CLIENT:
+            self.check_udp_client()
 
         # Check rig band
         if P.sock and P.FOLLOW_BAND and P.sock.active:

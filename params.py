@@ -143,6 +143,8 @@ class RUN_TIME_PARAMS:
                               action='store_true')
         arg_proc.add_argument('-mute', help='Mute the audio replay',
                               action='store_true')
+        arg_proc.add_argument('-udp', action='store_true',
+                              help='Start UDP client')
         arg_proc.add_argument('-nosplash', help='Dont put up splash screen',
                               action='store_true')
         arg_proc.add_argument("-rig", help="Connection Type",
@@ -317,6 +319,7 @@ class RUN_TIME_PARAMS:
         self.PORT            = args.port
         self.frqArx          = None
         self.frqAtx          = None
+        self.UDP_CLIENT      = args.udp
 
         self.HAMLIB_SERVERS  = not args.no_hamlib and not self.REPLAY_MODE
         self.RIG_CONTROL_MENU = not args.no_rigctl

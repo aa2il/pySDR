@@ -56,9 +56,9 @@
 #from __future__ import print_function
 
 # Suppress warnings from latest version of SciPy - not sure if we need this anymore
-import warnings
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+#import warnings
+#warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+#warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 import sig_proc as dsp
 import numpy as np
@@ -72,6 +72,7 @@ import rig_io.hamlibserver as rigctl
 import datetime
 import threading
 from profiler import *
+from udp import open_udp_client
 
 ################################################################################
 
@@ -159,6 +160,11 @@ def start_threads(P):
         th.start()
         P.threads.append(th)
 
+    # Open UDP client
+    if P.UDP_CLIENT:
+        P.udp_ntries=0
+        open_udp_client(P,7474)
+        
     # Instantiate the receive processor
     P.evt = threading.Event()
     P.sdr=None
