@@ -44,6 +44,8 @@ def udp_msg_handler(self,sock,msg):
                 P.SO2V=False
             print('UDP MSG HANDLER: mm=',mm,'\tSetting SO2V',P.SO2V)
             P.gui.so2v_cb.setChecked(P.SO2V)
+            self.P.MUTED[0]=False
+            P.gui.MuteCB(0,True)
 
         elif mm[0]=='Name':
             if mm[1]=='?':

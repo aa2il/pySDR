@@ -52,7 +52,7 @@ if( 1 )then
         # The current Soapy seems to work with the newer driver
         git clone https://github.com/pothosware/SoapySDRPlay.git ./SoapySDRPlay
         
-    elseif( 0 )then
+    else if( 0 )then
     
         # There is a problem with the older SoapySDRplay and the 2.13 version of the driver.
         # Just use what worked before for now
