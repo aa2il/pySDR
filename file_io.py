@@ -1,7 +1,7 @@
 ############################################################################
 #
 # file_io.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Functions related to file I/O
 #
@@ -241,10 +241,15 @@ class sdr_fileio:
 
         
     # Function to write data to disk
-    def save_data(self,x):
+    def save_data(self,x,VERBOSITY=0):
+
+        if VERBOSITY>0:
+            print('SAVE_DATA: Saving chunk',len(x),'\ttag=',self.tag)
 
         # If this is the first block, write out a simple header
         if not self.hdr_written:
+            if VERBOSITY>0:
+                print('SAVE_DATA: Writing header ...')
             self.write_header(self.P,self.fname,self.nchan,self.tag)
             self.hdr_written = True
 
@@ -259,13 +264,14 @@ class sdr_fileio:
         # Convert data to 32-bit floats & write it out
         if len(x)>0:
 
-            # Disabled for now - don't seem to be using this format much lately
-            if False:
+            # Save raw data - logic here needs to be impoved so we can do both??
+            if not self.WAVE_OUT:                   # Was False --> didn't save anything
                 if self.nchan==1:
                     x.real.astype(self.dtype).tofile(self.fp)
                 else:
                     x.astype(self.dtype).tofile(self.fp)
-                
+
+            # Save wav data
             if self.WAVE_OUT:
                 # In Python3, this seemed to get a whole lot easier - or maybe I was just over thinking it!
                 if sys.version_info[0]==3:

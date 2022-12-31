@@ -1,7 +1,7 @@
 ############################################################################
 #
 # receiver.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Top level receiver routines
 #
@@ -720,7 +720,8 @@ class SDR_EXECUTIVE:
 
             # Save raw data to disk
             if P.SAVE_IQ:
-                P.raw_iq_io.save_data(x)
+                #print('SDR_RX: Saving raw chunk',len(self.x))
+                P.raw_iq_io.save_data(self.x,VERBOSITY=0)
 
             # Get ready to do it again
             P.RX_DONE = P.RX_DONE or t>=P.DURATION or (P.Stopper and P.Stopper.isSet())

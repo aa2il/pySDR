@@ -37,26 +37,33 @@ fname='baseband_iq_20190216_173349.dat';
 fname='baseband_iq_20190215_182952.dat';
 fname='baseband_iq_20190226_230830.dat';
 
-% CW
-#fname='demod_20190321_225218.dat';
-
-fname
-
-NFFT=1024*16
-
 % Russian ISS SSTV - low mod index
 fname='SatComm2/baseband_iq_20190413_221346.dat'
 fname='SatComm2/baseband_iq_20190412_013210.dat'
 fname='SatComm2/baseband_iq_20190413_185551.dat'
 fname='SatComm2/baseband_iq_20190414_012518.dat'
 
+% CW
+%fname='demod_20190321_225218.dat';
+fname='raw_iq_20221230_011545.dat';           % RTL - looks saturated
+%fname='raw_iq_20221230_014530.dat';           % SDR Play - wrong ant port
+fname='raw_iq_20221230_020045.dat';           % SDR Play - looks promising
 
-% Read data 
+% Looks like if we use SDRplay & fs=1 MHz, we can do pretty good - try
+% implementing some kind of notch or noise canceller
+
+fname
+
+NFFT=1024*16
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+
+% Read the data 
 [y,hdr,str]=read_sdr_data(fname);
 
 % Keep a piece - use waterfall to find segs
 idx=[];
-idx = (2000*NFFT/2) : (2800*NFFT/2);          % SSTV section
+%idx = (2000*NFFT/2) : (2800*NFFT/2);          % SSTV section
 if length(idx)>0
   y = y(idx);
   y(1:10)
@@ -71,15 +78,18 @@ if length(idx)>0
 end
 
 % Write wave file
-%y(1:10)
-yy=[real(y) , imag(y)];
-%yy(1:10,:)
-[d,n,e]=fileparts(fname)
-if length(d)==0, d='.'; end
-fout = [d '/' n '.wav']
-fs=hdr(1)
-wavwrite(yy,fs,fout)
-clear yy
+if 0
+   %y(1:10)
+   yy=[real(y) , imag(y)];
+   %yy(1:10,:)
+   [d,n,e]=fileparts(fname)
+   if length(d)==0, d='.'; end
+   fout = [d '/' n '.wav']
+   fs=hdr(1)
+   %wavwrite(yy,fs,fout)            % Cant find this function in octave 6.4
+   audiowrite(fout,yy,fs)           % Try this instead
+   clear yy
+end
 
 length(y)
 hdr
@@ -90,6 +100,7 @@ nchan=hdr(4)
 
 t=(0:(length(y)-1))/fs;
 
+% Plot the raw data
 figure
 subplot(2,1,1)
 plot(t,real(y))
@@ -103,6 +114,7 @@ z=axis;
 axis([0 t(end) z(3:4)])
 grid on
 
+% and its PSD
 subplot(2,1,2)
 x = y;
 X = fft(x);
@@ -120,6 +132,7 @@ grid on
 z=axis;
 axis([-fs/2000 fs/2000 z(3:4)])
 
+%return
 
 
 [WF,istart] = waterfall(y,NFFT,NFFT,0.5);
@@ -133,6 +146,8 @@ WF2=10*log10(WF);
   ylabel('Freq bin')
   colorbar;
 
+return
+  
 %  z=axis;
 %  axis([z(1) z(2) NFFT/2 NFFT])
 
@@ -146,7 +161,9 @@ fm = real(y1).*imag(d) - imag(y1).*real(d);
 
 figure
 plot(fm)
-
+title('FM')
+xlabel('Time')
+ylabel('fm')
 
 
 
