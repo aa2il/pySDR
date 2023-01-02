@@ -20,3 +20,6 @@
 /build/*
 /pySDR.spec
 /dist/pySDR
+/raw_iq_*.dat
+/sigs/__pycache__/file_io.cpython-310.pyc
+/sigs/raw_iq_*.dat

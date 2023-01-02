@@ -187,7 +187,7 @@ class RUN_TIME_PARAMS:
         else:
             print('SDRplay rates =',SDRplaysrates)
             if fs==0:
-                fs=0.5
+                fs=1     # Was 0.5
             #if not args.fs in SDRplaysrates:
             idx = np.argmin( np.abs( np.array(SDRplaysrates) - fs ) )
             self.SRATE = 1e6*SDRplaysrates[idx]

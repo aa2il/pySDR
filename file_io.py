@@ -28,6 +28,7 @@ import struct
 import os
 import sys
 from scipy.io import wavfile
+from sig_proc import up_dn
 
 ###################################################################
 
@@ -74,6 +75,16 @@ class sdr_fileio:
 
             # Position pointer to start of requested data
             if P:
+                P.SRATE     = self.srate
+                P.REPLAY_FC = self.fc
+                P.FC        = self.fc
+                if self.fname.find('baseband_iq'):
+                    P.FS_OUT=P.SRATE
+                P.UP , P.DOWN   = up_dn(P.SRATE , P.FS_OUT )
+                P.FS_OUT        = int( P.SRATE * P.UP / P.DOWN   )
+                
+                if not hasattr(P,'REPLAY_START'):
+                    P.REPLAY_START=0
                 istart = int( P.REPLAY_START*60*self.srate*self.nchan*4 )
                 if istart>0:
                     if self.WAVE_IN:
