@@ -2,7 +2,7 @@
 ############################################################################
 #
 # pySDR.py - Rev 1.0
-# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # A complete SDR written in Python.
 #
@@ -27,6 +27,13 @@
 #    - -offset doesn't seem quite right
 #    - need to get control of RF gain
 #    - To update pyqtgraph, goto http://www.pyqtgraph.org/, download .deb file at top of page & click on it to install
+#
+# SDRplay Problems:
+#    - If we unplug the SDRplay USB cable & plug it back in, the driver fails.  To solve this, kill the driver:
+#         ps -A u | fgrep sdr         # Get process ID
+#         sudo kill -9 nnnn           # where nnnn is he process ID
+#         SoapySDRUtil --find                           # Test things out
+#         SoapySDRUtil --probe="driver=sdrplay"
 #
 # This seems to cause problems if we sudo it so don't:
 # pip3 install --upgrade numpy scipy pyqtgraph

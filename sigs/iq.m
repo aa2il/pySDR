@@ -1,5 +1,7 @@
 % Script to play with raw IQ data recorded from sdr
 
+% This is excrutiatingly slow in octave - migrate everything to
+% to python instead!!!!
 close all
 clear all
 

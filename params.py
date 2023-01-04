@@ -106,6 +106,8 @@ class RUN_TIME_PARAMS:
                               type=float,default=0)
         arg_proc.add_argument('-pan', help='Pan Adaptor',
                               action='store_true')
+        arg_proc.add_argument('-transpose', help='Transpose Waterfalls',
+                              action='store_true')
         arg_proc.add_argument("-pan_bw", help="Pan Adaptor Bandwidth (KHz)",
                               type=float,default=0)
         arg_proc.add_argument("-pan_dr", help="Pan Adaptor Dynamic Range (dB)",
@@ -291,6 +293,7 @@ class RUN_TIME_PARAMS:
         self.PAN_BW          = args.pan_bw*1e3
         self.PAN_DR          = args.pan_dr
         self.FS_OUT          = args.fsout*1e3
+        self.TRANSPOSE      = args.transpose
         self.FS_OUT_CORR     = args.corr
         self.SAVE_IQ         = args.save_iq
         self.SAVE_BASEBAND   = args.save_baseband

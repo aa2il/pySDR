@@ -556,16 +556,16 @@ class pySDR_GUI(QMainWindow):
         #title="pySDR by AA2IL"
         self.plots_rf=three_box_plot(P,"RF - AA2IL","RF Time Series","RF PSD", \
                                      P.SRATE/1000.,P.FOFFSET/1000.,P.IN_CHUNK_SIZE,
-                                     2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF)
+                                     2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF,P.TRANSPOSE)
         self.plots_rf.hide()
         OVERLAP = 0.5   # 0.75
         self.plots_af=three_box_plot(P,"Demod Audio - AA2IL","AF Time Series","AF PSD", \
                                      P.FS_OUT/1000.,0,4*P.OUT_CHUNK_SIZE,
-                                     8*P.OUT_CHUNK_SIZE,OVERLAP,self.MouseClickRF)
+                                     8*P.OUT_CHUNK_SIZE,OVERLAP,self.MouseClickRF,P.TRANSPOSE)
         self.plots_af.hide()
         self.plots_bb=three_box_plot(P,"Baseband IQ - AA2IL","Baseband Time Series", \
                                      "Baseband PSD", P.FS_OUT/1000.,0,P.IN_CHUNK_SIZE,
-                                     2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF)
+                                     2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF,P.TRANSPOSE)
         self.plots_bb.hide()
 
         screen_resolution = app.desktop().screenGeometry()
@@ -934,8 +934,17 @@ class pySDR_GUI(QMainWindow):
         if not self.P.SHOW_BASEBAND_PSD:
             self.btn4.setText('Stop BB IQ PSD')
             self.plots_bb.pwin.show()
-            self.plots_bb.pwin.setGeometry(
-                QRect(0,0,self.screen_width-1,int(self.screen_height/5)))
+            if self.P.TRANSPOSE:
+                w=int(self.screen_width/5)
+                h=self.screen_height-1
+                x=4*w
+                y=0
+            else:
+                x=0
+                y=0
+                w=self.screen_width-1
+                h=int(self.screen_height/5)
+            self.plots_bb.pwin.setGeometry( QRect(x,y,w,h) )
         else:
             self.btn4.setText('Start BB IQ PSD')
             self.plots_bb.pwin.hide()
@@ -948,10 +957,20 @@ class pySDR_GUI(QMainWindow):
     def StartStopAF_PSD(self):
         self.P.SHOW_AF_PSD = not self.P.SHOW_AF_PSD
         if self.P.SHOW_AF_PSD:
+            print('STARTing AF PSD ...')
             self.btn3.setText('Stop AF PSD')
             self.plots_af.pwin.show()
-            self.plots_af.pwin.setGeometry(
-                QRect(0,0,self.screen_width-1,int(self.screen_height/5)))
+            if self.P.TRANSPOSE:
+                w=int(self.screen_width/5)
+                h=self.screen_height-1
+                x=4*w
+                y=0
+            else:
+                x=0
+                y=0
+                w=self.screen_width-1
+                h=int(self.screen_height/5)
+            self.plots_af.pwin.setGeometry( QRect(x,y,w,h) )
             self.btn3.setChecked(True)
         else:
             self.btn3.setText('Start AF PSD')
@@ -1495,6 +1514,8 @@ class pySDR_GUI(QMainWindow):
     # Callback to change center freq when clicked 
     def MouseClickRF(self,button,frq,y,fc):
         print('MouseClickRF in:',button,frq,y,self.P.PSD_AF_FC2,fc)
+        if self.P.TRANSPOSE:
+            frq,y = y,frq
         
         # Make sure we include center freq if it is not already part of the plot
         #if self.P.PSD_AF_FC2==0:

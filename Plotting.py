@@ -1,7 +1,7 @@
 ############################################################################
 #
-# Plotting.py - Rev 1.0
-# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
+# Plotting.py - Rev 1.1
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Plotting related functions for pySDR
 #
@@ -103,7 +103,6 @@ class imager():
         # Otherwise, we get multiple calls
 
         if not pwin:
-            #pwin = pg.GraphicsWindow()
             pwin = pg.GraphicsLayoutWidget()
         self.pwin=pwin
 
@@ -126,7 +125,7 @@ class imager():
                                         rateLimit=60, slot=self.mouseMoved)
 
     # Function to plot an image
-    def imagesc(self,data,xlim=[],ylim=[],xdata=[],ydata=[]):
+    def imagesc(self,data,xlim=[],ylim=[],xdata=[],ydata=[],FLIP=False):
         self.img.setImage(data)
         #self.img.update()
         #self.p3.update()
@@ -143,7 +142,8 @@ class imager():
             self.p3.setYRange(0, data.shape[1], padding=0)
 
         # Flip image upside down
-        #self.p3.getViewBox().invertY(True)
+        if FLIP:
+            self.p3.getViewBox().invertY(True)
             
         # Adjust pixel scaling so image lines use with axis
         if len(xdata)>0:
@@ -222,17 +222,22 @@ class imager():
 
 # Object to plot data and its PSD
 class three_box_plot():
-    def __init__(self,P,win_label,TITLE1,TITLE2,fs,foff,chunk_size,Nfft,overlap,clickCB=None):
+    def __init__(self,P,win_label,TITLE1,TITLE2,fs,foff,chunk_size,Nfft,overlap,clickCB=None,TRANSPOSE=False):
         self.P = P
         self.enable_mouse=True     # This will be the driver routine for the mouse
         self.clickCB = clickCB
         self.foff=foff
         self.fc=0
+        self.TRANSPOSE=TRANSPOSE
 
         # Create plot window and start out with it hidden
-        #self.pwin = pg.GraphicsWindow(title=win_label)
-        #self.pwin.hide()
         self.pwin = pg.GraphicsLayoutWidget(show=False,title=win_label)
+        self.pwin.hide()
+
+        # Tighten borders - order looks like LEFT, TOP, RIGHT, BOTTOM
+        # set BOTTOM=100 (3rd element) when we're ready for spot labels - NO!!!
+        self.pwin.centralWidget.layout.setContentsMargins(0,0,0*100,0)
+        #self.pwin.centralWidget.layout.setSpacing(0)
 
         # Create plot for (potentially complex-valued) time series
         self.p1 = self.pwin.addPlot(title=TITLE1)
@@ -485,11 +490,38 @@ class three_box_plot():
 
         #zz = (1./sigma)*( self.wf[0:npsd,:] - mu)
         zz = self.wf[0:npsd,:] - med
-        #print 'PLOT:',P.PAN_DR,np.maximum(zz,0),np.minimum(np.maximum(zz,0),P.PAN_DR)
-        #self.imager.imagesc(np.minimum(np.maximum(zz,0),P.PAN_DR) , xlim=[f1,f2],xdata=frq)
-
         zmax = np.nanmax(zz)
-        self.imager.imagesc(np.maximum(zz,zmax-P.PAN_DR) , xlim=[f1,f2],xdata=frq)
+        if self.TRANSPOSE:
+            self.imager.imagesc(np.maximum(np.transpose(zz),zmax-P.PAN_DR),
+                                ylim=[f1,f2],ydata=frq,FLIP=True)
+            ax=self.p3.getAxis('bottom')
+        else:
+            self.imager.imagesc(np.maximum(zz,zmax-P.PAN_DR),
+                                xlim=[f1,f2],xdata=frq)
+            ax=self.p3.getAxis('left')
+
+        # Hide time axis
+        ax.hide()
+
+        # This will add text above/next to the plot
+        # Don't want this here but this shows how we do it
+        if False:
+            self.addSpot(0.5*(f1+f2),100,'Hello!','red')
+        
+    # Add spots to waterfall - a work in progress
+    def addSpot(self,x,y,txt,c):
+        spot = pg.TextItem(txt,c)
+        self.p3.addItem(spot,ignoreBounds=True)
+        if self.TRANSPOSE:
+            y,x=x,y
+            self.p3.setRange(xRange=(0,self.wf.shape[1]+10))
+        else:
+            # Not sure why the magic offset of 10 here but it works
+            # Really should
+            self.p3.setRange(yRange=(10,self.wf.shape[1]))
+            y+=10
+            pass
+        spot.setPos(x,y)
 
         
     # Function to shift waterfall when we change freqs

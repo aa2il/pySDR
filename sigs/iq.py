@@ -5,6 +5,7 @@
 import sys
 import numpy as np
 from scipy import signal
+from scipy.fft import fftshift
 import matplotlib.pyplot as plt
 from pprint import pprint
 import file_io
@@ -41,10 +42,10 @@ def two_box_plot(x,X,fs,fname,f):
     plt.xlim(f[0],f[-1])
     plt.grid()
     fig.tight_layout()
-    plt.show()
+    #plt.show()
 
 ##############################################################################
-    
+
 # Init param structure
 class Empty():
     def __init__(self):
@@ -74,6 +75,45 @@ X = psd.psd_est(x,True)
 
 frq=1e-3*psd.frq2
 two_box_plot(x,X,fs,fname,frq)
+#plt.show()
 
-    
-    
+# Waterfall - this seems quite fast - should bundle this up into a nice package.
+# My matlab routine is waterfall.m but I don't think we need it
+# This pretty much shows that the SDR data is contaminated bx of strength of
+# own signal.  Not sure much more can be done?
+print('Waterfalling ...')
+f, t, Sxx = signal.spectrogram(x, fs, nperseg=N,window=('chebwin',-100))
+#                               ,window=('kaiser', 8.6))
+print('t=',t)
+print('f=',f)
+print(np.max(Sxx),np.min(Sxx))
+PSD=fftshift( 10*np.log10( Sxx ) , axes=0 )
+mx=np.max(PSD)
+mn=max(np.min(PSD),mx-100)
+f=.001*fftshift(f)              
+print('PSD=',PSD)
+print(np.max(PSD),np.min(PSD),mx,mn)
+print('Plotting ...')
+fig = plt.figure()
+img=plt.imshow(PSD,aspect='auto',clim=[mn,mx],extent=[t[0],t[-1],f[0],f[-1]])
+img.set_cmap('jet')
+plt.colorbar()
+
+# This is vry slow!
+#plt.pcolormesh(t, fftshift(f), fftshift(Sxx, axes=0), shading='gouraud')
+
+plt.ylabel('Frequency [KHz]')
+plt.xlabel('Time [sec]')
+#plt.show()
+
+# We can get the periodogram PSD estimate very quickly from this
+if False:
+    X=np.mean(Sxx,axis=1) 
+    print(np.shape(Sxx),np.shape(X),np.shape(f))
+    print(X)
+    fig = plt.figure()
+    plt.plot(10*np.log10(X))
+
+plt.show()
+
+

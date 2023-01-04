@@ -64,7 +64,7 @@ def open_udp_client(P,port):
     try:
         
         print('Opening UDP client ...')
-        P.udp_client = TCP_Client(P,None,port,handler=udp_msg_handler)
+        P.udp_client = TCP_Client(P,None,port,Handler=udp_msg_handler)
         worker = Thread(target=P.udp_client.Listener,args=(), kwargs={}, name='UDP Client' )
         worker.setDaemon(True)
         worker.start()
