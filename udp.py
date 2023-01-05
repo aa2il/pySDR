@@ -26,7 +26,6 @@ from tcp_client import *
 # UDP Message handler for pySDR
 def udp_msg_handler(self,sock,msg):
 
-    #P=udp_msg_handler.P
     P=self.P
     
     id=sock.getpeername()
@@ -59,12 +58,11 @@ def udp_msg_handler(self,sock,msg):
 # Function to open UDP client
 def open_udp_client(P,port):
     
-    #udp_msg_handler.P=P
-    
     try:
         
         print('Opening UDP client ...')
-        P.udp_client = TCP_Client(P,None,port,Handler=udp_msg_handler)
+        P.udp_client = TCP_Client(P,None,port,Client=True,
+                                  Handler=udp_msg_handler)
         worker = Thread(target=P.udp_client.Listener,args=(), kwargs={}, name='UDP Client' )
         worker.setDaemon(True)
         worker.start()
