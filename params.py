@@ -108,6 +108,8 @@ class RUN_TIME_PARAMS:
                               action='store_true')
         arg_proc.add_argument('-transpose', help='Transpose Waterfalls',
                               action='store_true')
+        arg_proc.add_argument('-bandmap', help='Add spots to Waterfall',
+                              action='store_true')
         arg_proc.add_argument("-pan_bw", help="Pan Adaptor Bandwidth (KHz)",
                               type=float,default=0)
         arg_proc.add_argument("-pan_dr", help="Pan Adaptor Dynamic Range (dB)",
@@ -293,7 +295,8 @@ class RUN_TIME_PARAMS:
         self.PAN_BW          = args.pan_bw*1e3
         self.PAN_DR          = args.pan_dr
         self.FS_OUT          = args.fsout*1e3
-        self.TRANSPOSE      = args.transpose
+        self.TRANSPOSE       = args.transpose
+        self.BANDMAP         = args.bandmap # or self.TRANSPOSE
         self.FS_OUT_CORR     = args.corr
         self.SAVE_IQ         = args.save_iq
         self.SAVE_BASEBAND   = args.save_baseband
@@ -387,6 +390,8 @@ class RUN_TIME_PARAMS:
         self.fnames            = ['raw_iq','baseband_iq','demod']
         self.fp                = [-1]*3
         self.status            = [0]*3
+        self.threads           = []
+        self.NEW_SPOT_LIST     = None
 
         # Compute size of RF sampling chunk and playback ring buffer:
         # Pulse audio wants in chunks of 1024 samples ...

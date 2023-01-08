@@ -26,7 +26,7 @@ import sys
 from rig_io.socket_io import find_fldigi_port   # convert_freq2band
 from Tables import BANDS
 from utilities import freq2band
-from udp import open_udp_client
+from udp import *
 
 ############################################################################
 
@@ -34,8 +34,8 @@ from udp import open_udp_client
 class Logger:
     def __init__(self,P):
 
-        P.LOG1 = open('LOG1.TXT','w')
-        P.LOG2 = open('LOG2.TXT','w')
+        P.LOG1 = open('/tmp/LOG1.TXT','w')
+        P.LOG2 = open('/tmp/LOG2.TXT','w')
         P.LOG2.write('%d,%d,0,0\n' % (P.RB_SIZE,P.FS_OUT) )
         self.P = P
 
@@ -49,7 +49,6 @@ class WatchDog:
         self.timer.start(msec)
         self.count=0
         self.P = P
-        self.quiet=True
         self.quiet=False
 
         # Record start-time
@@ -62,25 +61,61 @@ class WatchDog:
         self.avg_latency = [0]*P.MAX_RX
         self.zz = np.zeros(P.OUT_CHUNK_SIZE, np.complex64)
 
+        # UDP stuff
+        self.P.udp_client  = None
+        self.P.udp_ntries  = 0
+        self.P.udp_client2 = None
+        self.P.udp_ntries2 = 0
 
-    # Function to monitor udp connection
-    def check_udp_client(self):
+
+    # Function to monitor udp connections
+    def check_udp_clients(self):
 
         if self.P.UDP_CLIENT:
+
+            # Client to keyer
             if not self.P.udp_client:
                 self.P.udp_ntries+=1
                 if self.P.udp_ntries<=1000:
-                    ok=open_udp_client(self.P,7474)
-                    if ok:
+                    self.P.udp_client=open_udp_client(self.P,KEYER_UDP_PORT,
+                                                      udp_msg_handler)
+                    if self.P.udp_client:
+                        print('WATCHDOG->CHECK UDP CLIENTS: Opened connection to KEYER.')
                         self.P.udp_ntries=0
                 else:
                     print('Unable to open UDP client - too many attempts',self.P.udp_ntries)
 
+            # Client to bandmap
+            if self.P.BANDMAP and not self.P.udp_client2:
+                self.P.udp_ntries2+=1
+                if self.P.udp_ntries2<=1000:
+                    self.P.udp_client2=open_udp_client(self.P,BANDMAP_UDP_PORT,
+                                                       udp_msg_handler,BUFFER_SIZE=32*1024)
+                    if self.P.udp_client2:
+                        print('WATCHDOG->CHECK UDP CLIENTS: Opened connection to BANDMAP.')
+                        self.P.udp_ntries2=0
+                        self.Last_BM_Check=time.time()
+                else:
+                    print('Unable to open 2nd UDP client - too many attempts',self.P.udp_ntries2)
+
+        # Query spot data to populate bandmap
+        if self.P.BANDMAP and self.P.udp_client2:
+            t = time.time()
+            dt = t - self.Last_BM_Check
+            band=self.P.BAND
+            #print('WATCHDOG->CHECK_UDP_CLIENTS: t=',t,self.Last_BM_Check,
+            #dt,'\tband=',band)
+            if dt>30:
+                msg='SpotList:'+band+':?\n'
+                self.P.udp_client2.Send(msg)
+                self.Last_BM_Check=t
+                print('WATCHDOG->CHECK_UDP_CLIENTS: Spot List Query sent ..,')
+                
         
     # Function to monitor audio ring buffers
     def check_ringbuff(self,t,irx,verbosity):
 
-        P      = self.P
+        P = self.P
         if P.MP_SCHEME==2 or P.MP_SCHEME==3:
             msg        = P.gui.mp_comm('rbStatus',irx,rx=irx)
             tag        = msg[0]
@@ -215,13 +250,15 @@ class WatchDog:
 
         # Check UDP client
         if P.UDP_CLIENT:
-            self.check_udp_client()
+            self.check_udp_clients()
+
+        if False:
+            P.NEW_SPOT_LIST=['HeLlO',1,'white']
 
         # Check rig band
         if P.sock and P.FOLLOW_BAND and P.sock.active:
             freq = P.sock.get_freq()*1e-3
             mode = P.sock.get_mode()
-            #band = convert_freq2band(freq,True)
             band = freq2band(freq*1e-3)
             #print BANDS
             #print "Rig    :\tFreq =",freq,"\tBand =",band,"\tMode =",mode

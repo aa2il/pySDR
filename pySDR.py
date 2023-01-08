@@ -137,7 +137,6 @@ def init_sdr():
 def start_threads(P):
     
     # Instantiate servers allowing external control of each RX
-    P.threads=[]
     P.Stopper = threading.Event()
     #print "P=",pprint(vars(P))
     if P.HAMLIB_SERVERS:
@@ -160,14 +159,13 @@ def start_threads(P):
         P.threads.append(th)
 
     # Open UDP client
-    if P.UDP_CLIENT:
+    if P.UDP_CLIENT and False:
         P.udp_ntries=0
         open_udp_client(P,KEYER_UDP_PORT)
         
     # Instantiate the receive processor
     P.evt = threading.Event()
     P.sdr=None
-    #worker = threading.Thread(target=SDR_RX, args=(P,True,),name='SDR_RX')
     worker = threading.Thread(target=SDR_EXECUTIVE(P,True).Run,args=(), name='SDR_EXEC')
     worker.setDaemon(True)
     worker.start()

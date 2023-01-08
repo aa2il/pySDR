@@ -21,7 +21,7 @@
 
 import sys
 import pyqtgraph as pg
-from PyQt5.QtGui import QTransform
+from PyQt5.QtGui import QTransform,QFont
 from PyQt5.QtWidgets import QLCDNumber,QLabel
 from PyQt5.QtCore import * 
 from Tables import *
@@ -99,7 +99,9 @@ class imager():
         self.xtrans = 0
         self.yscale = 1
         self.ytrans = 0
-        self.enable_mouse=False  # Only want one of these to be turned on
+        self.xpad   = 0
+        self.ypad   = 0
+        self.enable_mouse=False # Only want one of these to be turned on
         # Otherwise, we get multiple calls
 
         if not pwin:
@@ -117,12 +119,14 @@ class imager():
 
         # Crosshairs
         if self.enable_mouse:
-            self.vLine = pg.InfiniteLine(angle=90, movable=False)
-            self.hLine = pg.InfiniteLine(angle=0, movable=False)
+            self.vLine = pg.InfiniteLine(angle=90, movable=False,pen='m')
+            self.hLine = pg.InfiniteLine(angle=0, movable=False,pen='m')
             self.p3.addItem(self.vLine, ignoreBounds=True)
             self.p3.addItem(self.hLine, ignoreBounds=True)
-            self.proxy = pg.SignalProxy(self.p3.scene().sigMouseMoved,
-                                        rateLimit=60, slot=self.mouseMoved)
+            #self.proxy = pg.SignalProxy(self.p3.scene().sigMouseMoved,
+            #                            rateLimit=60, slot=self.mouseMoved)
+            self.p3.scene().sigMouseMoved.connect(self.mouseMoved)    
+            self.p3.scene().sigMouseClicked.connect(self.mouseClicked)    
 
     # Function to plot an image
     def imagesc(self,data,xlim=[],ylim=[],xdata=[],ydata=[],FLIP=False):
@@ -134,12 +138,12 @@ class imager():
         if len(xlim)>0:
             self.p3.setXRange(xlim[0],xlim[1], padding=0)
         else:
-            self.p3.setXRange(0, data.shape[0], padding=0)
+            self.p3.setXRange(0, data.shape[0]+self.xpad, padding=0)      ########
 
         if len(ylim)>0:
             self.p3.setYRange(ylim[0],ylim[1], padding=0)
         else:
-            self.p3.setYRange(0, data.shape[1], padding=0)
+            self.p3.setYRange(0, data.shape[1]+self.ypad, padding=0)
 
         # Flip image upside down
         if FLIP:
@@ -197,8 +201,8 @@ class imager():
 
     # Callback when the mouse/crosshairs have moved
     def mouseMoved(self,evt):
-        print("Waterfall mouse move detected:")
-        pos = evt[0]  ## using signal proxy turns original arguments into a tuple
+        print("IMAGERl mouse move detected:")
+        pos = evt   # [0]  ## using signal proxy turns original arguments into a tuple
         if self.p3.sceneBoundingRect().contains(pos):
             mousePoint = self.p3.vb.mapSceneToView(pos)
             self.vLine.setPos(mousePoint.x())
@@ -206,6 +210,10 @@ class imager():
 
             print("Waterfall:",mousePoint.x(),mousePoint.y())
 
+    def mouseClicked(self,evt):
+        pos = evt    #  [0]          ## using signal proxy turns original arguments into a tuple
+        print("\nIMAGER Mouse click detected: pos=",pos)
+            
     def show(self):
         self.pwin.show()
 
@@ -224,19 +232,19 @@ class imager():
 class three_box_plot():
     def __init__(self,P,win_label,TITLE1,TITLE2,fs,foff,chunk_size,Nfft,overlap,clickCB=None,TRANSPOSE=False):
         self.P = P
-        self.enable_mouse=True     # This will be the driver routine for the mouse
+        self.enable_mouse=True # This will be the driver routine for the mouse
         self.clickCB = clickCB
         self.foff=foff
         self.fc=0
         self.TRANSPOSE=TRANSPOSE
+        self.SpotItems=[]
 
         # Create plot window and start out with it hidden
         self.pwin = pg.GraphicsLayoutWidget(show=False,title=win_label)
         self.pwin.hide()
 
         # Tighten borders - order looks like LEFT, TOP, RIGHT, BOTTOM
-        # set BOTTOM=100 (3rd element) when we're ready for spot labels - NO!!!
-        self.pwin.centralWidget.layout.setContentsMargins(0,0,0*100,0)
+        self.pwin.centralWidget.layout.setContentsMargins(0,0,0,0)
         #self.pwin.centralWidget.layout.setSpacing(0)
 
         # Create plot for (potentially complex-valued) time series
@@ -262,12 +270,12 @@ class three_box_plot():
                                      symbolBrush=None)
         self.curve2smooth = self.p2.plot(pen='r')
 
-        # Add a vertical line to indicate current center freq
-        #self.curve3 = self.p2.plot(pen='b',name='Center')
-        self.vLine = pg.InfiniteLine(angle=90, movable=False, pen='w')
-        #pen=pg.mkPen('w', width=3)
-        #self.vLine = pg.InfiniteLine(angle=90, movable=False, pen=pen)
-        #                                     pen=pen, markers=('o',0.,10) )
+        # Add a line to indicate current center freq
+        if self.TRANSPOSE:
+            ANGLE=0
+        else:
+            ANGLE=90
+        self.vLine = pg.InfiniteLine(angle=ANGLE, movable=False, pen='w')
         self.p2.addItem(self.vLine, ignoreBounds=True)
         self.p2.show()
         self.p2_visible=True
@@ -295,19 +303,19 @@ class three_box_plot():
 
         # Add a vertical line to indicate current center freq
         pen1=pg.mkPen((128,0,255), width=3)
-        self.vLine4 = pg.InfiniteLine(angle=90, movable=False, pen=pen1)
+        self.vLine4 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen1)
         self.p3.addItem(self.vLine4, ignoreBounds=True)
 
         pen2=pg.mkPen((128,0,255), width=3, style=Qt.DotLine)  
-        self.vLine5 = pg.InfiniteLine(angle=90, movable=False, pen=pen2)
+        self.vLine5 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen2)
         self.p3.addItem(self.vLine5, ignoreBounds=True)
-        self.vLine6 = pg.InfiniteLine(angle=90, movable=False, pen=pen2)
+        self.vLine6 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen2)
         self.p3.addItem(self.vLine6, ignoreBounds=True)
 
         pen3=pg.mkPen((255,200,255), width=3, style=Qt.DashLine)  
-        self.vLine7 = pg.InfiniteLine(angle=90, movable=False, pen=pen3)
+        self.vLine7 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen3)
         self.p3.addItem(self.vLine7, ignoreBounds=True)
-        self.vLine8 = pg.InfiniteLine(angle=90, movable=False, pen=pen3)
+        self.vLine8 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen3)
         self.p3.addItem(self.vLine8, ignoreBounds=True)
         
         # Crosshairs
@@ -321,10 +329,14 @@ class three_box_plot():
             self.hLine3 = pg.InfiniteLine(angle= 0, movable=False, pen='m')
             self.p3.addItem(self.vLine3, ignoreBounds=True)
             self.p3.addItem(self.hLine3, ignoreBounds=True)
+            """
             self.proxy1 = pg.SignalProxy(self.p2.scene().sigMouseMoved,
                                         rateLimit=60, slot=self.mouseMoved)
             self.proxy2 = pg.SignalProxy(self.p2.scene().sigMouseClicked,
                                         rateLimit=60, slot=self.mouseClicked)
+            """
+            self.p3.scene().sigMouseMoved.connect(self.mouseMoved)    
+            self.p3.scene().sigMouseClicked.connect(self.mouseClicked)    
 
 
     def hide(self):
@@ -503,25 +515,48 @@ class three_box_plot():
         # Hide time axis
         ax.hide()
 
-        # This will add text above/next to the plot
-        # Don't want this here but this shows how we do it
-        if False:
-            self.addSpot(0.5*(f1+f2),100,'Hello!','red')
-        
     # Add spots to waterfall - a work in progress
     def addSpot(self,x,y,txt,c):
-        spot = pg.TextItem(txt,c)
-        self.p3.addItem(spot,ignoreBounds=True)
+        #print('Plotting->AddSpot:',x,y,txt,c)
         if self.TRANSPOSE:
-            y,x=x,y
-            self.p3.setRange(xRange=(0,self.wf.shape[1]+10))
+            y,x=x-0.1,y
+            self.imager.xpad=20
+            txt2=txt
+            ftsize=10
+            txt0=''
         else:
             # Not sure why the magic offset of 10 here but it works
-            # Really should
-            self.p3.setRange(yRange=(10,self.wf.shape[1]))
-            y+=10
-            pass
+            # Probably has something to do which text box corner is referenced
+            # See https://en.wikipedia.org/wiki/Mathematical_operators_and_symbols_in_Unicode
+            # for unicoded symbol table
+            #txt2=txt
+            #txt2="*"
+            txt2="\u2b24"    # Solid circle
+            ftsize=10
+            x-=0.05*(len(txt2)+1)
+            y+=12
+            self.imager.ypad=8
+            txt0='      '         # Get call sign out from under the mouse
+        spot = pg.TextItem(txt2,c)
         spot.setPos(x,y)
+        spot.setFont(QFont('Arial',ftsize, QFont.Bold))
+        spot.setToolTip(txt0+txt)
+        self.pwin.setStyleSheet(" QToolTip{ border: 1px solid white; color: k ; font: bold 12pt}")
+        #                         "background-color: lightgoldenrodyellow ;
+        self.p3.addItem(spot,ignoreBounds=True)
+        self.SpotItems.append(spot)
+        #spot.scene().sigMouseClicked.connect(self.mouseClicked2)     # Dont do this - too many calls!
+        #print('Plotting->AddSpot:',x,y,txt,c,spot)
+
+    def mouseClicked2(self,evt):
+        pos = evt    #  [0]          ## using signal proxy turns original arguments into a tuple
+        print("\nSPOTS Mouse click detected: pos=",pos)
+            
+        
+    # Routine to get rid of all spot labels
+    def removeAllSpots(self):
+        for spot in self.SpotItems:
+            self.p3.removeItem(spot)
 
         
     # Function to shift waterfall when we change freqs
@@ -536,7 +571,7 @@ class three_box_plot():
         
     # Callback when the mouse/crosshairs have moved
     def mouseMoved(self,evt):
-        pos = evt[0]  ## using signal proxy turns original arguments into a tuple
+        pos = evt # [0]  ## using signal proxy turns original arguments into a tuple
         #print "Mouse move detected:",pos
         if self.p2_visible and self.p2.sceneBoundingRect().contains(pos):
             #            try:
@@ -568,8 +603,8 @@ class three_box_plot():
 
     # Callback when the mouse is clicked
     def mouseClicked(self,evt):
-        pos = evt[0]  ## using signal proxy turns original arguments into a tuple
-        print("\nMouse click detected:",pos,self.mouse_x,self.mouse_y)
+        pos = evt    #  [0]          ## using signal proxy turns original arguments into a tuple
+        print("\nMouse click detected: pos=",pos,self.mouse_x,self.mouse_y,'\n\tevt=',evt)# ,pos.widget)
         #print 'pos=',pos.pos()
         #print 'button=',pos.button()
         #print 'buttons=',pos.buttons()

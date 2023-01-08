@@ -19,7 +19,7 @@
 #
 ############################################################################
 
-from collections import OrderedDict
+#from collections import OrderedDict
 import sys
 import functools
 import time
@@ -39,6 +39,13 @@ from utils import  show_threads
 from utilities import freq2band
 
 ################################################################################
+
+class SPOT:
+    def __init__(self,call,freq,color):
+        self.call=call
+        self.freq=freq
+        self.color=color
+        
 
 # The GUI 
 class pySDR_GUI(QMainWindow):
@@ -1107,6 +1114,19 @@ class pySDR_GUI(QMainWindow):
                     else:
                         break
 
+            if P.NEW_SPOT_LIST:
+                print('UPDATEPSD: New Spot List:',P.NEW_SPOT_LIST)
+                self.plots_af.removeAllSpots()
+                self.Spots=[]
+                for n in range(0,len(P.NEW_SPOT_LIST),3):
+                    call=P.NEW_SPOT_LIST[n]
+                    freq=P.NEW_SPOT_LIST[n+1]
+                    c=P.NEW_SPOT_LIST[n+2]
+                    self.plots_af.addSpot(freq,100,call,c)
+                    self.Spots.append(SPOT(call,freq,c))
+                P.NEW_SPOT_LIST=None
+                
+
         if P.SHOW_BASEBAND_PSD:
             P.PSD_BB_FC3 += 0*0.001*P.FOFFSET
             n=self.plots_bb.psd.chunk_size
@@ -1197,10 +1217,6 @@ class pySDR_GUI(QMainWindow):
                 return
             
             fc = self.lcd.get()
-            #band = self.P.sock.get_band()
-            #b = str(band)+'m'
-            #band2 = convert_freq2band(fc)
-            #b2 = str(band2)+'m'
             f = self.P.sock.get_freq()*1e-3
             band = freq2band(1e-3*f)
             band2 = freq2band(1e-6*fc)
@@ -1523,6 +1539,25 @@ class pySDR_GUI(QMainWindow):
             frq += .001*self.P.FC[self.P.PLOT_RX]
         print('MouseClickRF:',button,frq)
 
+        # Check if we've click on a spot
+        if self.P.BANDMAP:
+            if y>100:
+                dfbest=1e9
+                ibest=-1
+                idx=0
+                for spot in self.Spots:
+                    df=abs( spot.freq-frq )
+                    if df<dfbest:
+                        dfbest=df
+                        ibest=idx
+                    idx=idx+1
+                spot=self.Spots[ibest]
+                print('MouseClickRF: Looks like a spot click -',spot.call,spot.freq,spot.color)
+                frq=spot.freq
+                call=spot.call
+            else:
+                call=''
+            
         if button==1:
 
             # Left click - What we do depends on how SDR is being used
@@ -1612,6 +1647,10 @@ class pySDR_GUI(QMainWindow):
             else:
                 print("MouseClickRF: Middle button - TBD")
 
+        # Send spot info to keyer
+        if self.P.BANDMAP and self.P.udp_client:
+            self.P.udp_client.Send('Call:'+call+':'+vfo)
+
                 
     # Callback to change center freq
     def FreqSelect(self,new_frq,tune_rig=True,VFO=[]):
@@ -1639,6 +1678,7 @@ class pySDR_GUI(QMainWindow):
         else:
             f2 = new_frq[irx]*1000.
         if f2>0:
+            P.BAND = freq2band(1e-6*f2)
             if P.REPLAY_MODE:
                 print('Changing',P.REPLAY_FC,f2,P.FOFFSET)
                 P.FOFFSET = P.lo.change_freq( P.REPLAY_FC-f2 + 0*P.BFO )
@@ -1689,14 +1729,13 @@ class pySDR_GUI(QMainWindow):
                 if rig_vfo[0]!=vfo:
                     self.P.sock.set_vfo(rig_vfo[0])
 
-        # Manage sub-RX(s)
-
-        # NOT SURE WHY THIS IS STILL HERE?
+        # NOT SURE WHY THIS IS STILL HERE? Perhaps for FT8 hopper?
         #if P.FT8 and new_frq[0]>0:
         #    band = convert_freq2band(new_frq[0],True)
         #    new_frq[1] = bands[band]['FT8']
         #    print('band=',band,new_frq[0],new_frq[1])
 
+        # Manage sub-RX(s)
         for i in range(0,P.NUM_RX):
             if i==P.MAIN_RX:
                 # Main RX has already been taken care of
