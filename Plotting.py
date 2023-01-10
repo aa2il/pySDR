@@ -202,17 +202,15 @@ class imager():
     # Callback when the mouse/crosshairs have moved
     def mouseMoved(self,evt):
         print("IMAGERl mouse move detected:")
-        pos = evt   # [0]  ## using signal proxy turns original arguments into a tuple
-        if self.p3.sceneBoundingRect().contains(pos):
-            mousePoint = self.p3.vb.mapSceneToView(pos)
+        if self.p3.sceneBoundingRect().contains(evt):
+            mousePoint = self.p3.vb.mapSceneToView(evt)
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
 
             print("Waterfall:",mousePoint.x(),mousePoint.y())
 
     def mouseClicked(self,evt):
-        pos = evt    #  [0]          ## using signal proxy turns original arguments into a tuple
-        print("\nIMAGER Mouse click detected: pos=",pos)
+        print("\nIMAGER Mouse click detected: evt=",evt)
             
     def show(self):
         self.pwin.show()
@@ -549,8 +547,7 @@ class three_box_plot():
         #print('Plotting->AddSpot:',x,y,txt,c,spot)
 
     def mouseClicked2(self,evt):
-        pos = evt    #  [0]          ## using signal proxy turns original arguments into a tuple
-        print("\nSPOTS Mouse click detected: pos=",pos)
+        print("\nSPOTS Mouse click detected: evt=",evt)
             
         
     # Routine to get rid of all spot labels
@@ -571,14 +568,13 @@ class three_box_plot():
         
     # Callback when the mouse/crosshairs have moved
     def mouseMoved(self,evt):
-        pos = evt # [0]  ## using signal proxy turns original arguments into a tuple
-        #print "Mouse move detected:",pos
-        if self.p2_visible and self.p2.sceneBoundingRect().contains(pos):
+        #print "Mouse move detected:",evt
+        if self.p2_visible and self.p2.sceneBoundingRect().contains(evt):
             #            try:
             # For some reason, this generates a numerical error some times - we don't need to see it
             # Seems to be fixed if we also test if plot is visible
             # Maybe we just want to drive this off of the waterfall (p3) first
-            mousePoint = self.p2.vb.mapSceneToView(pos)
+            mousePoint = self.p2.vb.mapSceneToView(evt)
             #except:
             #    print "Mouse move error"
             #    return
@@ -589,8 +585,8 @@ class three_box_plot():
             self.mouse_x = mousePoint.x()
             self.mouse_y = mousePoint.y()
 
-        elif self.p3.sceneBoundingRect().contains(pos):
-            mousePoint = self.p3.vb.mapSceneToView(pos)
+        elif self.p3.sceneBoundingRect().contains(evt):
+            mousePoint = self.p3.vb.mapSceneToView(evt)
             self.vLine3.setPos(mousePoint.x())
             self.hLine3.setPos(mousePoint.y())
             self.vLine2.setPos(mousePoint.x())
@@ -603,21 +599,20 @@ class three_box_plot():
 
     # Callback when the mouse is clicked
     def mouseClicked(self,evt):
-        pos = evt    #  [0]          ## using signal proxy turns original arguments into a tuple
-        print("\nMouse click detected: pos=",pos,self.mouse_x,self.mouse_y,'\n\tevt=',evt)# ,pos.widget)
-        #print 'pos=',pos.pos()
-        #print 'button=',pos.button()
-        #print 'buttons=',pos.buttons()
-        #if pos.button()==1:
-        print('Button ',pos.button(),self.mouse_x)
-
+        print("\nMouse click detected: evt=",evt,self.mouse_x,self.mouse_y,'\n\tevt=',evt)
+        #print 'pos=',evt.pos()
+        #print 'button=',evt.button()
+        #print 'buttons=',evt.buttons()
+        #if evt.button()==1:
+        print('Button ',evt.button(),self.mouse_x)
+        
         # Snap to closest peak
         if self.P.gui.Use_Peaks_cb.isChecked():
             idx = ( np.abs(self.pk_frqs - self.mouse_x) ).argmin()
             self.mouse_x = self.pk_frqs[idx]
             
         df = self.mouse_x - self.wf_fc
-        self.clickCB(pos.button(),self.mouse_x,self.mouse_y,self.fc)
+        self.clickCB(evt.button(),self.mouse_x,self.mouse_y,self.fc)
 
         # Move cross hairs back to where they were
         self.mouse_x += df

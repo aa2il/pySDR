@@ -30,6 +30,10 @@ from udp import *
 
 ############################################################################
 
+BANDMAP_UPDATE_INTERVAL=30
+
+############################################################################
+
 # Logger
 class Logger:
     def __init__(self,P):
@@ -94,7 +98,7 @@ class WatchDog:
                     if self.P.udp_client2:
                         print('WATCHDOG->CHECK UDP CLIENTS: Opened connection to BANDMAP.')
                         self.P.udp_ntries2=0
-                        self.Last_BM_Check=time.time()
+                        self.Last_BM_Check=time.time() - BANDMAP_UPDATE_INTERVAL+2     # Force first update in 2-seconds
                 else:
                     print('Unable to open 2nd UDP client - too many attempts',self.P.udp_ntries2)
 
@@ -105,7 +109,7 @@ class WatchDog:
             band=self.P.BAND
             #print('WATCHDOG->CHECK_UDP_CLIENTS: t=',t,self.Last_BM_Check,
             #dt,'\tband=',band)
-            if dt>30:
+            if dt>BANDMAP_UPDATE_INTERVAL:
                 msg='SpotList:'+band+':?\n'
                 self.P.udp_client2.Send(msg)
                 self.Last_BM_Check=t
