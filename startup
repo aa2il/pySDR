@@ -1,6 +1,21 @@
 #! /usr/bin/tcsh
 
 # SO2V development
+pkill bandmap.py
+
+cd ~/Python/pySDR/
+pySDR.py -fc 7030 -mode CW -fsout 48 -vid_bw 45 -ant B -rig NONE -no_hamlib -port 12345 -af_bw .5 -follow_freq -bandmap -mute -udp -pan -pan_bw 10 -pan_dr 90 >& /tmp/SDR &
+
+sleep 1
+
+pushd ../bandmap
+bandmap.py -rig NONE -port 12345 -udp -cwops >& /tmp/BANDMAP &
+popd
+
+tail -f /tmp/SDR
+
+exit
+
 # Need to make sure rig is in PKT-U mode for both VFOs!!!!
 # And that widest bandwidth is selected!!!!
 # Perhaps add setup option to find_rig?

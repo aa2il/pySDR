@@ -31,6 +31,11 @@ import scipy.signal as signal
 
 ################################################################################
 
+BIG_DOT=False
+#BIG_DOT=True
+
+################################################################################
+
 def get_color_map(key, pos_min, pos_max):
     #    keys=['jet','autumn','bone','colorcube','cool','copper','gray','hot','hsv','parula','pink','spring','summer','winter']
     #    idx = idx % len(keys)
@@ -510,7 +515,8 @@ class three_box_plot():
                                 xlim=[f1,f2],xdata=frq)
             ax=self.p3.getAxis('left')
 
-        # Hide time axis
+        # Hide time axis on waterfall
+        #self.df=f2-f1
         ax.hide()
 
     # Add spots to waterfall - a work in progress
@@ -522,20 +528,26 @@ class three_box_plot():
             txt2=txt
             ftsize=10
             txt0=''
+            ang=0
         else:
             # Not sure why the magic offset of 10 here but it works
             # Probably has something to do which text box corner is referenced
             # See https://en.wikipedia.org/wiki/Mathematical_operators_and_symbols_in_Unicode
             # for unicoded symbol table
-            #txt2=txt
-            #txt2="*"
-            txt2="\u2b24"    # Solid circle
+            if BIG_DOT:
+                txt2="\u2b24"    # Solid circle
+                ang=0
+                self.imager.ypad=6
+                x-=0.05*(len(txt2)+1)        # Probably don't need this anymore?
+                y-=3
+            else:
+                txt2=txt
+                ang=45
+                self.imager.ypad=27
+                y-=5
             ftsize=10
-            x-=0.05*(len(txt2)+1)
-            y+=12
-            self.imager.ypad=8
             txt0='      '         # Get call sign out from under the mouse
-        spot = pg.TextItem(txt2,c)
+        spot = pg.TextItem(txt2,c,angle=ang,anchor=(0,1))
         spot.setPos(x,y)
         spot.setFont(QFont('Arial',ftsize, QFont.Bold))
         spot.setToolTip(txt0+txt)

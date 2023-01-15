@@ -1,7 +1,7 @@
 ############################################################################
 #
 # utils.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Support routines for pySDR.
 #
@@ -18,9 +18,6 @@
 # GNU General Public License for more details.
 #
 ############################################################################
-
-# Maintain compatability with python2 for now - probably can jettison this
-#from __future__ import print_function
 
 import SoapySDR
 from SoapySDR import *                # SOAPY_SDR_ constants

@@ -1,7 +1,7 @@
 ############################################################################
 #
 # gui.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # GUI-related functions for pySDR
 #
@@ -19,7 +19,6 @@
 #
 ############################################################################
 
-#from collections import OrderedDict
 import sys
 import functools
 import time
@@ -40,6 +39,7 @@ from utilities import freq2band
 
 ################################################################################
 
+# Structure to hold a bandmap spot
 class SPOT:
     def __init__(self,call,freq,color):
         self.call=call
@@ -75,9 +75,6 @@ class pySDR_GUI(QMainWindow):
 
         # Init
         self.P=P
-        #        locale.setlocale(locale.LC_NUMERIC, 'English')
-        #print(locale.getlocale())
-        #        locale.setlocale(locale.LC_ALL, 'en_US')
         self.last_psd_update = time.time()
         print('pySDR_GUI: ShowParams...')
         self.ShowParams()
@@ -575,19 +572,17 @@ class pySDR_GUI(QMainWindow):
                                      2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF,P.TRANSPOSE)
         self.plots_bb.hide()
 
+        # Finally, we're ready to show the gui
+        print('------------------------- And Away We Go !!!!!!!!!!!!!!!!!!!!!!')
+        self.show()
+
+        # Move to lower left corner of screen
+        widget = self.geometry()
         screen_resolution = app.desktop().screenGeometry()
         self.screen_width  = screen_resolution.width()
         self.screen_height = screen_resolution.height()
         print("Screen Res:",screen_resolution,self.screen_width, self.screen_height)
-
-        # Connect 'x' close box to close down event
-        #self.connect(self, SIGNAL('triggered()'), self.closeEvent)
-        #print('GUI - Need some help with connect!!! or maybe not')
-
-        # Finally, we're ready to show the gui
-        print('------------------------- here we go !!!!!!!!!!!!!!!!!!!!!!')
-        #self.win.show()
-        self.show()
+        self.move(0, self.screen_height - widget.height() )
 
     ################################################################################
 
@@ -918,10 +913,10 @@ class pySDR_GUI(QMainWindow):
         if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
             self.mp_comm('setPlotRX',self.P.PLOT_RX )
 
-        if True:
-            self.P.MAIN_RX=irx
-            frq=.001*self.P.FC[irx]
-            self.lcd.set(frq)
+        self.P.MAIN_RX=irx
+        frq=.001*self.P.FC[irx]
+        self.lcd.set(frq)
+        self.P.BAND = freq2band(1e-3*frq)
     
     # Callback for RF PSD Start/Stop button
     def StartStopRF_PSD(self):
@@ -1122,6 +1117,16 @@ class pySDR_GUI(QMainWindow):
                     call=P.NEW_SPOT_LIST[n]
                     freq=P.NEW_SPOT_LIST[n+1]
                     c=P.NEW_SPOT_LIST[n+2]
+                    if c=='v':
+                        c="violet"
+                    elif c=='p':
+                        c="pink"
+                    elif c=='lb':
+                        c="lightskyblue" 
+                    elif c=='g':
+                        c="gold"
+                    elif c=='o':
+                        c='orange'
                     self.plots_af.addSpot(freq,100,call,c)
                     self.Spots.append(SPOT(call,freq,c))
                 P.NEW_SPOT_LIST=None
@@ -1428,7 +1433,6 @@ class pySDR_GUI(QMainWindow):
         elif a[1]=="GHz":
             step=step*1e6
         print('GUI STEP SELECT - Need some help!')
-        #self.lcd.set_step(step)
 
     # Function to select Vidio Bandwidth
     def Video_BWSelect(self,i):
@@ -1539,7 +1543,7 @@ class pySDR_GUI(QMainWindow):
             frq += .001*self.P.FC[self.P.PLOT_RX]
         print('MouseClickRF:',button,frq)
 
-        # Check if we've click on a spot
+        # Check if we've clicked on a spot
         if self.P.BANDMAP:
             if y>100:
                 dfbest=1e9
@@ -1568,10 +1572,6 @@ class pySDR_GUI(QMainWindow):
                 vfo='A'                           # VFO A always follows left click
                 self.FreqSelect(frq,True,vfo)
                 
-                # Not quite sure what this is for?
-                if self.P.RIG_IF==0 and False:
-                    self.lcd.set(frq)
-
             else:
                 
                 # Left click with SDR listening to a rig's IF - shift rig freq
@@ -1678,16 +1678,15 @@ class pySDR_GUI(QMainWindow):
         else:
             f2 = new_frq[irx]*1000.
         if f2>0:
-            P.BAND = freq2band(1e-6*f2)
             if P.REPLAY_MODE:
                 print('Changing',P.REPLAY_FC,f2,P.FOFFSET)
                 P.FOFFSET = P.lo.change_freq( P.REPLAY_FC-f2 + 0*P.BFO )
                 print('Replay mode:',P.FOFFSET)
             else:
-                if self.P.MP_SCHEME==2:
+                if P.MP_SCHEME==2:
                     #f1 = self.mp_comm('getFrequency') + P.FOFFSET
                     self.mp_comm('setFrequency',0,foff,f2-P.FOFFSET)
-                elif self.P.MP_SCHEME==3:
+                elif P.MP_SCHEME==3:
                     self.mp_comm('setFrequency',foff,rx=0)
                     P.sdr.setFrequency(SOAPY_SDR_RX, 0, f2-P.FOFFSET)
                 else:
@@ -1702,7 +1701,7 @@ class pySDR_GUI(QMainWindow):
             if tune_rig and (self.follow_freq_cb.isChecked() or
                              self.so2v_cb.isChecked() ):
                 # Keep track of current rig vfo
-                rig_vfo = self.P.sock.get_vfo()
+                rig_vfo = P.sock.get_vfo()
                 print('Current rig vfo=',rig_vfo)
 
                 # Tune the rig
@@ -1716,18 +1715,17 @@ class pySDR_GUI(QMainWindow):
                 P.sock.set_freq(.001*f2,vfo)
                 self.itune_cnt=0
 
-                #mode = self.P.sock.get_fldigi_mode()
-                mode = self.P.MODE
-                rig_mode = self.P.sock.get_mode(vfo)
+                mode = P.MODE
+                rig_mode = P.sock.get_mode(vfo)
                 #if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
                 #    mode=self.P.MODE
                 print('SDR & RIG MODES:',mode,rig_mode,vfo)
                 if rig_mode!=mode and mode!='IQ':
-                    self.P.sock.set_mode(mode,vfo)
+                    P.sock.set_mode(mode,vfo)
 
                 # Restore vfo
                 if rig_vfo[0]!=vfo:
-                    self.P.sock.set_vfo(rig_vfo[0])
+                    P.sock.set_vfo(rig_vfo[0])
 
         # NOT SURE WHY THIS IS STILL HERE? Perhaps for FT8 hopper?
         #if P.FT8 and new_frq[0]>0:
@@ -1752,7 +1750,7 @@ class pySDR_GUI(QMainWindow):
                     frq = P.FC[P.SOURCE[i]] - f3
                 else:
                     frq = foff + f2 - f3
-                if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
+                if P.MP_SCHEME==2 or P.MP_SCHEME==3:
                     self.mp_comm('setFrequency', i,frq,rx=i)
                 else:
                     P.rx[i].lo.change_freq( frq )
@@ -1766,23 +1764,23 @@ class pySDR_GUI(QMainWindow):
                     P.sock.set_freq(.001*f3,vfo)
                     self.itune_cnt=0
 
-                    #mode = self.P.sock.get_fldigi_mode()
-                    mode = self.P.MODE
-                    rig_mode = self.P.sock.get_mode(vfo)
+                    mode = P.MODE
+                    rig_mode = P.sock.get_mode(vfo)
                     #if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
                     #    print('SDR & RIG MODES:',mode,rig_mode,vfo)
                     if rig_mode!=mode:
-                        self.P.sock.set_mode(mode,vfo)
+                        P.sock.set_mode(mode,vfo)
 
                     # Restore vfo
                     if rig_vfo[0]!=vfo:
-                        self.P.sock.set_vfo(rig_vfo[0])
+                        P.sock.set_vfo(rig_vfo[0])
 
                     
 
         # Manage GUI LCD display
         if f2>0:
             self.lcd.set(.001*f2)
+            P.BAND = freq2band(1e-3*f2)
             for i in range(P.NUM_RX):
                 self.rx_frq_box[i].setText( "{0:,.1f} KHz".format(.001*P.FC[i]) )
 
