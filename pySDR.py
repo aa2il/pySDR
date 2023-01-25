@@ -84,7 +84,7 @@ logging.basicConfig(
 
 ################################################################################
 
-VERSION='DEVELOPMENT 1.4'
+VERSION='1.0'
 
 ################################################################################
 
@@ -93,7 +93,7 @@ def init_sdr():
 
     # Create various objects
     print('\n****************************************************************************')
-    print('\n   pySDR',VERSION,'beginning ...\n')
+    print('\n   pySDR v',VERSION,'beginning ...\n')
 
     # Set-up run-time params
     P=RUN_TIME_PARAMS()
@@ -165,7 +165,7 @@ def start_threads(P):
         
     # Instantiate the receive processor
     P.evt = threading.Event()
-    P.sdr=None
+    #P.sdr=None
     worker = threading.Thread(target=SDR_EXECUTIVE(P,True).Run,args=(), name='SDR_EXEC')
     worker.setDaemon(True)
     worker.start()

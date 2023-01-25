@@ -1,7 +1,7 @@
 ############################################################################
 #
 # receiver.py - Rev 1.0
-# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Top level receiver routines
 #
@@ -565,8 +565,10 @@ class SDR_EXECUTIVE:
                 try:
                     sr = P.sdr.readStream(P.rxStream, [self.xx], P.IN_CHUNK_SIZE)
                     nn = sr.ret
-                except:
+                    #print(self.xx[0:10],self.xx[2000:2010])
+                except Exception as e:
                     print('SDR_RX - Trapped SDR stream error')
+                    print( str(e) )
                     nn=0
                 #print 'SDR RX 1d',nn,P.Stopper.isSet()
                 if nn>0:
@@ -637,9 +639,9 @@ class SDR_EXECUTIVE:
         if P.SDR_TYPE=='rtlsdr':
             frq=.001*P.FC[0]
             #if frq>=29.7e3 and P.DIRECT_SAMP!=0:
-            if frq>=28.0e3 and P.DIRECT_SAMP!=0:
+            if P.gui and frq>=28.0e3 and P.DIRECT_SAMP!=0:
                 P.gui.DirectSelect(0)
-            elif frq<28e3 and P.DIRECT_SAMP!=2:
+            elif P.gui and frq<28e3 and P.DIRECT_SAMP!=2:
                 P.gui.DirectSelect(2)
 
 
@@ -749,6 +751,7 @@ class SDR_EXECUTIVE:
     # Routine to connect to SDR device - might be hardware (e.g. SDRPlay) or a data file
     def create_SDR(self):
         P=self.P
+        print('P.sdr=',P.sdr)
 
         if not P.REPLAY_MODE:
             #    print P.SDR_TYPE
@@ -757,6 +760,7 @@ class SDR_EXECUTIVE:
                 # It should already be opened but if not, try again ...
                 if not P.sdr:
                     P.sdr = SoapySDR.Device(args)
+                    sys.exit(0)
             except:
                 print('\n*****************************************************')
                 print('*** Unable to instantiate SDR Device',P.SDR_TYPE,'\t  ***')

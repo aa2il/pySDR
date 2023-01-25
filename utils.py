@@ -35,6 +35,202 @@ from utilities import freq2band
 
 ############################################################################
 
+import inspect
+from rtlsdr import RtlSdr
+from sig_proc import ring_buffer2
+#import asyncio
+import threading
+
+def whoami():
+    # [0] is this method's frame, [1] is the parent's frame - which we want
+    name=inspect.stack()[1].function
+    name = '\n *+*+*+*+*+*+*+*+*+*+*  '+ name +' ***'
+    return name
+
+def rtlsdr_callback(samples, context):
+    #print('Callback...',context)
+    self=rtlsdr_callback
+    if context==None:
+        self.rb=samples
+        return
+        
+    print('Callback...',samples[0:5],len(samples))
+    self.rb.push(samples)
+    #print('Callback...',self.rb.nsamps)
+
+
+class RTL_SDR_DRIVER:
+    def __init__(self,P):
+        print('Init RTL_DRIVER ...')
+
+        self.device = RtlSdr()
+        self.direct=None
+        self.ret=None
+        self.key='RTLSDR'
+        self.P=P
+        #self.rb=P.rtl_rb
+
+    def RunRun(self):
+        pass
+        
+        #rtlsdr_callback(self.P.rtl_rb,None)
+        #self.device.read_samples_async(rtlsdr_callback)  #,self.P.IN_CHUNK_SIZE)
+        #print(whoami(),'Done.')
+
+    def setSampleRate(self,rx, b, fs):
+        print(whoami(),rx, b, fs)
+        self.device.sample_rate = fs
+        print(self.device.rs)
+        #sys.exit(0)
+        
+    def getSampleRate(self,rx, b):
+        print(whoami(),rx, b)
+        return self.device.sample_rate
+        
+    def setFrequency(self,rx, b, tag, f=None):
+        print(whoami(),rx, b, tag, f)
+        if f==None:
+            f=tag
+        elif tag=='RF':
+            self.device.center_freq = int(f)
+        elif tag=='CORR':
+            try:
+                # This causes a problem - not sure why?
+                #self.device.freq_correction = f
+                pass
+            except Exception as e: 
+                print('Unable to set freq correction')
+                print( str(e) )
+        else:
+            print(whoami(),'I dont know what I am doing here!')
+        print('fc=',self.device.fc,'\tdf=',self.device.freq_correction)
+        #sys.exit(0)
+
+    def getFrequency(self,rx, b, tag):
+        print(whoami(),rx, b, tag)
+        return self.device.center_freq
+        
+    def getNumChannels(self,rx):
+        print(whoami(),rx)
+        return 1
+        
+    def writeSetting(self,s1,s2):
+        print(whoami(),s1,s2)
+        if s1=='if_mode':
+            pass
+        elif s1=='direct_samp':
+            self.direct=int(s2)
+            self.device.set_direct_sampling(int(s2))
+            print(int(s2))
+            #sys.exit(0)
+        else:
+            sys.exit(0)
+
+    def listGains(self,rx,b):
+        print(whoami(),rx,b)
+        return self.device.valid_gains_db
+
+    def getGainRange(self,rx,b,stage=None):
+        print(whoami(),rx,b,stage)
+        gains=self.device.valid_gains_db
+        return [min(gains),max(gains),1]
+    
+    def hasGainMode(self,rx,b):
+        print(whoami(),rx,b)
+        return True
+        
+    def setGainMode(self,rx,b,tf):
+        print(whoami(),rx,b,tf)
+        self.device.gain = 'auto'
+        
+    def getGainMode(self,rx,b):
+        print(whoami(),rx,b)
+        return self.device.gain
+        
+    def getGain(self,rx,b,stage):
+        gain=self.device.gain
+        print(whoami(),rx,b,stage,gain)
+        return gain
+
+    def setGain(self,rx,b,stage,gain):
+        if gain>49.6:
+            gain=49.6
+        self.device.gain = gain
+        print(whoami(),rx,b,stage,gain)
+        #sys.exit(0)
+        
+    def setAntenna(self,rx,b,ant):
+        print(whoami(),rx,b,ant)
+        
+    def getAntenna(self,rx,b):
+        print(whoami(),rx,b)
+        return 0
+        
+    def getSettingInfo(self):
+        return []
+    
+    def listSampleRates(self,rx,b):
+        return [1.024e6,2.048e6]
+    
+    def listBandwidths(self,rx,b):
+        return []
+    
+    def getBandwidth(self,rx,b):
+        print(whoami(),rx,b)
+        bw = self.device.bandwidth
+        return bw
+
+    
+    def setupStream(self,rx,fmt):
+        print(whoami(),rx,fmt)
+        self.fmt=fmt
+        return 0
+
+    def activateStream(self,rx):
+        print(whoami(),rx)
+
+    def readStream(self,rx, bufs , n):        
+        xx=bufs[0]
+        #print(whoami(),rx,n)
+        #print(whoami(),n)
+        #print(whoami(),n,xx,len(xx))
+        nread=0
+        while nread<n-1024:
+            x = self.device.read_samples()
+            n2=len(x)
+            #print(n,n2,len(xx))
+            xx[nread:(nread+n2)] = x
+            if nread==0 and False:
+                print(x)
+                print(xx[nread:(nread+n2)])
+            nread += n2
+        if False:
+            print('end',x)
+            print(xx[(nread-n2):nread])
+        #print(whoami(),xx,self.fmt)
+        #sys.exit(0)
+        self.ret=nread
+        return self
+    
+    def deactivateStream(self,rx):
+        print(whoami(),rx)
+
+    def closeStream(self,rx):
+        print(whoami(),rx)
+
+
+    def getDriverKey(self):
+        return self.key
+
+    def getHardwareKey(self):
+        return self.device.get_tuner_type()
+    
+    def getHardwareInfo(self):
+        #return self.device.init_device_values()
+        return []
+
+############################################################################
+
 def adjust_foffset(self):
     M = round( self.RB_SIZE * self.FOFFSET / self.SRATE )
     fo = M*self.SRATE/self.RB_SIZE
@@ -234,6 +430,22 @@ def find_sdr_device(self,args):
     Done=False
     while not Done:
 
+        if self.USE_FAKE_RTL:
+            print('Howdy Ho!')
+            dev='driver=rtlsdr,rtl=0'
+            dev='driver=rtlsdr,serial=00000001'
+            print('dev=',dev)
+
+            self.SDR_TYPE = 'rtlsdr'
+            self.REPLAY_MODE=False
+            self.DIRECT_SAMP = 2
+            sdr = RTL_SDR_DRIVER(self)
+            return sdr
+            
+            #sdr = SoapySDR.Device( dict(driver=dev) )
+            #sdrkey = sdr.getDriverKey()
+            #sys.exit(0)
+
         # Get list of devices attached to the computer
         # For some reason, the new driver sometimes fails the first time so do it twice
         for ntry in range(1,3):
@@ -287,6 +499,7 @@ def find_sdr_device(self,args):
             # If we get here, we found the device - check what it is
             Done=True
             dev=devices[0]['driver']
+            print('dev=',dev)
             sdr = SoapySDR.Device( dict(driver=dev) )
             sdrkey = sdr.getDriverKey()
 

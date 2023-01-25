@@ -316,8 +316,11 @@ class pySDR_GUI(QMainWindow):
                 rr = self.mp_comm('getGainRange',stage)
             else:
                 r = self.P.sdr.getGainRange(SOAPY_SDR_RX, 0,stage)
-                print("\nr=",r,type(r),r.minimum(),r.maximum(),r.step())
-                rr = [r.minimum(),r.maximum(),r.step()]
+                if type(r)==list:
+                    rr=r
+                else:
+                    print("\nr=",r,type(r),r.minimum(),r.maximum(),r.step())
+                    rr = [r.minimum(),r.maximum(),r.step()]
             self.dgain = rr[2]
             if self.dgain==0:
                 self.dgain = rr[1]/10.
@@ -1542,6 +1545,7 @@ class pySDR_GUI(QMainWindow):
         if fc==0:
             frq += .001*self.P.FC[self.P.PLOT_RX]
         print('MouseClickRF:',button,frq)
+        vfo='A'        # Make sure this is set
 
         # Check if we've clicked on a spot
         if self.P.BANDMAP:

@@ -38,9 +38,9 @@ BANDMAP_UPDATE_INTERVAL=30
 class Logger:
     def __init__(self,P):
 
-        P.LOG1 = open('/tmp/LOG1.TXT','w')
-        P.LOG2 = open('/tmp/LOG2.TXT','w')
-        P.LOG2.write('%d,%d,0,0\n' % (P.RB_SIZE,P.FS_OUT) )
+        ##P.LOG1 = open('/tmp/LOG1.TXT','w')
+        #P.LOG2 = open('/tmp/LOG2.TXT','w')
+        #P.LOG2.write('%d,%d,0,0\n' % (P.RB_SIZE,P.FS_OUT) )
         self.P = P
 
         
@@ -155,8 +155,8 @@ class WatchDog:
             #print('Watch Dog:',tag,'Latency =',nsamps,'samps =',latency,' sec')
             print('Watch Dog: %s Latency = %5d samp = %4.2f sec' % \
                   (tag,nsamps,latency),end='',flush=True)
-        self.P.LOG2.write('%f,%d,%f,%f\n' % (t,nsamps,latency,self.avg_latency[irx]) )
-        self.P.LOG2.flush()
+        #self.P.LOG2.write('%f,%d,%f,%f\n' % (t,nsamps,latency,self.avg_latency[irx]) )
+        #self.P.LOG2.flush()
 
         dt = t - Start_Time
         fs_diff = int( float( nsamps - size/2 ) / dt )
@@ -167,15 +167,15 @@ class WatchDog:
         if dt>2 and nsamps > 3*size/4:
             #print("   ",tag," - Ring Buffer High Water Mark Hit - nsamps=", nsamps)
             print(' *** High Water Mark ***')
-            self.P.LOG1.write("t=%f - %s Ring Buffer High Water Mark Hit - nsamps = %d / %d\n" % \
-                              (t,tag, nsamps, size) )
+            #self.P.LOG1.write("t=%f - %s Ring Buffer High Water Mark Hit - nsamps = %d / %d\n" % \
+                #(t,tag, nsamps, size) )
 
         elif dt>2 and nsamps < size/4:
             #print("   ",tag," - Ring Buffer Low Water Mark Hit - nsamps=", nsamps)
             print(' *** Low Water Mark ***')
-            self.P.LOG1.write("t=%f - %s Ring Buffer Low Water Mark Hit - nsamps = %d / %d\n" % \
-                              (t,tag, nsamps, size) )
-            self.P.LOG1.flush()
+            #self.P.LOG1.write("t=%f - %s Ring Buffer Low Water Mark Hit - nsamps = %d / %d\n" % \
+                #(t,tag, nsamps, size) )
+            #self.P.LOG1.flush()
 
         else:
             print(' ...')

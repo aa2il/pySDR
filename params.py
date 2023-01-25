@@ -1,7 +1,7 @@
 ############################################################################
 #
 # params.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Command line param parser for pySDR.
 # Support routines for pySDR
@@ -26,6 +26,7 @@ from Tables import MODES,SDRplaysrates,RTLsrates
 from utils import *
 import numpy as np
 from sig_proc import up_dn
+import platform
 
 ############################################################################
 
@@ -47,6 +48,8 @@ class RUN_TIME_PARAMS:
                               help='RTL Dongle Device above 25 MHz')
         arg_proc.add_argument('-rtlhf', action='store_true',
                               help='RTL Dongle Device below 30 MHz')
+        arg_proc.add_argument('-fake', action='store_true',
+                              help='Use fake RTL driver')
         arg_proc.add_argument('-replay', help="Replay",
                               type=str,default="",nargs='+')
         arg_proc.add_argument('-test', action='store_true')
@@ -152,7 +155,7 @@ class RUN_TIME_PARAMS:
         arg_proc.add_argument('-nosplash', help='Dont put up splash screen',
                               action='store_true')
         arg_proc.add_argument("-rig", help="Connection Type",
-                              type=str,default="ANY",nargs='+',
+                              type=str,default="NONE",nargs='+',
                               choices=CONNECTIONS+['NONE']+RIGS)
         #choices=['FLDIGI','FLRIG','DIRECT','HAMLIB','ANY','NONE'])
         arg_proc.add_argument("-port", help="Connection Port",
@@ -175,8 +178,13 @@ class RUN_TIME_PARAMS:
             sys.exit(0)
 
         # Determine SDR type which is connected to computer
+        self.PLATFORM=platform.system()
         self.TEST_MODE = args.test
+        self.USE_FAKE_RTL=args.fake
+        #self.USE_FAKE_RTL=True
         self.sdr = find_sdr_device(self,args)
+        print('P.sdr=',self.sdr)
+        #sys.exit(0)
         
         # The set of available sampling rates is different for the two SDRs
         # Pick the one that is closest to what the user asked for

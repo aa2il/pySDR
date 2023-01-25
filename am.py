@@ -2,7 +2,7 @@
 ############################################################################
 #
 # am.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # A simple AM tuner for sdrplay using soapy lib and python
 # This is a stripped down version of pySDR without all the baggage.
@@ -42,9 +42,13 @@ from receiver import *
 
 ############################################################################
 
+VERSION='1.0'
+
+############################################################################
+
 # Create various objects
 print('\n****************************************************************************')
-print("\nAM SDR beginning ...\n")
+print('\nSimple SDR v',VERSION,'beginning ...\n')
 
 # Set-up run-time params
 P=RUN_TIME_PARAMS()
@@ -57,6 +61,7 @@ P.demod_io       = None
 P.evt            = None
 P.Stopper        = None
 P.MP_SCHEME      = MP_SCHEME
+P.gui            = None
 
 ############################################################################
 
