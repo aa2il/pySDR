@@ -320,6 +320,7 @@ class RUN_TIME_PARAMS:
         self.FOLLOW_FREQ     = args.follow_freq
         self.FOLLOW_BAND     = args.follow_band
         self.SO2V            = args.so2v
+        self.DXSPLIT         = False
         self.DIGI_OFFSET     = args.digi
         self.ENABLE_RTTY     = args.rtty
         if self.REPLAY_MODE:

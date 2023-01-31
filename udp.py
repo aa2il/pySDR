@@ -20,6 +20,7 @@
 #########################################################################################
 
 from tcp_server import *
+from rig_io.socket_io import SetTXSplit
 
 #########################################################################################
 
@@ -43,6 +44,20 @@ def udp_msg_handler(self,sock,msg):
                 P.SO2V=False
             print('UDP MSG HANDLER: mm=',mm,'\tSetting SO2V',P.SO2V)
             P.gui.so2v_cb.setChecked(P.SO2V)
+            self.P.MUTED[0]=False
+            P.gui.MuteCB(0,True)
+
+        elif mm[0]=='SPLIT':
+            if mm[1]=='ON':
+                P.DXSPLIT=True
+            else:
+                P.DXSPLIT=False
+            print('UDP MSG HANDLER: mm=',mm,'\tSetting DX SPLIT',P.DXSPLIT)
+            P.gui.split_cb.setChecked(P.DXSPLIT)
+
+            df=1000
+            SetTXSplit(self.P,df)
+            
             self.P.MUTED[0]=False
             P.gui.MuteCB(0,True)
 

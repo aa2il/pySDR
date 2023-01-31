@@ -300,7 +300,7 @@ class RIG_CONTROL():
         print('RIG_STATUS: mode=',self.mode)
         if self.mode in ['PKT-U','PKTUSB','PSK-U']:
             self.mode='RTTY'
-        elif self.mode=='CWR':
+        elif self.mode in ['CWR','CW-U','CW-L']:
             self.mode='CW'
         elif self.mode=='SSB':
             #print('freq=',self.sock.freq)
