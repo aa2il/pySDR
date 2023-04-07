@@ -36,6 +36,7 @@ from widgets import *
 import collections
 from utils import  show_threads
 from utilities import freq2band
+from PyQt5.QtCore import QTimer
 
 ################################################################################
 
@@ -401,7 +402,7 @@ class pySDR_GUI(QMainWindow):
         # sld.setFocusPolicy(Qt.NoFocus)
         self.afgain.setMinimum(0)
         self.afgain.setMaximum(100)
-        self.afgain.setValue(50)
+        self.afgain.setValue(int(P.VOL))
         self.afgain.valueChanged.connect(self.VolumeControl)
         self.afgain.setTickPosition(QSlider.TicksBelow)
         self.afgain.setTickInterval(10)
@@ -559,6 +560,13 @@ class pySDR_GUI(QMainWindow):
 
         ################################################################################
 
+        # Setup timer to make sure we don't hang
+        self.timer1 = QTimer()
+        self.timer1.timeout.connect(self.TicToc)
+        self.timer1.start(5000)
+
+        ################################################################################
+
         # Open plotting windows
         #title="pySDR by AA2IL"
         self.plots_rf=three_box_plot(P,"RF - AA2IL","RF Time Series","RF PSD", \
@@ -587,6 +595,14 @@ class pySDR_GUI(QMainWindow):
         print("Screen Res:",screen_resolution,self.screen_width, self.screen_height)
         self.move(0, self.screen_height - widget.height() )
 
+    ################################################################################
+
+    def TicToc(self):
+        print('Tic Toc ...')
+        if self.P.Stopper.is_set():
+            print('Tic Toc - Triggering closeEvent ...')
+            self.closeEvent()
+        
     ################################################################################
 
     # Routine to start the GUI
@@ -642,6 +658,7 @@ class pySDR_GUI(QMainWindow):
 
     # Routine to close down gracefully
     def closeEvent(self, event=None):
+        print('CloseEvent ...')
 
         # This seems to get called twice so trap second call
         if self.gui_closed:
@@ -662,7 +679,7 @@ class pySDR_GUI(QMainWindow):
         print('closeEvent: Stopping timers...')
         self.P.PSDtimer.stop()
         print("--- PSD timer stopped")
-        self.P.monitor.timer.stop()
+        #self.P.monitor.timer.stop()
         print("--- WatchDog timer stopped")
         time.sleep(1)
         
@@ -698,7 +715,7 @@ class pySDR_GUI(QMainWindow):
             print('\tWaiting for thread to quit -',th.getName(),' ...')
             if self.P.Stopper:
                 self.P.Stopper.set()
-            th.join()
+            th.join(5.0)
             print('\t... Thread quit -',th.getName())
             
         print("Closing down gui ...")
@@ -708,6 +725,8 @@ class pySDR_GUI(QMainWindow):
         #    print "Closing down gui - RF PSD closed"
         #self.plots_af.close()
         app = QApplication.instance()
+        app.quitOnLastWindowClosed=False
+        print("Closing down gui - Closing all windows ...")
         app.closeAllWindows()
         print("Closing down gui - All windows closed")
         time.sleep(1)
@@ -887,8 +906,9 @@ class pySDR_GUI(QMainWindow):
 
     # Callback for Volume control slider
     def VolumeControl(self):
-        # print 'Hey',self.afgain.value()
+        self.P.VOL = self.afgain.value()
         self.P.AF_GAIN=2*self.afgain.value()/100.
+        #print('VOLUME CONTROL out: gain=',self.P.AF_GAIN,'\tslider=',self.P.VOL)
 
     # Callback for RX Start/Stop button
     def StartStopRX(self):
@@ -1204,7 +1224,7 @@ class pySDR_GUI(QMainWindow):
 
             frq=(self.P.sock.get_freq(vfo) + df)*1e-3
                 
-            if np.abs(frq-fc)>=1e-3:
+            if frq>0 and np.abs(frq-fc)>=1e-3:
                 print("\n%%%%%%%%% RIG_RETUNE: RIG Center Frq=",frq,'\tSDR frq=',fc,'\tVFO=',vfo)
                 #print self.P.sock.freq,self.P.sock.mode,self.P.sock.connection
                 self.FreqSelect(frq,False,vfo)
@@ -1213,7 +1233,7 @@ class pySDR_GUI(QMainWindow):
                 rig_mode = self.P.sock.get_mode()
                 if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
                     mode=self.P.MODE
-                if rig_mode!=mode:
+                if len(mode)>0 and rig_mode!=mode:
                     self.P.sock.set_mode(mode)
                 print('RIG_RETUNE: mode=',mode,'rig_mode=',rig_mode,'sdr_mode=',self.P.MODE)
 
@@ -1227,8 +1247,8 @@ class pySDR_GUI(QMainWindow):
             fc = self.lcd.get()
             f = self.P.sock.get_freq()*1e-3
             band = freq2band(1e-3*f)
-            band2 = freq2band(1e-6*fc)
-            if band!=band2:
+            band2 = freq2band(1e-3*fc)
+            if f>0 and band!=band2:
                 mode = self.P.sock.get_fldigi_mode()
                 if True:
                     frq=f
@@ -1784,7 +1804,7 @@ class pySDR_GUI(QMainWindow):
         # Manage GUI LCD display
         if f2>0:
             self.lcd.set(.001*f2)
-            P.BAND = freq2band(1e-3*f2)
+            P.BAND = freq2band(1e-6*f2)
             for i in range(P.NUM_RX):
                 self.rx_frq_box[i].setText( "{0:,.1f} KHz".format(.001*P.FC[i]) )
 

@@ -24,6 +24,7 @@ if( 1 )then
     sudo make install
     sudo ldconfig
     rehash
+    
     SoapySDRUtil --info
     SoapySDRUtil --probe="driver=rtlsdr"
     
@@ -54,15 +55,17 @@ if( 1 )then
     sudo chmod -R go+rx /usr/local/lib/SoapySDR
     sudo chmod -R go+rx /usr/local/share/cmake
     rehash
+    
     SoapySDRUtil --find
     SoapySDRUtil --probe="driver=rtlsdr"
+    
     #exit
 endif
 
 # Also need to do this once 
 if( 0 )then
     sudo -i
-    echo "blacklist dvb_usb_rtl28xxu" > /etc/modprobe.d/blacklist-rtl.conf
+    echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist-rtl.conf
     echo "&&&&& Need to reboot for blacklist to take affect &&&&&&"
     reboot
 endif

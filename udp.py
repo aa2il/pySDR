@@ -34,9 +34,9 @@ def udp_msg_handler(self,sock,msg):
     
     msgs=msg.split('\n')
     for m in msgs:
-        print('UDP MSG HANDLER: m=',m,len(m))
-
         mm=m.split(':')
+        print('UDP MSG HANDLER: m=',m,'\tmm[0]=',mm[0])
+
         if mm[0]=='SO2V':
             if mm[1]=='ON':
                 P.SO2V=True
@@ -46,6 +46,7 @@ def udp_msg_handler(self,sock,msg):
             P.gui.so2v_cb.setChecked(P.SO2V)
             self.P.MUTED[0]=False
             P.gui.MuteCB(0,True)
+            return
 
         elif mm[0]=='SPLIT':
             if mm[1]=='ON':
@@ -55,11 +56,12 @@ def udp_msg_handler(self,sock,msg):
             print('UDP MSG HANDLER: mm=',mm,'\tSetting DX SPLIT',P.DXSPLIT)
             P.gui.split_cb.setChecked(P.DXSPLIT)
 
-            df=1000
-            SetTXSplit(self.P,df)
+            #df=1  # Defaults to 1 KHz UP
+            #SetTXSplit(self.P,df)
             
             self.P.MUTED[0]=False
             P.gui.MuteCB(0,True)
+            return
 
         elif mm[0]=='Name':
             if mm[1]=='?':
@@ -68,8 +70,18 @@ def udp_msg_handler(self,sock,msg):
                 sock.send(msg2.encode())
             else:
                 print('UDP MSG HANDLER: Server name is',mm[1])
+            return
                 
         elif mm[0]=='SpotList':
-            band=mm[1]
-            self.P.NEW_SPOT_LIST=eval(mm[2])
-            print('UDP MSG HANDLER: New Spot List:',band,self.P.NEW_SPOT_LIST)
+            if mm[1]=='Refresh':
+                band=self.P.BAND
+                msg='SpotList:'+band+':?\n'
+                self.P.udp_client2.Send(msg)
+            elif mm[1]!='?':
+                band=mm[1]
+                self.P.NEW_SPOT_LIST=eval(mm[2])
+                print('UDP MSG HANDLER: New Spot List:',band,self.P.NEW_SPOT_LIST)
+            return
+
+        print('UDP MSG HANDLER: Not sure what to do with this',mm)
+        

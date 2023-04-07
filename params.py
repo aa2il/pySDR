@@ -79,6 +79,8 @@ class RUN_TIME_PARAMS:
         arg_proc.add_argument("-ant", help="Antenna",
                               type=str,default="A",
                               choices=['A','B','Z'])
+        arg_proc.add_argument("-vol", help="Audio Volume",
+                              type=int,default=50)
         arg_proc.add_argument("-bfo", help="CW pitch",
                               type=float,default=0)
         arg_proc.add_argument("-t", help="Play duration (sec)",
@@ -391,7 +393,10 @@ class RUN_TIME_PARAMS:
         self.NEW_FREQ          = self.FC
         self.MODE_CHANGE       = False                   # No mode changes pending
         self.NEW_MODE          = self.MODE
+        
         self.AF_GAIN           = 0.5                     # AF slider in the middle
+        self.VOL               = args.vol
+        
         self.RX_HOLD           = False                   # RX is not held
         self.MUTED             = MAX_RX*[args.mute]      # Start with audio muted?
         self.INTERNALS         = 'internals.mat'         # Output file where we dump internal vars such as filter coeffs

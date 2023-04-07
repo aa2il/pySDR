@@ -1,7 +1,7 @@
 ############################################################################
 #
 # watchdog.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Watchdog monitor for pySDR
 #
@@ -27,6 +27,7 @@ from rig_io.socket_io import find_fldigi_port   # convert_freq2band
 from Tables import BANDS
 from utilities import freq2band
 from udp import *
+import threading
 
 ############################################################################
 
@@ -47,13 +48,25 @@ class Logger:
 # Watch Dog Timer - Called every msec to monitor health of app
 class WatchDog:
     def __init__(self,P,msec):
+        print('Watch Dog Starting ....')
 
+        """
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.Monitor)
         self.timer.start(msec)
+        self.msec=msec
+
+        self.timer2 = QtCore.QTimer()
+        self.timer2.timeout.connect(self.ItsAlive)
+        self.timer2.setSingleShot(True)
+        self.msec4=int(msec/4)
+        self.msec2=int(msec/2)
+        """
+
         self.count=0
         self.P = P
         self.quiet=False
+        self.in_and_out=0
 
         # Record start-time
         self.Start_Time = time.time()
@@ -71,11 +84,10 @@ class WatchDog:
         self.P.udp_client2 = None
         self.P.udp_ntries2 = 0
 
-
     # Function to monitor udp connections
     def check_udp_clients(self):
 
-        if self.P.UDP_CLIENT:
+        if self.P.UDP_CLIENT != None:
 
             # Client to keyer
             if not self.P.udp_client:
@@ -201,12 +213,36 @@ class WatchDog:
                 print('Watch Dog:',tag,'nsamps =',nsamps,size)
 
 
+    def ItsAlive(self):
+        if self.in_and_out==0:
+            print('Its Alive!',self.in_and_out)
+        else:
+            print('It appears to be dead!',self.in_and_out)
+            self.in_and_out+=1
+
+            if self.in_and_out>10 and False:
+                P=self.P
+                P.SHUT_DOWN = True
+                P.Stopper.set()
+                #P.gui.closeEvent()
+            
+            self.P.Timer2 = threading.Timer(2.0, self.ItsAlive)
+            self.P.Timer2.daemon=True
+            self.P.Timer2.start()
+        
             
     # Check health of app in here
     def Monitor(self):
-        #print('Monitor: in...')
         P=self.P
+        self.in_and_out+=1
+        #print('Monitor: in...',self.in_and_out)
 
+        #QTimer.singleShot(250, self.alive)
+        #self.timer2.start(self.msec2)
+        P.Timer2 = threading.Timer(2.0, self.ItsAlive)
+        P.Timer2.daemon=True
+        P.Timer2.start()
+        
         #vfo=P.sock.get_vfo()
         #print('WATCHDOG->MONITOR: vfo=',vfo)
         
@@ -219,7 +255,7 @@ class WatchDog:
             #print "\nThat's all Folks!"
             #P.gui.QuitApp()
             print('WatchDog Monitor: Shutting down...')
-            P.gui.closeEvent()
+            #P.gui.closeEvent()
             sys.exit(0)
 
         verbosity = -1
@@ -311,8 +347,14 @@ class WatchDog:
                 
 
         # That's a wrap for this time around ...
-        self.Last_Time = t
+        self.Last_Time  = t
+        self.in_and_out = 0
+        #self.timer2.stop()
         #print('Monitor: ...out')
+
+        self.P.Timer = threading.Timer(2.0, self.Monitor)
+        self.P.Timer.daemon=True
+        self.P.Timer.start()
         
                 
     # Routine to sync serial counters over multiple instances of FLDIGI

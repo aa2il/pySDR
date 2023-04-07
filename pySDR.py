@@ -185,7 +185,7 @@ def start_threads(P):
 # Over time, we need to move more of these things here
 def RIG_Updater(P):
         
-    logging.info('Starting ...')
+    logging.info('RIG UPDATER: Starting ...')
     #while not P.Stopper.isSet():
     while not P.Stopper.is_set():
 
@@ -206,12 +206,12 @@ def RIG_Updater(P):
         #logging.info('Resetting timer '+str(P.frqArx)+' '+str(P.frqAtx))
         time.sleep(1.)
 
-    logging.info('Exiting.')
+    logging.info('RIG UPDATER: Exiting.')
 
 ############################################################################
 
 # Top-level main for pySDR
-def main():
+if __name__ == '__main__':
 
     # Put up splash screen
     app = QApplication(sys.argv)
@@ -236,8 +236,13 @@ def main():
 #    time.sleep(1.)                         # Delay to mitigate start-up problem with Mint 20.3?
     P.gui.StartGUI()
 #    time.sleep(1.)                         # Delay to mitigate start-up problem with Mint 20.3?
-    P.monitor = WatchDog(P,2000)
 
+    # Thread to monitor health of app
+    P.monitor = WatchDog(P,2000)
+    P.Timer = threading.Timer(2.0, P.monitor.Monitor)
+    P.Timer.daemon=True                       # This prevents timer thread from blocking shutdown
+    P.Timer.start()
+    
     # Timer for PSD plotting - Calls updater every 1000/PSD_RATE millisec
 #    time.sleep(1.)                         # Delay to mitigate start-up problem with Mint 20.3?
     PSD_RATE=20   # was 10 Hz
@@ -255,11 +260,7 @@ def main():
     # Start the RX
     P.gui.StartStopRX()
 
-    return app.exec_()
-
-
-# Event loop
-if __name__ == '__main__':
-    main()
-
+    # Main event loop
+    sys.exit(app.exec_())
+    
 ############################################################################
