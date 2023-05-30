@@ -81,6 +81,10 @@ if( 0 )then
     # This works
     rtl_fm -M wbfm -f 100.7M | play -r 32k -t raw -e s -b 16 -c 1 -V1 -
     rtl_fm -f 100.7e6 -M wbfm -s 200000 -r 48000 - | aplay -r 48k -f S16_LE
+    
+    rtl_fm -f 162.425e6 -M fm -s 24000 - | aplay -f S16_LE -r 24000
+    rtl_fm -f 14.075e6 -E direct2 -M usb -s 24000 - | aplay -f S16_LE -r 24000
+    rtl_fm -f 600e3 -E direct2 -M am -s 24000 - | aplay -f S16_LE -r 24000
 
     # This doesn't
     rtl_fm -M wbfm -f 100.7M | sox -traw -r24k -es -b16 -c1 -V1 - -tmp3 - 

@@ -588,17 +588,33 @@ class pySDR_GUI(QMainWindow):
         self.show()
 
         # Move to lower left corner of screen
-        widget = self.geometry()
         screen_resolution = app.desktop().screenGeometry()
         self.screen_width  = screen_resolution.width()
         self.screen_height = screen_resolution.height()
-        print("Screen Res:",screen_resolution,self.screen_width, self.screen_height)
-        self.move(0, self.screen_height - widget.height() )
+        if P.GEO==None:
+            widget = self.geometry()
+            print("Screen Res:",screen_resolution,self.screen_width, self.screen_height)
+            self.move(0, self.screen_height - widget.height() )
+        else:
+            # WWWxHHH+XXX+YYY
+            # pySDR.py -geo 1100x530+5+540
+            print('geo=',P.GEO)
+            geo2=P.GEO.split('+')
+            print('geo2=',geo2)
+            geo3=geo2[0].split('x')
+            print('geo3=',geo3)
+            w=int( geo3[0] )
+            h=int( geo3[1] )
+            x=int( geo2[1] )
+            y=int( geo2[2] )
+            print('geo=',P.GEO,'\tx=',x,'\ty=',y,'\tw=',w,'\th=',h)
+            self.setGeometry(x,y,w,h)
+            
 
     ################################################################################
 
     def TicToc(self):
-        print('Tic Toc ...')
+        #print('Tic Toc ...')
         if self.P.Stopper.is_set():
             print('Tic Toc - Triggering closeEvent ...')
             self.closeEvent()

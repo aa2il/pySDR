@@ -63,6 +63,8 @@ class RUN_TIME_PARAMS:
                               help='Send loopback audio to speakers also')
         arg_proc.add_argument("-audio", help="Audio Scheme for routing RXs",
                               type=int,default=1)
+        arg_proc.add_argument("-nbuff", help="Audio Buffer Size",
+                              type=int,default=32)
         
         #arg_proc.add_argument('-left', help='Put Main RX on left channel', action='store_true')
         #arg_proc.add_argument('-right', help='Put Main RX on right channel', action='store_true')
@@ -164,6 +166,8 @@ class RUN_TIME_PARAMS:
                               type=int,default=0)
         arg_proc.add_argument("-xlmrpc", help="Try to open xlmrpc port(s)",
                               nargs='*', type=int,default=[])
+        arg_proc.add_argument('-geo',type=str,default=None,
+                              help='Geometry')
         arg_proc.add_argument("-v", "--verbosity", action="count",
                               help="increase output verbosity")
         arg_proc.add_argument('-no_rigctl', help="Disable rig control menu",
@@ -180,9 +184,10 @@ class RUN_TIME_PARAMS:
             sys.exit(0)
 
         # Determine SDR type which is connected to computer
-        self.PLATFORM=platform.system()
-        self.TEST_MODE = args.test
-        self.USE_FAKE_RTL=args.fake
+        self.PLATFORM     = platform.system()
+        self.TEST_MODE    = args.test
+        self.GEO          = args.geo
+        self.USE_FAKE_RTL = args.fake
         #self.USE_FAKE_RTL=True
         self.sdr = find_sdr_device(self,args)
         print('P.sdr=',self.sdr)
@@ -419,7 +424,7 @@ class RUN_TIME_PARAMS:
         # ... Not quite sure how big we really need to make the ring buffer
         # between the sig processor and the audio playback but this seems to
         # work
-        self.RB_SIZE        = 2*16*self.OUT_CHUNK_SIZE
+        self.RB_SIZE        = args.nbuff*self.OUT_CHUNK_SIZE
 
         if self.NUM_RX>2 and True:
             self.RB_SIZE *= 4

@@ -152,7 +152,7 @@ class WatchDog:
         else:
             print('WATCHDOG - Unknown MP SCHEME',P.MP_SCHEME)
             sys.exit(0)
-                
+
         latency = float( nsamps ) / float(P.FS_OUT)
         if self.count==1:
             self.avg_latency[irx] = latency
@@ -165,8 +165,8 @@ class WatchDog:
 
         if not self.quiet:
             #print('Watch Dog:',tag,'Latency =',nsamps,'samps =',latency,' sec')
-            print('Watch Dog: %s Latency = %5d samp = %4.2f sec' % \
-                  (tag,nsamps,latency),end='',flush=True)
+            print('Watch Dog: %s Latency = %5d samp = %4.2f sec\t%d' % \
+                  (tag,nsamps,latency,size),end='',flush=True)
         #self.P.LOG2.write('%f,%d,%f,%f\n' % (t,nsamps,latency,self.avg_latency[irx]) )
         #self.P.LOG2.flush()
 
@@ -215,7 +215,8 @@ class WatchDog:
 
     def ItsAlive(self):
         if self.in_and_out==0:
-            print('Its Alive!',self.in_and_out)
+            #print('Its Alive!',self.in_and_out)
+            pass
         else:
             print('It appears to be dead!',self.in_and_out)
             self.in_and_out+=1

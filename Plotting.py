@@ -109,6 +109,11 @@ class imager():
         self.enable_mouse=False # Only want one of these to be turned on
         # Otherwise, we get multiple calls
 
+        self.prev_tgt=None        
+        self.prev_view=None
+        self.prev_xlim=None
+        self.prev_ylim=None
+        
         if not pwin:
             pwin = pg.GraphicsLayoutWidget()
         self.pwin=pwin
@@ -121,7 +126,10 @@ class imager():
         cmap = get_color_map('jet', 0.,1.)
         lut = cmap.getLookupTable(0.,1., 256)
         self.img.setLookupTable(lut)
-
+        
+        # Only allow zoom in X-axis
+        self.p3.setMouseEnabled(y=False)
+                
         # Crosshairs
         if self.enable_mouse:
             self.vLine = pg.InfiniteLine(angle=90, movable=False,pen='m')
@@ -131,24 +139,47 @@ class imager():
             #self.proxy = pg.SignalProxy(self.p3.scene().sigMouseMoved,
             #                            rateLimit=60, slot=self.mouseMoved)
             self.p3.scene().sigMouseMoved.connect(self.mouseMoved)    
-            self.p3.scene().sigMouseClicked.connect(self.mouseClicked)    
+            self.p3.scene().sigMouseClicked.connect(self.mouseClicked)
+
+    # Function to get X-range
+    def getXRange(self):
+        #print('GET X RANGE: prev=',self.prev_tgt)
+        state=self.p3.getViewBox().state
+        tgt  = state['targetRange'][0]
+        view = state['viewRange'][0]
+        if tgt!=self.prev_tgt:
+            df=tgt[1]-tgt[0]
+            #print('TGT CHANGE: ',tgt,view,df)
+            #if self.prev_tgt and df!=self.prev_tgt[1]-self.prev_tgt[0]:
+            #    print('RANGE CHANGE!!!')
+            self.prev_tgt=tgt
+        if view!=self.prev_view:
+            #print('VIEW CHANGE:',tgt,view,view[1]-view[0])
+            self.prev_view=view
+
+        return tgt
 
     # Function to plot an image
-    def imagesc(self,data,xlim=[],ylim=[],xdata=[],ydata=[],FLIP=False):
+    def imagesc(self,data,xlim=[],ylim=[],xdata=[],ydata=[],FLIP=False,Force=False):
         self.img.setImage(data)
         #self.img.update()
         #self.p3.update()
 
         # Set axis limits
-        if len(xlim)>0:
-            self.p3.setXRange(xlim[0],xlim[1], padding=0)
-        else:
-            self.p3.setXRange(0, data.shape[0]+self.xpad, padding=0)      ########
+        #print('xlim=',xlim,self.prev_xlim)
+        if xlim!=self.prev_xlim or Force:
+            if len(xlim)>0:
+                self.p3.setXRange(xlim[0],xlim[1], padding=0)
+            else:
+                self.p3.setXRange(0, data.shape[0]+self.xpad, padding=0)
+            self.prev_xlim=xlim
 
-        if len(ylim)>0:
-            self.p3.setYRange(ylim[0],ylim[1], padding=0)
-        else:
-            self.p3.setYRange(0, data.shape[1]+self.ypad, padding=0)
+        if ylim!=self.prev_ylim or True:
+            if len(ylim)>0:
+                self.p3.setYRange(ylim[0],ylim[1], padding=0)
+            else:
+                self.p3.setYRange(0, data.shape[1]+self.ypad, padding=0)
+            self.prev_ylim=ylim
 
         # Flip image upside down
         if FLIP:
@@ -405,22 +436,35 @@ class three_box_plot():
         self.vLine.setPos(fc)
 
         # Set freq axis limits depending on selected limits & mode
-        f1=min(frq)
-        f2=max(frq)
+        F1=min(frq)
+        F2=max(frq)
         bw=0
-        #print "PSD frqs:",f1,f2,fc
-        if P.PAN_BW>0:
-            if P.PAN_DIR=='Up/Down':
-                bw = P.PAN_BW*0.5e-3
+        
+        TGT=self.imager.getXRange()
+        force=TGT[0]<F1 or TGT[1]>F2
+        BW = TGT[1]-TGT[0]
+        if BW==1.0:
+            if P.PAN_BW==0:
+                BW = F2-F1
             else:
-                bw = P.PAN_BW*1e-3
-            f1=max(f1,fc-bw)
-            f2=min(f2,fc+bw)
-            #print 'f1 f2=',f1,f2
+                BW = P.PAN_BW*1e-3
+        
+        if P.PAN_DIR=='Up/Down':
+            bw = BW*0.5
+        else:
+            bw = BW
+
+        #print('BWs:',P.PAN_DIR,P.PAN_BW,'\tTGT=',TGT[0],TGT[1],
+        #      '\tF=',F1,F2,'\tfc=',fc,'\tbw=',bw)
+            
+        f1=max(F1,fc-bw)
+        f2=min(F2,fc+bw)
         if P.PAN_DIR=='Up':
             f1=fc-1.
         elif P.PAN_DIR=='Down':
             f2=fc+1.
+        #else:
+            #print('f1,f2=',f1,f2)
         self.p2.setXRange(f1,f2, padding=0)
         #print "Axis frqs:",f1,f2,bw,P.PAN_BW,P.PAN_DIR
 
@@ -512,7 +556,7 @@ class three_box_plot():
             ax=self.p3.getAxis('bottom')
         else:
             self.imager.imagesc(np.maximum(zz,zmax-P.PAN_DR),
-                                xlim=[f1,f2],xdata=frq)
+                                xlim=[f1,f2],xdata=frq,Force=force)
             ax=self.p3.getAxis('left')
 
         # Hide time axis on waterfall
@@ -531,7 +575,7 @@ class three_box_plot():
             ang=0
         else:
             # Not sure why the magic offset of 10 here but it works
-            # Probably has something to do which text box corner is referenced
+            # Probably has something to do where text box corner is referenced
             # See https://en.wikipedia.org/wiki/Mathematical_operators_and_symbols_in_Unicode
             # for unicoded symbol table
             if BIG_DOT:

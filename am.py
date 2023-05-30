@@ -25,7 +25,7 @@
 
 import sig_proc as dsp
 import numpy as np
-if False:
+if True:
     import threading
     MP_SCHEME=1
 elif True:
@@ -72,6 +72,10 @@ if P.MP_SCHEME==1:
     worker = threading.Thread(target=SDR_EXECUTIVE(P,False).Run,args=(), name='SDR_EXEC')
     worker.setDaemon(True)
     worker.start()
+    #print('RB_SIZE1:',P.RB_SIZE)
+    #P.RB_SIZE        = 4*P.OUT_CHUNK_SIZE
+    #print('RB_SIZE2:',P.RB_SIZE)
+    
 elif P.MP_SCHEME==2:
     # This works - entire rx is in its own process
     P.parent_conn, P.child_conn = mp.Pipe()
@@ -166,7 +170,9 @@ while not Done:
         elif P.MP_SCHEME==3:
             pass
         else:
-            print("Ring Buffer - nsamps=", P.players[0].rb.nsamps)
+            N=P.players[0].rb.nsamps
+            DT=float(N)/float(P.FS_OUT)
+            print("Ring Buffer - nsamps=",N,'\tlatency=',DT)
         
     except (KeyboardInterrupt, SystemExit):
         print('Exception detected and being handled ...')
