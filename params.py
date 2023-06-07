@@ -63,8 +63,8 @@ class RUN_TIME_PARAMS:
                               help='Send loopback audio to speakers also')
         arg_proc.add_argument("-audio", help="Audio Scheme for routing RXs",
                               type=int,default=1)
-        arg_proc.add_argument("-nbuff", help="Audio Buffer Size",
-                              type=int,default=32)
+        arg_proc.add_argument("-delay", help="Audio Buffer Delay",
+                              type=int,default=16)
         
         #arg_proc.add_argument('-left', help='Put Main RX on left channel', action='store_true')
         #arg_proc.add_argument('-right', help='Put Main RX on right channel', action='store_true')
@@ -424,7 +424,9 @@ class RUN_TIME_PARAMS:
         # ... Not quite sure how big we really need to make the ring buffer
         # between the sig processor and the audio playback but this seems to
         # work
-        self.RB_SIZE        = args.nbuff*self.OUT_CHUNK_SIZE
+        #self.RB_SIZE        = args.nbuff*self.OUT_CHUNK_SIZE
+        self.RB_SIZE        = 32*self.OUT_CHUNK_SIZE
+        self.DELAY          = min(32,max(1,args.delay))*self.OUT_CHUNK_SIZE
 
         if self.NUM_RX>2 and True:
             self.RB_SIZE *= 4

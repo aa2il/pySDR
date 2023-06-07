@@ -171,7 +171,7 @@ def audio_out(P,am=None):
             # Need to delay start of playback until there are enough samples
             player.rb.push( am1*af_gain1 + 1j*am2*af_gain2 )
             if player and not player.active:
-                player.start_playback(P.RB_SIZE/2,False)
+                player.start_playback(P.DELAY,False)
 
         return
             
@@ -208,7 +208,7 @@ def audio_out(P,am=None):
 
         # Need to delay start of playback until there are enough samples
         if player and not player.active:
-            player.start_playback(P.RB_SIZE/2,False)
+            player.start_playback(P.DELAY,False)
 
 
 
