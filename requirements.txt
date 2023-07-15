@@ -1,7 +1,7 @@
-# Under Mint 21, tried this but didn't work - "Illegal Instruction"
+# Under Mint 21, tried this but didn't work --> "Illegal Instruction"
 
-# sudo apt -y install python3-soapysdr soapysdr-module-rtlsdr
-# libsoapysdr-doc libsoapysdr-dev soapysdr-tools rtl-sdr librtlsdr-dev
+#   sudo apt -y install python3-soapysdr soapysdr-module-rtlsdr
+#   libsoapysdr-doc libsoapysdr-dev soapysdr-tools rtl-sdr librtlsdr-dev
 
 # Had to resort to building from source.  Hopefully this will get
 # resolved some day.
@@ -13,7 +13,7 @@
 # pip3 install -r requirements.txt
 
 # There are some changes in the latest pyqtgraph so for now, we use
-# the older version untile I can catch up
+# the older version until I can catch up
 
 # pip3 install --upgrade pyqtgraph==0.12.4
 
@@ -24,16 +24,19 @@
 pyqt5
 matplotlib
 pyqtgraph
-basemap
 pyserial
 xlrd
 unidecode
 pyhamtools
+pyaudio
 pyrtlsdr
 
 pandas
 scipy
-levenshtein
+#levenshtein
 
-
+# It might be a lot easier in the future to just use mini-conda:
+# Must use python 3.10 but it works!!!!:
+# conda install -c conda-forge soapysdr
+# conda install -c conda-forge soapysdr-module-rtlsdr
 
