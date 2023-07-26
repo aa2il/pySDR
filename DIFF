@@ -31,7 +31,7 @@ set old=${ROOT}${PTH}
 echo OLD=$old
 
 rm -f DIFFS
-foreach i (DIFF *.py SSTV FT8* *.bat *.m BUILD* *.txt)
+foreach i (DIFF *.py SSTV FT8* *.bat *.m BUILD* *.txt README.md)
     echo $i
     set n=`diff -w $old/$i $i | wc -l`
     if( !( -e $old/$i ) )then

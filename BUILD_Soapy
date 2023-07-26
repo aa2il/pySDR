@@ -28,7 +28,7 @@ if( 1 )then
     mkdir ~/Dev
     cd ~/Dev
 
-    cmake --help-policy CMP0078
+    #cmake --help-policy CMP0078
     
     sudo make uninstall SoapySDR
     sudo rm -rf SoapySDR
@@ -47,7 +47,9 @@ if( 1 )then
     # Permissions were a real problem when trying to get this to
     # work on the RPi.
     sudo chmod -R go+rx /usr/local/lib/SoapySDR
+    sudo chmod -R go+rx /usr/local/lib/pkgconfig
     sudo chmod -R go+rx /usr/local/share/cmake
+    sudo chmod -R go+rx /usr/local/lib/arm*
     rehash
     
     SoapySDRUtil --info

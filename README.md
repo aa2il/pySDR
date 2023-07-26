@@ -41,6 +41,7 @@ To be continued....
     - git clone https://github.com/aa2il/libs
     - git clone https://github.com/aa2il/data
 3) Build components that deal with the SDR device:    
+    - cd ~/Python/pySDR
     - BUILD_Soapy
     - BUILD_RTL
     - BUILD_SDRplay
