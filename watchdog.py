@@ -125,7 +125,7 @@ class WatchDog:
                 msg='SpotList:'+band+':?\n'
                 self.P.udp_client2.Send(msg)
                 self.Last_BM_Check=t
-                print('WATCHDOG->CHECK_UDP_CLIENTS: Spot List Query sent ..,')
+                print('WATCHDOG->CHECK_UDP_CLIENTS: Spot List Query sent ..,',msg)
                 
         
     # Function to monitor audio ring buffers

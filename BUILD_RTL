@@ -4,6 +4,8 @@
 
 ##########################################################################################
 
+pip install pyrtlsdr
+
 # SoapySDR - version that will find RTL libs
 if( 1 )then
     echo "\n------------------------------------ Installing SoapSDR for RTL part 1 ...\n"

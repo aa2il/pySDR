@@ -21,6 +21,7 @@
 
 from tcp_server import *
 from rig_io.socket_io import SetTXSplit
+from utilities import freq2band
 
 #########################################################################################
 
@@ -83,5 +84,48 @@ def udp_msg_handler(self,sock,msg):
                 print('UDP MSG HANDLER: New Spot List:',band,self.P.NEW_SPOT_LIST)
             return
 
+        elif mm[0]=='RunFreq' and False:
+
+            # This pathway uses the bandmap as the arbiter - more up to dae but very slow
+            if mm[1] in ['UP','DOWN']:
+                self.P.udp_client2.Send(m)
+            else:
+                self.P.udp_client.Send(m)
+                
+            print('UDP MSG HANDLER: Relayed msg=',m)
+            return
+        
+        elif mm[0]=='RunFreq' and mm[1] in ['UP','DOWN'] and True:
+
+            # Just use whatever spaots we already have
+            frq=float(mm[2])
+            band = freq2band(1e-3*frq)
+            print('UDP MSG HANDLER: RunFreq - frq=',frq,'\tband=',band)
+            spots = self.P.gui.Spots
+            spots.sort(key=lambda x: x.freq, reverse=(mm[1]=='DOWN'))
+            #print('spots=',spots)
+
+            flast=None
+            MIN_DF=1e-3*500
+            for x in spots:
+                f  = x.freq
+                if not flast:
+                    flast = f
+                df = abs( f - flast )
+                print(x.call,'\t',flast,'\t',f,'\t',df)
+                if df>MIN_DF:
+                    if (mm[1]=='UP' and flast>frq and f>frq) or \
+                       (mm[1]=='DOWN' and flast<frq and f<frq):
+                        frq2=0.5*(f+flast)
+                        msg='RunFreq:TRY:'+str(frq2)
+                        print('UDP MSG HANDLER: RunFreq - Suggested freq=',frq2,
+                              '\nSending msg=',msg)
+                        #self.P.udp_server.Broadcast(msg)
+                        sock.send(msg.encode())
+                        return
+                flast = f
+            print('UDP MSG HANDLER: RunFreq - Unable to suggest a freq')
+            return
+                
         print('UDP MSG HANDLER: Not sure what to do with this',mm)
         

@@ -13,21 +13,28 @@
 set VER=3.07
 set SUBVER=2
 set ARCH="Linux"
-#set ARCH="ARM32"
+set ARCH="ARM32"
+set ARCH="ARM64"                      # 64-bit API is under ARM -  Ubuntu ...
+set SUBVER=1                          # ... and is version 1 .. but doesn't work for RPi OS :-(
 set ARCH="NONE"                      # Do this to skip download from SDRPlay
 if( $ARCH == "Linux")then
 
     echo "Installing SDRPlay driver version ${ARCH}-$VER ..."
-    pushd ~/AA2IL/SDR/SDRplay/
+    mkdir -p ~/AA2IL/SDR/SDRplay
+    pushd ~/AA2IL/SDR/SDRplay
+    pwd
     chmod 755 ./SDRplay_RSP_API-${ARCH}-${VER}.1.run
     ./SDRplay_RSP_API-${ARCH}-${VER}.1.run
     popd
     sudo reboot
     exit
 
-else if( $ARCH == "ARM32")then
+else if( ( $ARCH == "ARM32" ) || ( $ARCH == "ARM64" ) )then
 
     echo "Installing SDRPlay driver version ${ARCH}-$VER ..."
+    mkdir -p ~/AA2IL/SDR/SDRplay
+    pushd ~/AA2IL/SDR/SDRplay
+    pwd
     wget https://www.sdrplay.com/software/SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
     ls
     chmod 755 ./SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
@@ -50,6 +57,8 @@ if( 1 )then
     if( $VER == 3.07 )then
     
         # The current Soapy seems to work with the newer driver
+        echo "Cloning Soapy SDRPlay stuff ..."
+        pwd
         git clone https://github.com/pothosware/SoapySDRPlay.git ./SoapySDRPlay
         
     else if( 0 )then
@@ -73,7 +82,12 @@ if( 1 )then
     
     endif
 
+    # For a 64-bit operating system on a Raspberry Pi 4:
+    #setenv CXXFLAGS "-O3 -mtune=cortex-a72"
+    #setenv CFLAGS "-O3 -mtune=cortex-a72"
+
     # Build it
+    echo "Building Soapy Support for SDRPlay ..."
     cd ~/Dev/SoapySDRPlay
     sudo rm -rf build
     mkdir build
