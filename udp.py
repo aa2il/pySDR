@@ -127,5 +127,30 @@ def udp_msg_handler(self,sock,msg):
             print('UDP MSG HANDLER: RunFreq - Unable to suggest a freq')
             return
                 
+        elif mm[0]=='SpotFreq' and mm[1] in ['UP','DOWN'] and True:
+
+            # Just use whatever spaots we already have
+            frq=float(mm[2])
+            band = freq2band(1e-3*frq)
+            print('UDP MSG HANDLER: SpotFreq - frq=',frq,'\tband=',band)
+            spots = self.P.gui.Spots
+            spots.sort(key=lambda x: x.freq, reverse=(mm[1]=='DOWN'))
+            #print('spots=',spots)
+
+            for x in spots:
+                f  = x.freq
+                print(x.call,'\t',f)
+                if (mm[1]=='UP' and f>frq) or \
+                   (mm[1]=='DOWN' and f<frq):
+                        msg='SpotFreq:TRY:'+str(f)
+                        print('UDP MSG HANDLER: SpotFreq - Suggested freq=',f,
+                              '\nSending msg=',msg)
+                        #self.P.udp_server.Broadcast(msg)
+                        sock.send(msg.encode())
+                        return
+
+            print('UDP MSG HANDLER: SpotFreq - Unable to find a spot freq')
+            return
+                
         print('UDP MSG HANDLER: Not sure what to do with this',mm)
         
