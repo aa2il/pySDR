@@ -599,8 +599,6 @@ class three_box_plot():
         #                         "background-color: lightgoldenrodyellow ;
         self.p3.addItem(spot,ignoreBounds=True)
         self.SpotItems.append(spot)
-        #spot.scene().sigMouseClicked.connect(self.mouseClicked2)     # Dont do this - too many calls!
-        #print('Plotting->AddSpot:',x,y,txt,c,spot)
 
     def mouseClicked2(self,evt):
         print("\nSPOTS Mouse click detected: evt=",evt)

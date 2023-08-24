@@ -97,7 +97,7 @@ def udp_msg_handler(self,sock,msg):
         
         elif mm[0]=='RunFreq' and mm[1] in ['UP','DOWN'] and True:
 
-            # Just use whatever spaots we already have
+            # Just use whatever spots we already have
             frq=float(mm[2])
             band = freq2band(1e-3*frq)
             print('UDP MSG HANDLER: RunFreq - frq=',frq,'\tband=',band)
@@ -114,8 +114,8 @@ def udp_msg_handler(self,sock,msg):
                 df = abs( f - flast )
                 print(x.call,'\t',flast,'\t',f,'\t',df)
                 if df>MIN_DF:
-                    if (mm[1]=='UP' and flast>frq and f>frq) or \
-                       (mm[1]=='DOWN' and flast<frq and f<frq):
+                    if (mm[1]=='UP'   and flast>=frq and f>frq) or \
+                       (mm[1]=='DOWN' and flast<=frq and f<frq):
                         frq2=0.5*(f+flast)
                         msg='RunFreq:TRY:'+str(frq2)
                         print('UDP MSG HANDLER: RunFreq - Suggested freq=',frq2,
@@ -142,7 +142,7 @@ def udp_msg_handler(self,sock,msg):
                 print(x.call,'\t',f)
                 if (mm[1]=='UP' and f>frq) or \
                    (mm[1]=='DOWN' and f<frq):
-                        msg='SpotFreq:TRY:'+str(f)
+                        msg='SpotFreq:TRY:'+str(f)+':'+x.call+':A'
                         print('UDP MSG HANDLER: SpotFreq - Suggested freq=',f,
                               '\nSending msg=',msg)
                         #self.P.udp_server.Broadcast(msg)

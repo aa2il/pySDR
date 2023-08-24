@@ -1155,17 +1155,35 @@ class pySDR_GUI(QMainWindow):
                 for n in range(0,len(P.NEW_SPOT_LIST),3):
                     call=P.NEW_SPOT_LIST[n]
                     freq=P.NEW_SPOT_LIST[n+1]
+
+                    # Decode spot color - single letters were used to shorten messages
                     c=P.NEW_SPOT_LIST[n+2]
-                    if c=='v':
+                    if c=='r':
+                        c="red"
+                    elif c=='m':
+                        c="magenta"
+                    elif c=='v':
                         c="violet"
                     elif c=='p':
                         c="pink"
                     elif c=='lb':
                         c="lightskyblue" 
+                    elif c=='t':
+                        c="turquoise"
+                    elif c=='b':
+                        c="deepskyblue"
                     elif c=='g':
                         c="gold"
                     elif c=='o':
                         c='orange'
+                    elif c=='y':
+                        c='yellow'
+                    elif c=='g':
+                        c='lightgreen'
+                    elif len(c)==1:
+                        # Catch all so program doesn't crash & burn
+                        c='w'
+                        
                     self.plots_af.addSpot(freq,100,call,c)
                     self.Spots.append(SPOT(call,freq,c))
                 P.NEW_SPOT_LIST=None
