@@ -13,10 +13,10 @@
 set VER=3.07
 set SUBVER=2
 set ARCH="Linux"
-set ARCH="ARM32"
-set ARCH="ARM64"                      # 64-bit API is under ARM -  Ubuntu ...
-set SUBVER=1                          # ... and is version 1 .. but doesn't work for RPi OS :-(
-set ARCH="NONE"                      # Do this to skip download from SDRPlay
+#set ARCH="ARM32"
+set ARCH="ARM64"                      # 64-bit API is under ARM & is version 1
+set SUBVER=1                          # Only works for true 64-bit OS, not hybrid nonsense that RPi defaults to!!
+set ARCH="NONE"                       # Do this to skip download from SDRPlay
 if( $ARCH == "Linux")then
 
     echo "Installing SDRPlay driver version ${ARCH}-$VER ..."
@@ -35,8 +35,9 @@ else if( ( $ARCH == "ARM32" ) || ( $ARCH == "ARM64" ) )then
     mkdir -p ~/AA2IL/SDR/SDRplay
     pushd ~/AA2IL/SDR/SDRplay
     pwd
-    wget https://www.sdrplay.com/software/SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
-    ls
+    # Get it from the website instead?
+    #wget https://www.sdrplay.com/software/SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
+    ls -al
     chmod 755 ./SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
     ./SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
 
@@ -103,6 +104,8 @@ if( 1 )then
     # work on the RPi.
     sudo chmod -R go+rx /usr/local/lib/SoapySDR
     sudo chmod -R go+rx /usr/local/share/cmake
+
+    sudo chmod -R go+rx /usr/local/lib/aarch64-linux-gnu/SoapySDR
 
     # Need to rehash to find new stuff
     rehash

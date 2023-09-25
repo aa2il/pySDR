@@ -10,6 +10,7 @@
 #set ROOT="/media/${USER}/pi"
 #set ROOT="/media/${USER}/aa2il"
 set ROOT="/media/${USER}/marconi"
+set ROOT="/media/${USER}/hertz"
 #set ROOT="/media/${USER}/sproul"
 #set ROOT="/media/${USER}/3D76-ECB1"
 #set ROOT="/media/${USER}/acer"

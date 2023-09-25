@@ -10,6 +10,8 @@
 #                       BUILD_Soapy
 #                       BUILD_RTL
 #                       BUILD_SDRplay
+#
+# This also seems ok for RPi Bullseye 64-bit
 
 ##########################################################################################
 
@@ -49,7 +51,13 @@ if( 1 )then
     sudo chmod -R go+rx /usr/local/lib/SoapySDR
     sudo chmod -R go+rx /usr/local/lib/pkgconfig
     sudo chmod -R go+rx /usr/local/share/cmake
-    sudo chmod -R go+rx /usr/local/lib/arm*
+    #sudo chmod -R go+rx /usr/local/lib/arm*
+
+    sudo chmod -R go+rx /usr/local/lib/aarch64-linux-gnu
+    sudo chmod -R go+rx /usr/local/lib/aarch64-linux-gnu/libSoapySDR*
+    sudo chmod -R go+rx /usr/local/lib/aarch64-linux-gnu/pkgconfig
+    #sudo chmod -R go+rx /usr/local/lib/arm*
+    
     rehash
     
     SoapySDRUtil --info

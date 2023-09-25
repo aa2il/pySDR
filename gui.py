@@ -1171,7 +1171,8 @@ class pySDR_GUI(QMainWindow):
                     elif c=='t':
                         c="turquoise"
                     elif c=='b':
-                        c="deepskyblue"
+                        #c="deepskyblue"
+                        c="blue"
                     elif c=='g':
                         c="gold"
                     elif c=='o':
@@ -1602,6 +1603,7 @@ class pySDR_GUI(QMainWindow):
         vfo='A'        # Make sure this is set
 
         # Check if we've clicked on a spot
+        fields=None
         if self.P.BANDMAP:
             if y>100:
                 dfbest=1e9
@@ -1617,6 +1619,7 @@ class pySDR_GUI(QMainWindow):
                 print('MouseClickRF: Looks like a spot click -',spot.call,spot.freq,spot.color)
                 frq=spot.freq
                 call=spot.call
+                fields = {'Call':call}
             else:
                 call=''
             
@@ -1707,8 +1710,14 @@ class pySDR_GUI(QMainWindow):
 
         # Send spot info to keyer
         if self.P.BANDMAP and self.P.udp_client:
+            print('Sending CALL to UDP Client...',call)
             self.P.udp_client.Send('Call:'+call+':'+vfo)
 
+        # Send spot to FLDIGI also - RTTY op
+        if fields and self.P.sock.fldigi_active:
+            print('Sending info to FLDIGI ...',fields)
+            self.P.sock.set_log_fields(fields)
+            
                 
     # Callback to change center freq
     def FreqSelect(self,new_frq,tune_rig=True,VFO=[]):
