@@ -1173,7 +1173,7 @@ class pySDR_GUI(QMainWindow):
                     elif c=='b':
                         #c="deepskyblue"
                         c="blue"
-                    elif c=='g':
+                    elif c=='d':
                         c="gold"
                     elif c=='o':
                         c='orange'
