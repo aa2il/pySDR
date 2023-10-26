@@ -50,19 +50,6 @@ class WatchDog:
     def __init__(self,P,msec):
         print('Watch Dog Starting ....')
 
-        """
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.Monitor)
-        self.timer.start(msec)
-        self.msec=msec
-
-        self.timer2 = QtCore.QTimer()
-        self.timer2.timeout.connect(self.ItsAlive)
-        self.timer2.setSingleShot(True)
-        self.msec4=int(msec/4)
-        self.msec2=int(msec/2)
-        """
-
         self.count=0
         self.P = P
         self.quiet=False
