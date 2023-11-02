@@ -86,8 +86,8 @@ def udp_msg_handler(self,sock,msg):
                 # Relay to bandmap
                 band=self.P.BAND
                 msg='SpotList:'+band+':?\n'
-                #self.P.udp_client2.Send(msg)
-                print('UDP MSG HANDLER: Passing on SPOT LIST REFRESH message')
+                self.P.udp_client2.Send(msg)
+                #print('UDP MSG HANDLER: Passing on SPOT LIST REFRESH message')
                 
             elif mm[1]!='?':
                 

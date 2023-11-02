@@ -174,6 +174,8 @@ class RUN_TIME_PARAMS:
                               action='store_true')
         arg_proc.add_argument('-no_hamlib', help="Disable hamlib servers",
                               action='store_true')
+        arg_proc.add_argument('-desktop',type=int,default=None,
+                              help='Desk Top Work Space No.')
         args = arg_proc.parse_args()
 
         if False:
@@ -187,6 +189,7 @@ class RUN_TIME_PARAMS:
         self.PLATFORM     = platform.system()
         self.TEST_MODE    = args.test
         self.GEO          = args.geo
+        self.DESKTOP      = args.desktop
         self.USE_FAKE_RTL = args.fake
         #self.USE_FAKE_RTL=True
         self.sdr = find_sdr_device(self,args)

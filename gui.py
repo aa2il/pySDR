@@ -610,6 +610,25 @@ class pySDR_GUI(QMainWindow):
             print('geo=',P.GEO,'\tx=',x,'\ty=',y,'\tw=',w,'\th=',h)
             self.setGeometry(x,y,w,h)
             
+        if P.DESKTOP!=None:
+            cmd1='wmctrl -r "'+self.windowTitle()+'" -t '+str(P.DESKTOP)
+            print('cmd1=',cmd1)
+            os.system(cmd1)
+
+            """
+            cmd2='wmctrl -r "'+self.plots_rf.pwin.windowTitle()+'" -t '+str(P.DESKTOP)
+            print('cmd2=',cmd2)
+            os.system(cmd2)
+            
+            cmd3='wmctrl -r "'+self.plots_af.pwin.windowTitle()+'" -t '+str(P.DESKTOP)
+            print('cmd3=',cmd3)
+            os.system(cmd3)
+            
+            cmd4='wmctrl -r "'+self.plots_bb.pwin.windowTitle()+'" -t '+str(P.DESKTOP)
+            print('cmd4=',cmd4)
+            os.system(cmd4)
+            """
+        
 
     ################################################################################
 
@@ -962,6 +981,13 @@ class pySDR_GUI(QMainWindow):
         if not self.P.SHOW_RF_PSD:
             self.btn2.setText('Stop RF PSD')
             self.plots_rf.pwin.show()
+
+            if self.P.DESKTOP!=None and self.plots_rf.first_time:
+                cmd2='wmctrl -r "'+self.plots_rf.pwin.windowTitle()+'" -t '+str(self.P.DESKTOP)
+                print('cmd2=',cmd2)
+                os.system(cmd2)
+                self.plots_rf.first_time=False
+            
         else:
             self.btn2.setText('Start RF PSD')
             self.plots_rf.pwin.hide()
@@ -986,6 +1012,13 @@ class pySDR_GUI(QMainWindow):
                 w=self.screen_width-1
                 h=int(self.screen_height/5)
             self.plots_bb.pwin.setGeometry( QRect(x,y,w,h) )
+
+            if self.P.DESKTOP!=None and self.plots_bb.first_time:
+                cmd4='wmctrl -r "'+self.plots_bb.pwin.windowTitle()+'" -t '+str(self.P.DESKTOP)
+                print('cmd4=',cmd4)
+                os.system(cmd4)
+                self.plots_bb.first_time=False
+            
         else:
             self.btn4.setText('Start BB IQ PSD')
             self.plots_bb.pwin.hide()
@@ -1013,6 +1046,13 @@ class pySDR_GUI(QMainWindow):
                 h=int(self.screen_height/5)
             self.plots_af.pwin.setGeometry( QRect(x,y,w,h) )
             self.btn3.setChecked(True)
+
+            if self.P.DESKTOP!=None and self.plots_af.first_time:
+                cmd3='wmctrl -r "'+self.plots_af.pwin.windowTitle()+'" -t '+str(self.P.DESKTOP)
+                print('cmd3=',cmd3)
+                os.system(cmd3)
+                self.plots_af.first_time=False
+                
         else:
             self.btn3.setText('Start AF PSD')
             self.plots_af.pwin.hide()

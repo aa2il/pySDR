@@ -20,6 +20,7 @@
 ############################################################################
 
 import sys
+#import os
 import pyqtgraph as pg
 from PyQt5.QtGui import QTransform,QFont
 from PyQt5.QtWidgets import QLCDNumber,QLabel
@@ -272,6 +273,7 @@ class three_box_plot():
         self.fc=0
         self.TRANSPOSE=TRANSPOSE
         self.SpotItems=[]
+        self.first_time=True
 
         # Create plot window and start out with it hidden
         self.pwin = pg.GraphicsLayoutWidget(show=False,title=win_label)
@@ -372,6 +374,14 @@ class three_box_plot():
             self.p3.scene().sigMouseMoved.connect(self.mouseMoved)    
             self.p3.scene().sigMouseClicked.connect(self.mouseClicked)    
 
+        """
+        if P.DESKTOP!=None:
+            self.pwin.show()
+            cmd2='wmctrl -r "'+self.pwin.windowTitle()+'" -t '+str(P.DESKTOP)
+            print('cmd2=',cmd2)
+            os.system(cmd2)
+            self.pwin.hide()
+        """
 
     def hide(self):
         self.pwin.hide()
