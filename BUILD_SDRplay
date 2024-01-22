@@ -10,10 +10,10 @@
 # That was OK with Mint 18.3 since we could just downgrade but not with Mint 19.3.  Things seem ok in Mint 20 & 21
 #set VER=2.11
 #set VER=2.13
-set VER=3.07
+set VER=3.12                          # Was 3.07
 set SUBVER=2
 set ARCH="Linux"
-#set ARCH="ARM32"
+###set ARCH="ARM32"                   # Shoudlnt need this anymore
 set ARCH="ARM64"                      # 64-bit API is under ARM & is version 1
 set SUBVER=1                          # Only works for true 64-bit OS, not hybrid nonsense that RPi defaults to!!
 set ARCH="NONE"                       # Do this to skip download from SDRPlay
@@ -35,17 +35,38 @@ else if( ( $ARCH == "ARM32" ) || ( $ARCH == "ARM64" ) )then
     mkdir -p ~/AA2IL/SDR/SDRplay
     pushd ~/AA2IL/SDR/SDRplay
     pwd
+
+    # They've changed the naming convention so I just did thismanually on the RPi
     # Get it from the website instead?
     #wget https://www.sdrplay.com/software/SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
-    ls -al
+    ls -alhrt
     chmod 755 ./SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
     ./SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
 
+    # Note: To start and stop the API service, use the following commands...
+    
+    # sudo systemctl start sdrplay
+    # sudo systemctl stop sdrplay
+
+    # Should now be able to see the device if it is plugged in
+    lsusb
+    
     # Didn't need the reboot on RPi bulleye
     popd
     #sudo reboot        
     exit
     
+endif
+
+# Well, do we have what we need already?
+# Seems like we need a to do little more work for the SDRplay
+if( 0 )then
+    which SoapySDRUtil
+    SoapySDRUtil --info
+    SoapySDRUtil --find
+    SoapySDRUtil --probe="driver=sdrplay"
+    
+    exit
 endif
 
 ##########################################################################################
@@ -55,7 +76,8 @@ if( 1 )then
     echo "\n------------------------------------ Installing SoapySDR for SDRPlay ...\n"
     cd ~/Dev
     sudo rm -rf SoapySDRPlay
-    if( $VER == 3.07 )then
+    #if( $VER == 3.07 )then
+    if( $VER == 3.12 )then
     
         # The current Soapy seems to work with the newer driver
         echo "Cloning Soapy SDRPlay stuff ..."

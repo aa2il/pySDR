@@ -1141,7 +1141,6 @@ class pySDR_GUI(QMainWindow):
             fc1 = 1*fc - 0*0.001*P.FOFFSET
             #print 'fc1=',fc1,fc, P.FOFFSET, P.BFO
             if P.MP_SCHEME==1:
-                #print 'hey 1'
                 # Should eventually be able to eliminate this path
                 if P.rb_rf.ready(2*n):
                     x = list(range(n))
@@ -1154,7 +1153,6 @@ class pySDR_GUI(QMainWindow):
                         self.curve1d.setData(x,y)
 
             else:
-                #print 'hey 2'
                 y = P.rb_rf.pull(n,True)
                 if len(y)>0:
                     x = list(range(n))

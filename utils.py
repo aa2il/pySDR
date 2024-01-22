@@ -1,7 +1,7 @@
 ############################################################################
 #
 # utils.py - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Support routines for pySDR.
 #
@@ -455,15 +455,26 @@ def find_sdr_device(self,args):
                 time.sleep(1)
             else:
                 break
-            
-        if False:
-            print(devices)
-            print(len(devices))
+
+        # If we use the pre-built Soapy libs, this seems to find an
+        # "audio" device, at least on the RPi.
+        # Sift through the list of found devices and only keep the ones
+        # we can work with.
+        if len(devices)>1 or False:
+            print('\nFIND_SDR_DEVICE: Found',len(devices),'SDR devices ...')
+            print('devices=',devices)
+            print( type( devices ) )
+            valid_devices=[]
             for dev in devices:
-                print('dev=',dev)
+                print('\ndev=',dev)
                 print('driver=',dev['driver'])
-                #print type( dev['driver'] )
-            sys.exit(0)
+                if dev['driver'] in ['rtlsdr','sdrplay']:
+                    print('*** Recognized SDR Device ***')
+                    valid_devices.append(dev)
+                #print( type( dev['driver'] ) )
+            print('valid_devices=',valid_devices)
+            devices=valid_devices
+            #sys.exit(0)
 
         # For now, we only can handle one device
         if len(devices)==0:
@@ -492,6 +503,7 @@ def find_sdr_device(self,args):
                     
         elif len(devices)>1:
             print('FIND_SDR_DEVICE: ERROR - Need some more code to handle multiple SDR devices')
+            print('devices=',devices)
             sys.exit(0)
 
         else:

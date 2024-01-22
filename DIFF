@@ -10,14 +10,21 @@
 #set ROOT="/media/${USER}/pi"
 #set ROOT="/media/${USER}/aa2il"
 set ROOT="/media/${USER}/marconi"
-set ROOT="/media/${USER}/hertz"
+#set ROOT="/media/${USER}/hertz"
 #set ROOT="/media/${USER}/sproul"
 #set ROOT="/media/${USER}/3D76-ECB1"
 #set ROOT="/media/${USER}/acer"
 #set ROOT="/media/${USER}/cartman"
-if( !(-e $ROOT) )then
+if( !(-e $ROOT) && (-e ${ROOT}2) )then
     set ROOT="${ROOT}2"
+else
+    echo Trying to think but nothing happens ...
+    set MACHINE=`basename $ROOT`
+    set ROOT=`ls -d /run/user/1001/gvfs/smb-share*${MACHINE}`
 endif
+echo ROOT=$ROOT
+
+#exit
 
 # Add path down to old version
 set N=`echo $HOME | wc -c`
@@ -36,7 +43,7 @@ foreach i (DIFF *.py SSTV FT8* *.bat *.m BUILD* *.txt README.md)
     echo $i
     set n=`diff -w $old/$i $i | wc -l`
     if( !( -e $old/$i ) )then
-        echo NO SUCH FILE $old/$i
+        echo NO SUCH FILE $old/$i --- Copying $i to $old/$i ...
         cp $i $old/$i
     else if( $n > 0 ) then
         echo ---------------------------------- >> DIFFS

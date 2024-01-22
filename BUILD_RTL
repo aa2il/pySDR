@@ -4,8 +4,36 @@
 
 ##########################################################################################
 
-pip install pyrtlsdr
-sudo apt-get -y install rtl-sdr librtlsdr-dev libusb-1.0-0-dev
+# Need to do this once 
+if( 0 )then
+    pip3 install pyrtlsdr
+    sudo apt-get -y install rtl-sdr librtlsdr-dev libusb-1.0-0-dev
+
+    # Blacklisting - doesn't work until we do this!
+    sudo -i
+    
+    echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist-rtl.conf
+    echo "&&&&& Need to reboot for blacklist to take affect &&&&&&"
+    cat /etc/modprobe.d/blacklist-rtl.conf
+    
+    reboot
+
+    exit
+endif
+
+# Well, do we have what we need already?
+# Seems like the pre-built libs are fine on the RPi/Bookworm for the rtl
+if( 1 )then
+    which SoapySDRUtil
+    SoapySDRUtil --info
+    SoapySDRUtil --probe="driver=rtlsdr"
+    SoapySDRUtil --find
+    
+    # Test it
+    rtl_test -t
+        
+    exit
+endif
 
 # SoapySDR - version that will find RTL libs
 if( 1 )then
@@ -25,8 +53,10 @@ if( 1 )then
 
     sudo make install
     sudo ldconfig
+
     rehash
     
+    which SoapySDRUtil
     SoapySDRUtil --info
     SoapySDRUtil --probe="driver=rtlsdr"
     
@@ -39,7 +69,7 @@ if( 1 )then
     cd ~/Dev
 
     sudo rm -rf rtl-sdr
-    git clone git://git.osmocom.org/rtl-sdr.git
+    git clone https://github.com/osmocom/rtl-sdr.git
     cd rtl-sdr/
 
     rm -rf build
@@ -60,18 +90,11 @@ if( 1 )then
     
     rehash
     
+    which SoapySDRUtil
     SoapySDRUtil --find
     SoapySDRUtil --probe="driver=rtlsdr"
     
     #exit
-endif
-
-# Also need to do this once 
-if( 0 )then
-    sudo -i
-    echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist-rtl.conf
-    echo "&&&&& Need to reboot for blacklist to take affect &&&&&&"
-    reboot
 endif
 
 # Test it
