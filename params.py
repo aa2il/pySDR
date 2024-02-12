@@ -21,7 +21,7 @@
 ############################################################################
 
 import argparse
-from rig_io.ft_tables import bands,CONNECTIONS,RIGS
+from rig_io import bands,CONNECTIONS,RIGS
 from Tables import MODES,SDRplaysrates,RTLsrates
 from utils import *
 import numpy as np

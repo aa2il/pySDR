@@ -2,7 +2,7 @@
 ############################################################################
 #
 # Tables.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Various parameter tables for pySDR
 #
@@ -26,7 +26,7 @@ import numpy as np
 import xlrd
 from unidecode import unidecode
 import sys
-from rig_io.ft_tables import bands
+from rig_io import bands
 
 ############################################################################
 

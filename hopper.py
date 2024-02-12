@@ -1,7 +1,7 @@
 ############################################################################
 #
 # hopper.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Functions related to freqeuncy hopping
 #
@@ -31,8 +31,7 @@ from utils import adjust_foffset,expand_ft4
 from dx.wsjt_helper import WSJT_LOGFILE3,WSJT_LOGFILE4,WSJT_LOGFILE5
 import os
 import numpy as np
-#from rig_io.util import convert_freq2band
-from rig_io.ft_tables import bands
+from rig_io import bands
 from utilities import freq2band
 
 from PyQt5.QtCore import QTimer

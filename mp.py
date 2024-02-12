@@ -2,7 +2,7 @@
 ############################################################################
 #
 # mp.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Multiprocessing version of pySDR
 #
@@ -47,9 +47,9 @@ from gui import *
 from hopper import *
 from watchdog import *
 import file_io as io
-import rig_io.socket_io as socket_io
+from rig_io import socket_io 
 
-import rig_io.hamlibserver as rigctl
+from rig_io import hamlibserver as rigctl
 import datetime
 import threading
 import multiprocessing as mp

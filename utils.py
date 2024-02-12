@@ -27,7 +27,7 @@ import time
 from Tables import MODES,SDRplaysrates,RTLsrates
 import io
 from threading import enumerate
-from rig_io.ft_tables import bands,CONNECTIONS,RIGS
+from rig_io import bands,CONNECTIONS,RIGS
 from multiprocessing import active_children
 from PyQt5.QtWidgets import QMessageBox,QSplashScreen
 from PyQt5.QtGui import QIcon, QPixmap

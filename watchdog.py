@@ -1,7 +1,7 @@
 ############################################################################
 #
 # watchdog.py - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Watchdog monitor for pySDR
 #
@@ -23,7 +23,7 @@ from pyqtgraph.Qt import QtCore
 import time
 import numpy as np
 import sys
-from rig_io.socket_io import find_fldigi_port   # convert_freq2band
+from rig_io import find_fldigi_port
 from Tables import BANDS
 from utilities import freq2band
 from udp import *
