@@ -323,7 +323,7 @@ class three_box_plot():
             print('************************************************************')
             chunk_size=int(65636/2)
             Nfft=2*chunk_size
-        self.psd  = dsp.spectrum(fs,chunk_size,Nfft,overlap)
+        self.psd  = dsp.spectrum(fs,chunk_size,Nfft,overlap,TAG=TITLE2)
         nfft = self.psd.NFFT
 
         # Create waterfall 

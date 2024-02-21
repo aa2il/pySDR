@@ -32,13 +32,13 @@ from receiver import *
 from rig_io.ft_tables import *
 from rig_io.presets import *
 from rtty import *
-from widgets import *
+from widgets_qt import *
 import collections
 from utils import  show_threads
 from utilities import freq2band
 from PyQt5.QtCore import QTimer
 
-################################################################################
+############################################################################
 
 # Structure to hold a bandmap spot
 class SPOT:
@@ -47,16 +47,34 @@ class SPOT:
         self.freq=freq
         self.color=color
         
+############################################################################
 
 # The GUI 
-class pySDR_GUI(QMainWindow):
+class SDR_GUI(QMainWindow):
 
-    # Routine to draw the GUI
-    def __init__(self,app,P,parent=None):
-        super(pySDR_GUI, self).__init__(parent)
+    def __init__(self,P,parent=None):
+        super(SDR_GUI, self).__init__(parent)
+
+        # Init
+        self.P=P
+        
+        # Put up splash screen
+        self.P = P
+        self.parent=parent
+        self.splash=SPLASH_SCREEN(P.app,'splash.png')    
+        self.status_bar = self.splash.status_bar
+
+    # Function that actually constructs the gui
+    def construct_gui(self):
+
+        # Init
+        P=self.P
         self.gui_closed=False
         self.prev_group=''
 
+        # Splash will close when main window of gui is open
+        self.splash.splash.finish(P.gui)
+        
         # Wait for SDR to start up
         print('\npySDR_GUI: Init GUI ...\n')
         if P.MP_SCHEME==1:
@@ -94,6 +112,9 @@ class pySDR_GUI(QMainWindow):
         self.win.setLayout(self.grid)
         nrows=15
         ncols=11
+
+        # Status bar
+        self.status_bar = StatusBar(self,nrows+1)
 
         # Create wideband RTTY window
         if self.P.ENABLE_RTTY:
@@ -177,7 +198,7 @@ class pySDR_GUI(QMainWindow):
         b.clicked.connect(self.ShowParams)
         self.grid.addWidget(b,0,ncols-1)
 
-        # Exit app
+        # Hook to exit app
         b = QPushButton('Quit')
         b.setToolTip('Click to quit!')
         b.clicked.connect( self.closeEvent )        
@@ -588,7 +609,7 @@ class pySDR_GUI(QMainWindow):
         self.show()
 
         # Move to lower left corner of screen
-        screen_resolution = app.desktop().screenGeometry()
+        screen_resolution = self.P.app.desktop().screenGeometry()
         self.screen_width  = screen_resolution.width()
         self.screen_height = screen_resolution.height()
         if P.GEO==None:

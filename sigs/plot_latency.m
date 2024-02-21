@@ -2,13 +2,16 @@ close all
 clear all
 more off
 
-fp=fopen('LOG1.TXT');
+fp=fopen('/tmp/LOG1.TXT');
 tt=[];
 nn=[];
 i=0;
 while !feof(fp)
   i=i+1;
-  b=fgetl(fp);
+  b=fgetl(fp)
+  if b=-1 
+    break
+  end
   tt(i)=str2num(b(3:20));
   nn(i)=str2num(b(71:77));
   
@@ -20,7 +23,7 @@ nn
 
 %return
 
-a=load('LOG2.TXT');
+a=load('/tmp/LOG2.TXT');
 
 rb_size = a(1,1)
 fs = a(1,2)
@@ -73,6 +76,9 @@ xlabel('Time (Hours)')
 ylabel('Latency (sec.)')
 grid on
 axis([t(1) t(end) 0 2*half])
+
+legend('latency','average','filt','corrected','half','upper','lower')
+
 
 return
 

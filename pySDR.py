@@ -89,15 +89,7 @@ VERSION='1.0'
 ################################################################################
 
 # Initialization for pySDR
-def init_sdr():
-
-    # Create various objects
-    print('\n****************************************************************************')
-    print('\n   pySDR v',VERSION,'beginning ...\n')
-
-    # Set-up run-time params
-    P=RUN_TIME_PARAMS()
-    P.MP_SCHEME=1            # For now
+def init_sdr(P):
 
     # Ring buffers to throttle between data capture and playback/display
     # Seems like this should use blocking???
@@ -213,15 +205,18 @@ def RIG_Updater(P):
 # Top-level main for pySDR
 if __name__ == '__main__':
 
-    # Put up splash screen
-    app = QApplication(sys.argv)
-    splash=None
-    splash=splash_screen(app,'splash.png')              # In util.py
-    #splash=splash_screen(app,'splash.jpg')              # In util.py
+    # Create various objects
+    print('\n****************************************************************************')
+    print('\n   pySDR v',VERSION,'beginning ...\n')
 
-    # Start the processing app
-    P=init_sdr()
-    P.app=app
+    # Set-up run-time params
+    P=RUN_TIME_PARAMS()
+    P.MP_SCHEME=1            # For now
+
+    # Put up splash screen
+    P.app  = QApplication(sys.argv)
+    P.gui = SDR_GUI(P)
+    init_sdr(P)
     start_threads(P)
 
     # Construct the gui
@@ -229,10 +224,8 @@ if __name__ == '__main__':
         P.gui     = None
         P.hopper  = FreqHopper(P)
     P.logger = Logger(P)
-    P.gui = pySDR_GUI(app,P)
+    P.gui.construct_gui()
 
-    if splash:
-        splash.finish(P.gui)               # Splash will close when main window of gui is open
 #    time.sleep(1.)                         # Delay to mitigate start-up problem with Mint 20.3?
     P.gui.StartGUI()
 #    time.sleep(1.)                         # Delay to mitigate start-up problem with Mint 20.3?
@@ -261,6 +254,6 @@ if __name__ == '__main__':
     P.gui.StartStopRX()
 
     # Main event loop
-    sys.exit(app.exec_())
+    sys.exit(P.app.exec_())
     
 ############################################################################

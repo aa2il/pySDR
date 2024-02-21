@@ -29,7 +29,7 @@ import io
 from threading import enumerate
 from rig_io import bands,CONNECTIONS,RIGS
 from multiprocessing import active_children
-from PyQt5.QtWidgets import QMessageBox,QSplashScreen
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon, QPixmap
 from utilities import freq2band
 
@@ -549,21 +549,3 @@ def find_sdr_device(self,args):
             
             return sdr
 
-
-
-
-# Put up splash screen until we're ready
-def splash_screen(app,fname):
-    
-    splash = QSplashScreen(QPixmap(fname))
-    splash.show()
-    #splash.showMessage('Splish Splash I was taking a bath ...')
-    time.sleep(.1)
-    app.processEvents()
-
-    # This shows how to put a new message - need to figur out fonts but seems to work
-    #time.sleep(3)
-    #splash.showMessage('Init SDR ..')
-    #app.processEvents()
-    
-    return splash

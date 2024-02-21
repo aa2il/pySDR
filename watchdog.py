@@ -39,13 +39,18 @@ BANDMAP_UPDATE_INTERVAL=30
 class Logger:
     def __init__(self,P):
 
-        ##P.LOG1 = open('/tmp/LOG1.TXT','w')
-        #P.LOG2 = open('/tmp/LOG2.TXT','w')
-        #P.LOG2.write('%d,%d,0,0\n' % (P.RB_SIZE,P.FS_OUT) )
+        if True:
+            P.LOG1 = open('/tmp/LOG1.TXT','w')
+            P.LOG2 = open('/tmp/LOG2.TXT','w')
+            P.LOG2.write('%d,%d,0,0\n' % (P.RB_SIZE,P.FS_OUT) )
+        else:
+            P.LOG1 = None
+            P.LOG2 = None
+            
         self.P = P
 
         
-# Watch Dog Timer - Called every msec to monitor health of app
+# Watch Dog Timer - Called every 2-sec to monitor health of app
 class WatchDog:
     def __init__(self,P,msec):
         print('Watch Dog Starting ....')
@@ -154,8 +159,9 @@ class WatchDog:
             #print('Watch Dog:',tag,'Latency =',nsamps,'samps =',latency,' sec')
             print('Watch Dog: %s Latency = %5d samp = %4.2f sec\t%d' % \
                   (tag,nsamps,latency,size),end='',flush=True)
-        #self.P.LOG2.write('%f,%d,%f,%f\n' % (t,nsamps,latency,self.avg_latency[irx]) )
-        #self.P.LOG2.flush()
+        if self.P.LOG2:
+            self.P.LOG2.write('%f,%d,%f,%f\n' % (t,nsamps,latency,self.avg_latency[irx]) )
+            self.P.LOG2.flush()
 
         dt = t - Start_Time
         fs_diff = int( float( nsamps - size/2 ) / dt )
@@ -164,17 +170,19 @@ class WatchDog:
             print('   Ring Buffer: ',pct," %   dfs=",fs_diff,"   fs_out=",fs)
 
         if dt>2 and nsamps > 3*size/4:
-            #print("   ",tag," - Ring Buffer High Water Mark Hit - nsamps=", nsamps)
             print(' *** High Water Mark ***')
-            #self.P.LOG1.write("t=%f - %s Ring Buffer High Water Mark Hit - nsamps = %d / %d\n" % \
-                #(t,tag, nsamps, size) )
+            if self.P.LOG1:
+                self.P.LOG1.write("t=%f - %s Ring Buffer High Water Mark Hit - nsamps = %d / %d\n" % \
+                                  (t,tag, nsamps, size) )
 
         elif dt>2 and nsamps < size/4:
-            #print("   ",tag," - Ring Buffer Low Water Mark Hit - nsamps=", nsamps)
             print(' *** Low Water Mark ***')
-            #self.P.LOG1.write("t=%f - %s Ring Buffer Low Water Mark Hit - nsamps = %d / %d\n" % \
-                #(t,tag, nsamps, size) )
-            #self.P.LOG1.flush()
+            if True:
+                player.rb.push_zeros(int(size/2 - nsamps))
+            if self.P.LOG1:
+                self.P.LOG1.write("t=%f - %s Ring Buffer Low Water Mark Hit - nsamps = %d / %d\n" % \
+                                  (t,tag, nsamps, size) )
+                self.P.LOG1.flush()
 
         else:
             print(' ...')
