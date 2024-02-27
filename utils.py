@@ -512,8 +512,16 @@ def find_sdr_device(self,args):
             Done=True
             dev=devices[0]['driver']
             print('dev=',dev)
-            sdr = SoapySDR.Device( dict(driver=dev) )
-            sdrkey = sdr.getDriverKey()
+            try:
+                sdr = SoapySDR.Device( dict(driver=dev) )
+                sdrkey = sdr.getDriverKey()
+            except Exception as e: 
+                print( str(e) )
+                print('\n***************************************')
+                print('Unable to open driver - dev=',dev)
+                print('Perhaps you need to restart the driver?')
+                print('***************************************')
+                sys.exit(0)
 
             # Is it the SDRplay RSP?
             if sdrkey=='SDRplay':

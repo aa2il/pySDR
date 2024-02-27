@@ -8,13 +8,15 @@ from scipy import signal
 from scipy.fft import fftshift
 import matplotlib.pyplot as plt
 from pprint import pprint
-import file_io
+from fileio import SDR_FILEIO
 from sig_proc import spectrum
 
 ##############################################################################
 
-fname='raw_iq_20221230_011545.dat';           # RTL - looks saturated
-fname='raw_iq_20221230_020045.dat';           # SDR Play - looks promising
+fname='raw_iq_20221230_011545.dat'           # RTL - looks saturated
+fname='raw_iq_20221230_020045.dat'           # SDR Play - looks promising
+fname='raw_iq_20240222_194033.dat'           # SDR Play - looks promising
+fname='raw_iq_20240222_195828.dat'
 
 ##############################################################################
 
@@ -54,7 +56,7 @@ P = Empty()
 P=None
 
 # Read the data
-sdr = file_io.sdr_fileio(fname,'r',P)
+sdr = SDR_FILEIO(fname,'r',P)
 x = sdr.read_data()
 print('x=',x[0:10],' ... ',x[-1],len(x))
 
@@ -75,7 +77,8 @@ X = psd.psd_est(x,True)
 
 frq=1e-3*psd.frq2
 two_box_plot(x,X,fs,fname,frq)
-#plt.show()
+plt.show()
+sys.exit(0)
 
 # Waterfall - this seems quite fast - should bundle this up into a nice package.
 # My matlab routine is waterfall.m but I don't think we need it

@@ -97,7 +97,6 @@ class SDR_GUI(QMainWindow):
         self.last_psd_update = time.time()
         print('pySDR_GUI: ShowParams...')
         self.ShowParams()
-        self.SHOW_RF_IQ=False
         self.SHOW_BASEBAND_PLOTS=False
         self.itune_cnt=0
         self.P.AF_FILTER_NUM = None
@@ -192,6 +191,19 @@ class SDR_GUI(QMainWindow):
         self.btn7.clicked.connect(self.StartStopSave_Demod)
         self.grid.addWidget(self.btn7,0,col)
 
+        # Start & stop auto muting
+        col+=1
+        self.btn8 = QPushButton('Auto Mute')
+        self.btn8.setToolTip('Mute Big Sigs')
+        self.btn8.setCheckable(True)
+        self.btn8.clicked.connect(self.StartStop_AutoMute)
+        self.grid.addWidget(self.btn8,0,col)
+
+        col+=1
+        self.btn9 = LED('','lime')
+        #self.grid.addWidget(self.btn9,0,col)
+        self.grid.addWidget(self.btn9,nrows+1,ncols)
+ 
         # Debug - show settings
         b = QPushButton('Params')
         b.setToolTip('Show params')
@@ -437,11 +449,11 @@ class SDR_GUI(QMainWindow):
         for i in range(P.MAX_RX):
             self.Mute_btns[i] = QPushButton('Mute RX'+str(i+1))
             self.Mute_btns[i].setToolTip('Click to Mute/Unmute Audio')
-            self.Mute_btns[i].clicked.connect( functools.partial( self.MuteCB,i,False ))
+            self.Mute_btns[i].clicked.connect( functools.partial( self.MuteCB,i ))   # Clicking button toggles mute state
             self.Mute_btns[i].setCheckable(True)
             if i>=P.NUM_RX:
                 self.Mute_btns[i].setEnabled(False)
-            self.MuteCB(i,True)
+            self.MuteCB(i,True)          # Start out muted
 
             self.grid.addWidget(self.Mute_btns[i],irow,icol)
             icol=icol+1
@@ -1082,6 +1094,14 @@ class SDR_GUI(QMainWindow):
         if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
             self.mp_comm('showAFpsd',self.P.SHOW_AF_PSD )
         
+    # Callback for Start/Stop Baseband Save button
+    def StartStop_AutoMute(self):
+        self.P.ENABLE_AUTO_MUTE = not self.P.ENABLE_AUTO_MUTE
+        if self.P.ENABLE_AUTO_MUTE:
+            self.btn8.setText('Stop Auto Mute')
+        else:
+            self.btn8.setText('Start Auto Mute')
+
     # Callback for Start/Stop Raw IQ Save button
     def StartStopSave_RawIQ(self):
         if not self.P.SAVE_IQ:
@@ -1166,7 +1186,7 @@ class SDR_GUI(QMainWindow):
                 if P.rb_rf.ready(2*n):
                     x = list(range(n))
                     y = P.rb_rf.pull(n,True)
-                    self.plots_rf.plot(x,y,fc1,self.SHOW_RF_IQ,True)
+                    self.plots_rf.plot(x,y,fc1,self.P.SHOW_RF_IQ,True)
 
                     if False:
                         x = [fc, fc]
@@ -1177,7 +1197,7 @@ class SDR_GUI(QMainWindow):
                 y = P.rb_rf.pull(n,True)
                 if len(y)>0:
                     x = list(range(n))
-                    self.plots_rf.plot(x,y,fc1,self.SHOW_RF_IQ,True)
+                    self.plots_rf.plot(x,y,fc1,self.P.SHOW_RF_IQ,True)
                     
         if P.SHOW_AF_PSD:
 
@@ -2005,16 +2025,18 @@ class SDR_GUI(QMainWindow):
 
 
     # Callback to Mute/Unmute Audio
-    def MuteCB(self,irx,Reset=False):
+    def MuteCB(self,irx,MUTE=None):
 
-        print('MUTE CB: irx=',irx,'\tReset=',Reset,'\tMUTED=',self.P.MUTED[irx])
+        #print('MUTE CB: irx=',irx,'\MUTE=',MUTE,'\tMUTED=',self.P.MUTED[irx])
         #print irx,self.Mute_btns[irx].text()
         #print irx,self.Mute_btns[irx].isChecked()
 
-        if Reset:
-            self.Mute_btns[irx].setChecked(self.P.MUTED[irx])
-        else:
+        if MUTE==None:
+            # Toggle mute state for this rx - default behavior
             self.P.MUTED[irx] = not self.P.MUTED[irx]
+        else:
+            self.P.MUTED[irx] = MUTE
+        self.Mute_btns[irx].setChecked(self.P.MUTED[irx])
             
         if self.P.MUTED[irx]:
             self.Mute_btns[irx].setText('Un-Mute RX'+str(irx+1))

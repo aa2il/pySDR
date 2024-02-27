@@ -50,6 +50,7 @@ fname='SatComm2/baseband_iq_20190414_012518.dat'
 fname='raw_iq_20221230_011545.dat';           % RTL - looks saturated
 %fname='raw_iq_20221230_014530.dat';           % SDR Play - wrong ant port
 fname='raw_iq_20221230_020045.dat';           % SDR Play - looks promising
+fname='raw_iq_20240222_194033.dat';           % SDR Play - looks promising
 
 % Looks like if we use SDRplay & fs=1 MHz, we can do pretty good - try
 % implementing some kind of notch or noise canceller

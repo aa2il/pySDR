@@ -1,7 +1,7 @@
 ############################################################################
 #
 # receiver.py - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Top level receiver routines
 #
@@ -181,7 +181,7 @@ def audio_out(P,am=None):
         am=P.rx[irx].am
         player=P.players[irx]
 
-        if P.MUTED[irx]:
+        if P.MUTED[irx] or P.AUTO_MUTED:
             af_gain = 0.
         else:
             af_gain = pow(10.,P.AF_GAIN)-1          # Make the slider a dB scale
@@ -220,6 +220,16 @@ def demodulate_data(P,x,irx):
     rx=P.rx[irx]
     am = rx.demod_data(x)
 
+    # Automajic muting of big sigs - helps with SO2V
+    if P.ENABLE_AUTO_MUTE:
+        mute = rx.auto_mute(x)
+        if mute and not P.AUTO_MUTED:
+            P.AUTO_MUTED=True
+            P.gui.btn9.setColor('red')
+        elif not mute and P.AUTO_MUTED:
+            P.AUTO_MUTED=False
+            P.gui.btn9.setColor('lime')
+        
     #if rx.sub>0:
     #    am2 = rx.demod_data(x)
 

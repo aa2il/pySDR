@@ -53,6 +53,8 @@ class RUN_TIME_PARAMS:
         arg_proc.add_argument('-replay', help="Replay",
                               type=str,default="",nargs='+')
         arg_proc.add_argument('-test', action='store_true')
+        arg_proc.add_argument('-auto_mute', action='store_true',
+                              help='Enable Auto Muting of big sigs')
         arg_proc.add_argument('-ft8', action='store_true',
                               help='Sub RX follows FT8 subband')
         arg_proc.add_argument('-ft4', action='store_true',
@@ -136,6 +138,9 @@ class RUN_TIME_PARAMS:
         arg_proc.add_argument("-save_demod", help="Save demodulated data",
                               action="store_true")
 
+        arg_proc.add_argument("-show_iq", help="Showraw IQ data",
+                              action="store_true")
+        
         arg_proc.add_argument('-hop', help="List of Hop Frequencies (KHz)",
                               nargs='*', type=float,default=None)
         arg_proc.add_argument("-hop_time", help="Hop Time (sec)",
@@ -392,6 +397,7 @@ class RUN_TIME_PARAMS:
         self.sock1        = None
         
         # Set other defaults
+        self.SHOW_RF_IQ        = args.show_iq
         self.SHOW_RF_PSD       = False                   # No PSD plots        
         self.SHOW_BASEBAND_PSD = False                   # 
         self.SHOW_AF_PSD       = False                   # 
@@ -421,9 +427,14 @@ class RUN_TIME_PARAMS:
 
         # ... We'll therefore grab thr RF samples in chunks large enough
         # to accomodate one playback block ...
-        #self.IN_CHUNK_SIZE  = self.OUT_CHUNK_SIZE*self.NDEC
         self.IN_CHUNK_SIZE  = int( self.OUT_CHUNK_SIZE*self.DOWN/float(self.UP) + 0*0.5 )
 
+        # Auto-muting params
+        self.ENABLE_AUTO_MUTE = args.auto_mute
+        self.MUTE_TIME   = .25
+        self.MUTE_CHUNKS = int( self.MUTE_TIME*self.FS_OUT/self.OUT_CHUNK_SIZE )
+        self.AUTO_MUTED=False
+        
         # ... Not quite sure how big we really need to make the ring buffer
         # between the sig processor and the audio playback but this seems to
         # work

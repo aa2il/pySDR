@@ -39,32 +39,25 @@ def udp_msg_handler(self,sock,msg):
         print('UDP MSG HANDLER: m=',m,'\tmm[0]=',mm[0])
 
         if mm[0]=='SO2V':
-            if mm[1]=='ON':
-                P.SO2V=True
-            else:
-                P.SO2V=False
+            
+            P.SO2V = (mm[1]=='ON')
+            P.ENABLE_AUTO_MUTE = P.SO2V
+            P.gui.MuteCB(0,not P.SO2V)
             print('UDP MSG HANDLER: mm=',mm,'\tSetting SO2V',P.SO2V)
             P.gui.so2v_cb.setChecked(P.SO2V)
-            self.P.MUTED[0]=False
-            P.gui.MuteCB(0,True)
             return
 
         elif mm[0]=='SPLIT':
-            if mm[1]=='ON':
-                P.DXSPLIT=True
-            else:
-                P.DXSPLIT=False
+            
+            P.DXSPLIT = (mm[1]=='ON')
+            P.ENABLE_AUTO_MUTE = P.SO2V
             print('UDP MSG HANDLER: mm=',mm,'\tSetting DX SPLIT',P.DXSPLIT)
             P.gui.split_cb.setChecked(P.DXSPLIT)
-
-            #df=1  # Defaults to 1 KHz UP
-            #SetTXSplit(self.P,df)
-            
-            self.P.MUTED[0]=False
-            P.gui.MuteCB(0,True)
+            P.gui.MuteCB(0,not P.DXSPLIT)
             return
 
         elif mm[0]=='Name':
+            
             if mm[1]=='?':
                 print('UDP MSG HANDLER: Server name query')
                 msg2='Name:pySDR\n'
@@ -74,6 +67,7 @@ def udp_msg_handler(self,sock,msg):
             return
                 
         elif mm[0]=='SPOT':
+            
             # Relay to bandmap
             #self.P.udp_client2.Send(m)
             print('UDP MSG HANDLER: Passing on SPOT message')
