@@ -41,7 +41,7 @@ def udp_msg_handler(self,sock,msg):
         if mm[0]=='SO2V':
             
             P.SO2V = (mm[1]=='ON')
-            P.ENABLE_AUTO_MUTE = P.SO2V
+            P.ENABLE_AUTO_MUTE =  P.DXSPLIT or P.SO2V
             P.gui.MuteCB(0,not P.SO2V)
             print('UDP MSG HANDLER: mm=',mm,'\tSetting SO2V',P.SO2V)
             P.gui.so2v_cb.setChecked(P.SO2V)
@@ -50,7 +50,7 @@ def udp_msg_handler(self,sock,msg):
         elif mm[0]=='SPLIT':
             
             P.DXSPLIT = (mm[1]=='ON')
-            P.ENABLE_AUTO_MUTE = P.SO2V
+            P.ENABLE_AUTO_MUTE = P.DXSPLIT or P.SO2V
             print('UDP MSG HANDLER: mm=',mm,'\tSetting DX SPLIT',P.DXSPLIT)
             P.gui.split_cb.setChecked(P.DXSPLIT)
             P.gui.MuteCB(0,not P.DXSPLIT)
