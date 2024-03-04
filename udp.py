@@ -39,7 +39,8 @@ def udp_msg_handler(self,sock,msg):
         print('UDP MSG HANDLER: m=',m,'\tmm[0]=',mm[0])
 
         if mm[0]=='SO2V':
-            
+
+            # Set SO2V mode
             P.SO2V = (mm[1]=='ON')
             P.ENABLE_AUTO_MUTE =  P.DXSPLIT or P.SO2V
             P.gui.MuteCB(0,not P.SO2V)
@@ -49,6 +50,7 @@ def udp_msg_handler(self,sock,msg):
 
         elif mm[0]=='SPLIT':
             
+            # Set Split for Chasing DX
             P.DXSPLIT = (mm[1]=='ON')
             P.ENABLE_AUTO_MUTE = P.DXSPLIT or P.SO2V
             print('UDP MSG HANDLER: mm=',mm,'\tSetting DX SPLIT',P.DXSPLIT)
@@ -57,13 +59,27 @@ def udp_msg_handler(self,sock,msg):
             return
 
         elif mm[0]=='Name':
-            
+
+            # Query server name
             if mm[1]=='?':
                 print('UDP MSG HANDLER: Server name query')
                 msg2='Name:pySDR\n'
                 sock.send(msg2.encode())
             else:
                 print('UDP MSG HANDLER: Server name is',mm[1])
+            return
+                
+        elif mm[0]=='MODE':
+
+            # Set mode
+            if mm[1]=='?':
+                print('UDP MSG HANDLER: Mode query')
+                msg2='MODE:'+self.P.MODE+'\n'
+                sock.send(msg2.encode())
+            else:
+                self.P.MODE=mm[1]
+                self.P.gui.ModeSelect(-1)
+                print('UDP MSG HANDLER: SDR mode set to',mm[1])
             return
                 
         elif mm[0]=='SPOT':
@@ -93,7 +109,7 @@ def udp_msg_handler(self,sock,msg):
 
         elif mm[0]=='RunFreq' and False:
 
-            # This pathway uses the bandmap as the arbiter - more up to dae but very slow
+            # This pathway uses the bandmap as the arbiter - more up to date but very slow
             if mm[1] in ['UP','DOWN']:
                 self.P.udp_client2.Send(m)
             else:
