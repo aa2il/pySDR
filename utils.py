@@ -31,7 +31,7 @@ from rig_io import bands,CONNECTIONS,RIGS
 from multiprocessing import active_children
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon, QPixmap
-from utilities import freq2band
+from utilities import freq2band, error_trap
 
 ############################################################################
 
@@ -98,9 +98,8 @@ class RTL_SDR_DRIVER:
                 # This causes a problem - not sure why?
                 #self.device.freq_correction = f
                 pass
-            except Exception as e: 
-                print('Unable to set freq correction')
-                print( str(e) )
+            except: 
+                error_trap('UTILS->SET FREQUENCY - Unable to set freq correction')
         else:
             print(whoami(),'I dont know what I am doing here!')
         print('fc=',self.device.fc,'\tdf=',self.device.freq_correction)
@@ -515,8 +514,8 @@ def find_sdr_device(self,args):
             try:
                 sdr = SoapySDR.Device( dict(driver=dev) )
                 sdrkey = sdr.getDriverKey()
-            except Exception as e: 
-                print( str(e) )
+            except: 
+                error_trap('UTILS->FIND SDR DEVICE')
                 print('\n***************************************')
                 print('Unable to open driver - dev=',dev)
                 print('Perhaps you need to restart the driver?')

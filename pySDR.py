@@ -237,8 +237,8 @@ if __name__ == '__main__':
     P.Timer.start()
     
     # Timer for PSD plotting - Calls updater every 1000/PSD_RATE millisec
-#    time.sleep(1.)                         # Delay to mitigate start-up problem with Mint 20.3?
-    PSD_RATE=20   # was 10 Hz
+    time.sleep(.1)
+    PSD_RATE=20   
     msec = round( 1000./PSD_RATE )
     P.PSDtimer = QtCore.QTimer()
     P.PSDtimer.timeout.connect(P.gui.UpdatePSD)

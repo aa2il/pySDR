@@ -1299,7 +1299,7 @@ class SDR_GUI(QMainWindow):
 
         t_old = self.last_psd_update 
         self.last_psd_update = time.time()
-        #        print "PSD update time=",self.last_psd_update-t_old
+        #        print("PSD update time=",self.last_psd_update-t_old)
         #print('UpdatePSD ...out')
 
 
@@ -1584,7 +1584,7 @@ class SDR_GUI(QMainWindow):
                     bw = int( self.P.VIDEO_BW*1e-3 )
                     idx=self.video_bws.index(str(bw)+' KHz')
             except ValueError:
-                print("special")
+                print("GUI->VIDEO BW SELECT: special")
                 idx = len(self.video_bws)-1
                 
         elif i==0 and self.P.NEW_MODE=='IQ':
@@ -1629,7 +1629,7 @@ class SDR_GUI(QMainWindow):
                     bw = int( self.P.AF_BW*1e-3 ) 
                     idx=self.af_bws.index(str(bw)+' KHz')
             except ValueError:
-                print("special")
+                print("GUI->AF BS SELECT: special")
                 #idx = len(self.af_bws)-1
                 idx = 0
                 

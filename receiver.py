@@ -29,6 +29,7 @@ from Tables import MODES,VIDEO_BWs,AF_BWs
 import file_io
 from pprint import pprint
 from utils import setupSDR,check_sdr_settings
+from utilities import error_trap
 import sig_proc as dsp
 from scipy.io import savemat
 from Tables import AF_BWs
@@ -576,9 +577,8 @@ class SDR_EXECUTIVE:
                     sr = P.sdr.readStream(P.rxStream, [self.xx], P.IN_CHUNK_SIZE)
                     nn = sr.ret
                     #print(self.xx[0:10],self.xx[2000:2010])
-                except Exception as e:
-                    print('SDR_RX - Trapped SDR stream error')
-                    print( str(e) )
+                except:
+                    error_trap('RECEIVER->READ CHUNK - SDR stream error')
                     nn=0
                 #print 'SDR RX 1d',nn,P.Stopper.isSet()
                 if nn>0:
@@ -772,6 +772,7 @@ class SDR_EXECUTIVE:
                     P.sdr = SoapySDR.Device(args)
                     sys.exit(0)
             except:
+                error_trap('RECEIVER->CREATE SDR')
                 print('\n*****************************************************')
                 print('*** Unable to instantiate SDR Device',P.SDR_TYPE,'\t  ***')
                 print('***       Make sure it is plugged in              ***')

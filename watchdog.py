@@ -25,7 +25,7 @@ import numpy as np
 import sys
 from rig_io import find_fldigi_port
 from Tables import BANDS
-from utilities import freq2band
+from utilities import freq2band, error_trap
 from udp import *
 import threading
 
@@ -338,9 +338,8 @@ class WatchDog:
         if len(P.XLMRPC_LIST)>1:
             try:
                 self.sync_counters()
-            except:
-                print('WatchDog: Unable to sync counters')
-                
+            except: 
+                error_trap('WATCH DOG: Unable to sync counters')
 
         # That's a wrap for this time around ...
         self.Last_Time  = t
