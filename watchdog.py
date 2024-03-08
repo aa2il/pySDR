@@ -171,14 +171,14 @@ class WatchDog:
 
         if dt>2 and nsamps > 3*size/4:
             print(' *** High Water Mark ***')
+            player.rb.pull(int(nsamps - size/2))                 # Try to stay in the middles of the buffer
             if self.P.LOG1:
                 self.P.LOG1.write("t=%f - %s Ring Buffer High Water Mark Hit - nsamps = %d / %d\n" % \
                                   (t,tag, nsamps, size) )
 
         elif dt>2 and nsamps < size/4:
             print(' *** Low Water Mark ***')
-            if True:
-                player.rb.push_zeros(int(size/2 - nsamps))
+            player.rb.push_zeros(int(size/2 - nsamps))            # Try to stay in the middles of the buffer
             if self.P.LOG1:
                 self.P.LOG1.write("t=%f - %s Ring Buffer Low Water Mark Hit - nsamps = %d / %d\n" % \
                                   (t,tag, nsamps, size) )
