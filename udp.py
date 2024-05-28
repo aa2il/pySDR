@@ -103,7 +103,8 @@ def udp_msg_handler(self,sock,msg):
                 
                 band=mm[1]
                 self.P.NEW_SPOT_LIST=eval(mm[2])
-                print('UDP MSG HANDLER: New Spot List:',band,self.P.NEW_SPOT_LIST)
+                print('UDP MSG HANDLER: New Spot List:',band,
+                      self.P.NEW_SPOT_LIST,len(self.P.NEW_SPOT_LIST))
                 
             return
 

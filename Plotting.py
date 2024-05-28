@@ -20,7 +20,6 @@
 ############################################################################
 
 import sys
-#import os
 import pyqtgraph as pg
 from PyQt5.QtGui import QTransform,QFont
 from PyQt5.QtWidgets import QLCDNumber,QLabel
@@ -29,6 +28,7 @@ from Tables import *
 import sig_proc as dsp
 import numpy as np
 import scipy.signal as signal
+from utilities import error_trap
 
 ################################################################################
 
@@ -532,7 +532,11 @@ class three_box_plot():
             #print 'dist=',dist,n
             #bkgnd = signal.medfilt(PSD2,21)
             bkgnd = np.median(PSD2)
-            self.curve2smooth.setData(frq, bkgnd*np.ones(npsd))
+            try:
+                self.curve2smooth.setData(frq, bkgnd*np.ones(npsd))
+            except:
+                error_trap('PLOT: Unable to plot data',True)
+                #return
 
             dist = self.P.PEAK_DIST/self.psd.df
             #peaks, _ = signal.find_peaks(PSD2,distance=dist)
