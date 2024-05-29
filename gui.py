@@ -95,11 +95,11 @@ class SDR_GUI(QMainWindow):
         # Init
         self.P=P
         self.last_psd_update = time.time()
-        print('pySDR_GUI: ShowParams...')
         self.ShowParams()
         self.SHOW_BASEBAND_PLOTS=False
         self.itune_cnt=0
         self.P.AF_FILTER_NUM = None
+        self.P.audio_playback = False
 
         # Start by putting up the root window
         self.win  = QWidget()
@@ -205,10 +205,20 @@ class SDR_GUI(QMainWindow):
         self.grid.addWidget(self.btn9,nrows+1,ncols)
  
         # Debug - show settings
-        b = QPushButton('Params')
-        b.setToolTip('Show params')
-        b.clicked.connect(self.ShowParams)
+        if False:
+            b = QPushButton('Params')
+            b.setToolTip('Show params')
+            b.clicked.connect(self.ShowParams)
+            self.grid.addWidget(b,0,ncols-1)
+
+        # Turn audio on and off
+        b = QPushButton('Audio Out')
+        b.setToolTip('Turn Audio On/Off')
+        b.clicked.connect(self.AudioOnOff)
+        b.setCheckable(True)
         self.grid.addWidget(b,0,ncols-1)
+        self.AudioPlayBackBtn=b
+        self.AudioOnOff(-1)
 
         # Hook to exit app
         b = QPushButton('Quit')
@@ -662,7 +672,59 @@ class SDR_GUI(QMainWindow):
             os.system(cmd4)
             """
         
+    ################################################################################
 
+    # Callback to show current params
+    def AudioOnOff(self,opt):
+        P=self.P
+        if opt==-1:
+            P.audio_playback = False
+        else:
+            P.audio_playback = not P.audio_playback
+        print('\nAUDIO ON/OFF: Audio playback is',P.audio_playback)
+        print('opt=',opt)
+
+        # Manage the button
+        if P.audio_playback:
+            self.AudioPlayBackBtn.setText('Stop Audio')
+            """
+            self.AudioPlayBackBtn.setStyleSheet('QPushButton { \
+            background-color: red; \
+            border :1px inset ; \
+            border-radius: 5px; \
+            border-color: gray; \
+            font: bold 14px; \
+            padding: 4px; \
+            }')
+            """
+            
+        else:
+            self.AudioPlayBackBtn.setText('Start Audio')
+            """
+            self.AudioPlayBackBtn.setStyleSheet('QPushButton { \
+            background-color: limegreen; \
+            border :1px outset ; \
+            border-radius: 5px; \
+            border-color: gray; \
+            font: bold 14px; \
+            padding: 4px; \
+            }')
+            """
+            
+        # Manage the audio player(s)
+        for irx in range(P.NUM_PLAYERS):
+            player=P.players[irx]
+            print(irx,player.active)
+
+            if P.audio_playback and player.active:
+                print('Resuming audio playback for RX',irx)
+                player.resume()
+
+            elif not P.audio_playback and player.active:
+                print('Pausing audio playback for RX',irx)
+                player.pause()
+
+        
     ################################################################################
 
     def TicToc(self):
@@ -1258,7 +1320,7 @@ class SDR_GUI(QMainWindow):
                         c='orange'
                     elif c=='y':
                         c='yellow'
-                    elif c=='g':
+                    elif c in ['g','lg']:
                         c='lightgreen'
                     elif len(c)==1:
                         # Catch all so program doesn't crash & burn

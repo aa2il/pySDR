@@ -79,9 +79,10 @@ def RX_Thread(P,irx):
             demodulate_data(P,x,irx)
 
             af_gain = pow(10.,P.AF_GAIN)-1
-            player.rb.push( P.rx[irx].am * af_gain )
-            if player and not player.active:
-                player.start_playback(P.RB_SIZE/2,False)
+            if P.audio_playback:
+                player.rb.push( P.rx[irx].am * af_gain )
+                if player and not player.active:
+                    player.start_playback(P.RB_SIZE/2,False)
             
             # Handshake with main
             P.data_ready[irx].clear()
@@ -170,9 +171,10 @@ def audio_out(P,am=None):
                 am2=0
             
             # Need to delay start of playback until there are enough samples
-            player.rb.push( am1*af_gain1 + 1j*am2*af_gain2 )
-            if player and not player.active:
-                player.start_playback(P.DELAY,False)
+            if P.audio_playback:
+                player.rb.push( am1*af_gain1 + 1j*am2*af_gain2 )
+                if player and not player.active:
+                    player.start_playback(P.DELAY,False)
 
         return
             
@@ -189,26 +191,27 @@ def audio_out(P,am=None):
 
         #print 'AUDIO_OUT:',irx,af_gain,am
             
-        if P.LOOPBACK:
-            if P.AUX_USE_BPF and False:
-                am2 = P.aux_bpf.convolve_fast( am )
-                player.rb.push( am2 )
+        if P.audio_playback:
+            if P.LOOPBACK:
+                if P.AUX_USE_BPF and False:
+                    am2 = P.aux_bpf.convolve_fast( am )
+                    player.rb.push( am2 )
+                else:
+                    player.rb.push( am )
             else:
-                player.rb.push( am )
-        else:
-            player.rb.push( am * af_gain )
+                player.rb.push( am * af_gain )
 
-        if irx==0 and P.LOOPBACK and P.AUX_AUDIO:
-            if P.AUX_USE_BPF:
-                am2 = P.aux_bpf.convolve_fast( am )
-                P.aux_rb.push( am2*af_gain )
-            else:
-                P.aux_rb.push( am * af_gain )
-            if not P.aux_player.active:
-                P.aux_player.active = P.aux_player.start_playback(P.RB_SIZE/2,False)
+            if irx==0 and P.LOOPBACK and P.AUX_AUDIO:
+                if P.AUX_USE_BPF:
+                    am2 = P.aux_bpf.convolve_fast( am )
+                    P.aux_rb.push( am2*af_gain )
+                else:
+                    P.aux_rb.push( am * af_gain )
+                if P.audio_playback and not P.aux_player.active:
+                    P.aux_player.active = P.aux_player.start_playback(P.RB_SIZE/2,False)
 
         # Need to delay start of playback until there are enough samples
-        if player and not player.active:
+        if P.audio_playback and player and not player.active:
             player.start_playback(P.DELAY,False)
 
 
