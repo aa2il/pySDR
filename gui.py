@@ -1898,10 +1898,16 @@ class SDR_GUI(QMainWindow):
                     self.mp_comm('setFrequency',foff,rx=0)
                     P.sdr.setFrequency(SOAPY_SDR_RX, 0, f2-P.FOFFSET)
                 else:
-                    #f1 = P.sdr.getFrequency(SOAPY_SDR_RX, 0) + P.FOFFSET
                     P.rx[irx].lo.change_freq( foff )
-                    P.sdr.setFrequency(SOAPY_SDR_RX, 0, f2-P.FOFFSET)
+                    df=f2-P.FOFFSET                    
+                    if P.HAMITUP:
+                        df += 125e6
+                    P.sdr.setFrequency(SOAPY_SDR_RX, 0, df)
                 print('\tChanging Main-RX',irx,' freq from',P.FC[irx],' to ',f2)
+                if P.HAMITUP:
+                    f1 = P.sdr.getFrequency(SOAPY_SDR_RX, 0)
+                    print('\tSDR freq=',f1)
+                    
             P.FC[irx]  = f2
 
             # Re-tune rig also - NEW!!!
@@ -2057,14 +2063,6 @@ class SDR_GUI(QMainWindow):
             self.P.sock.set_mode(mode)
             #self.itune_cnt=0
             return
-
-        # Check if we need to change RTL direct sampling mode
-        if self.P.SDR_TYPE=='rtlsdr' and False:
-            thresh=30e3
-            if frq>=thresh and self.P.DIRECT_SAMP!=0:
-                self.DirectSelect(0)
-            elif frq<thresh and self.P.DIRECT_SAMP!=2:
-                self.DirectSelect(2)
 
 
     # Callback to enable/disable AM/FM BCB Notch

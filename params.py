@@ -50,6 +50,8 @@ class RUN_TIME_PARAMS:
                               help='RTL Dongle Device below 30 MHz')
         arg_proc.add_argument('-fake', action='store_true',
                               help='Use fake RTL driver')
+        arg_proc.add_argument('-hamitup', action='store_true',
+                              help='Include 125-MHz offset for Ham It Up Converter')
         arg_proc.add_argument('-replay', help="Replay",
                               type=str,default="",nargs='+')
         arg_proc.add_argument('-test', action='store_true')
@@ -196,6 +198,7 @@ class RUN_TIME_PARAMS:
         self.GEO          = args.geo
         self.DESKTOP      = args.desktop
         self.USE_FAKE_RTL = args.fake
+        self.HAMITUP      = args.hamitup
         #self.USE_FAKE_RTL=True
         self.sdr = find_sdr_device(self,args)
         print('P.sdr=',self.sdr)
