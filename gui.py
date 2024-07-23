@@ -1901,6 +1901,8 @@ class SDR_GUI(QMainWindow):
                     P.rx[irx].lo.change_freq( foff )
                     df=f2-P.FOFFSET                    
                     if P.HAMITUP:
+                        # The hamitup up-converter shifts 0-60MHz up by 125-MHz
+                        # so tune the SDR to the desired freq plus 125-MHz
                         df += 125e6
                     P.sdr.setFrequency(SOAPY_SDR_RX, 0, df)
                 print('\tChanging Main-RX',irx,' freq from',P.FC[irx],' to ',f2)
