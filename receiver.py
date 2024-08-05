@@ -26,7 +26,7 @@ import numpy as np
 import time
 from sig_proc import up_dn
 from Tables import MODES,VIDEO_BWs,AF_BWs
-import file_io
+import fileio
 from pprint import pprint
 from utils import setupSDR,check_sdr_settings
 from utilities import error_trap
@@ -247,6 +247,11 @@ def demodulate_data(P,x,irx):
     if P.SHOW_AF_PSD and irx==P.PLOT_RX:
         if P.PANADAPTOR:
             # This allows us to see the wider specturm if we are using the SDR as a pan-adpater
+            #if P.AUTO_MUTED:
+            #    dc = np.mean(rx.iq)
+            #else:
+            #    dc = 0
+            #print('dc=',dc)
             P.rb_af.push(rx.iq)
         else:
             if P.MP_SCHEME==1: 

@@ -410,6 +410,9 @@ class three_box_plot():
 
         # Compute and plot the PSD
         PSD = self.psd.periodogram(y,True)
+        if len(PSD)==0:
+            print('PLOT: Error computing periodogram - giving up!')
+            return
         #print '\nPlotting ...',fc,self.P.RIG_IF
         frq = self.psd.frq - self.foff + fc
         self.fc=fc-self.foff

@@ -1953,6 +1953,8 @@ class SDR_GUI(QMainWindow):
         for i in range(0,P.NUM_RX):
             if i==P.MAIN_RX:
                 # Main RX has already been taken care of
+                if self.P.SHOW_AF_PSD:
+                    P.rb_af.clear()
                 continue
             #elif P.MAIN_RX==0 and not np.isscalar(new_frq):
             elif not np.isscalar(new_frq):
