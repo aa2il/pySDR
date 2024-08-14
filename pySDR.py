@@ -65,7 +65,7 @@ from params import *
 from gui import *
 from hopper import *
 from watchdog import *
-import file_io as io
+import fileio as io
 from rig_io import socket_io 
 from rig_io import hamlibserver as rigctl
 import datetime
