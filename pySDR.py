@@ -1,4 +1,7 @@
-#! /usr/bin/python3 -u
+#! /usr/bin/python3 -u 
+#
+# NEW: /home/joea/.venv/bin/python -u
+# OLD: /usr/bin/python3 -u 
 ############################################################################
 #
 # pySDR.py - Rev 1.0
@@ -139,14 +142,14 @@ def start_threads(P):
             else:
                 port = 4675 + i-P.NUM_RX
             th = threading.Thread(target=rigctl.HamlibServer(P,port).Run, args=(),name='Hamlib '+str(port))
-            th.setDaemon(True)
+            th.daemon=True
             th.start()
             P.threads.append(th)
     elif not P.REPLAY_MODE:
         # Just one to communicate with SDR
         port=4533
         th = threading.Thread(target=rigctl.HamlibServer(P,port).Run, args=(),name='Hamlib '+str(port))
-        th.setDaemon(True)
+        th.daemon=True
         th.start()
         P.threads.append(th)
 
@@ -159,7 +162,7 @@ def start_threads(P):
     P.evt = threading.Event()
     #P.sdr=None
     worker = threading.Thread(target=SDR_EXECUTIVE(P,True).Run,args=(), name='SDR_EXEC')
-    worker.setDaemon(True)
+    worker.daemon=True
     worker.start()
     P.threads.append(worker)
 
@@ -246,7 +249,7 @@ if __name__ == '__main__':
 
     # Thread to communicate to radio 
     th = threading.Thread(target=RIG_Updater, args=(P,),name='Rig Updater')
-    th.setDaemon(True)
+    th.daemon=True
     th.start()
     P.threads.append(th)
         
@@ -254,6 +257,6 @@ if __name__ == '__main__':
     P.gui.StartStopRX()
 
     # Main event loop
-    sys.exit(P.app.exec_())
+    sys.exit(P.app.exec())
     
 ############################################################################

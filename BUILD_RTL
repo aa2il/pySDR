@@ -6,7 +6,7 @@
 
 # Need to do this once 
 if( 0 )then
-    pip3 install pyrtlsdr
+    #pip3 install pyrtlsdr
     sudo apt-get -y install rtl-sdr librtlsdr-dev libusb-1.0-0-dev
 
     # Blacklisting - doesn't work until we do this!

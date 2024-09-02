@@ -8,25 +8,34 @@
 # wget command should take care of this for us now!
 # Soapy support for latest driver has lagged behind and still isn't quite right.
 # That was OK with Mint 18.3 since we could just downgrade but not with Mint 19.3.  Things seem ok in Mint 20 & 21
-#set VER=2.11
-#set VER=2.13
-set VER=3.12                          # Was 3.07
+
+# Linux - Versions 2.11, 2.13, 3.07 are ancient!
+#set VER=3.12
+#set SUBVER=1
+set VER=3.15
 set SUBVER=2
 set ARCH="Linux"
+
+# RPi
 ###set ARCH="ARM32"                   # Shoudlnt need this anymore
-set ARCH="ARM64"                      # 64-bit API is under ARM & is version 1
-set SUBVER=1                          # Only works for true 64-bit OS, not hybrid nonsense that RPi defaults to!!
-set ARCH="NONE"                       # Do this to skip download from SDRPlay
+#set ARCH="ARM64"                      # 64-bit API is under ARM & is version 1
+#set SUBVER=1                          # Only works for true 64-bit OS, not hybrid nonsense that RPi defaults to!!
+
+# Do this to skip download from SDRPlay
+set ARCH="NONE"
+
 if( $ARCH == "Linux")then
 
     echo "Installing SDRPlay driver version ${ARCH}-$VER ..."
     mkdir -p ~/AA2IL/SDR/SDRplay
     pushd ~/AA2IL/SDR/SDRplay
     pwd
-    chmod 755 ./SDRplay_RSP_API-${ARCH}-${VER}.1.run
-    ./SDRplay_RSP_API-${ARCH}-${VER}.1.run
+    chmod 755 ./SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
+    ./SDRplay_RSP_API-${ARCH}-${VER}.${SUBVER}.run
     popd
-    sudo reboot
+
+    # Not convinced we need this since driver seems to load when we plug in the SDR
+    #sudo reboot         
     exit
 
 else if( ( $ARCH == "ARM32" ) || ( $ARCH == "ARM64" ) )then
@@ -77,7 +86,8 @@ if( 1 )then
     cd ~/Dev
     sudo rm -rf SoapySDRPlay
     #if( $VER == 3.07 )then
-    if( $VER == 3.12 )then
+    #if( $VER == 3.12 )then
+    if( $VER == 3.15 )then
     
         # The current Soapy seems to work with the newer driver
         echo "Cloning Soapy SDRPlay stuff ..."

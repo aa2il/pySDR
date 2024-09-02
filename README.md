@@ -58,14 +58,21 @@ To be continued....
 
 # Installation under Mini-conda:
 
+   As of Python 3.12, there are a lot more restrictions imposed on using pip,
+   to the point where it is becoming difficult to get things going.  Perhaps
+   its time to start migrating toward a "sandbox."
+   
 0) Good video:  https://www.youtube.com/watch?v=23aQdrS58e0&t=552s
 
 1) Point browser to https://docs.conda.io/en/latest/miniconda.html
 2) Download and install latest & greatest Mini-conda for your particular OS:
    - I used the bash installer for linux
    - As of July 2023: Conda 23.5.2 Python 3.11.3 released July 13, 2023
+   - As of Aug 2024:  Conda 24.7.1 Python 3.12.4 released Aug 22, 2024
    - cd ~/Downloads
    - bash Miniconda3-latest-Linux-x86_64.sh
+           or, to update existing installation,  
+     bash Miniconda3-latest-Linux-x86_64.sh -u
    - Follow the prompts
 
    - If you'd prefer that conda's base environment not be activated on startup, 
@@ -74,6 +81,7 @@ To be continued....
       conda config --set auto_activate_base false
 
    - To get it to work under tcsh:
+       - cd    
        - bash
        - conda init tcsh
        - This creates ~/.tcshrc - move its contents to .cshrc if need be
@@ -82,18 +90,25 @@ To be continued....
            - conda list
 
 3) Create a working enviroment for ham radio stuff:
-   - !!! The conda libraries for the SDR device are not completely
-         up to date to need to use python 3.10 !!!
+     !!! As of July 2023, the conda libraries for the SDR device were not
+         completely up to date to need to use python 3.10 !!!
    - conda create --name aa2il python=3.10
 
+                   or 
+   
+     !!! As of Aug 2024, it seems that these libraries have caught up but
+         I havent completed migration to Python 3.12/QT 6 yet !!!
+   - conda create --name aa2il python=3.12
+   
    - To activate this environment, use:
-       - conda activate aa2il
+         conda activate aa2il
    - To deactivate an active environment, use:
-       - conda deactivate
-
-   - conda env list
-   - conda activate aa2il
-
+         conda deactivate
+   - To see all the available envirnoments:
+         conda env list
+   - To remove an environment:
+        conda remove -n aa2il --all
+        
 4) Clone gitub pySDR, libs and data repositories:
     - cd
     - mkdir Python
@@ -104,22 +119,34 @@ To be continued....
 
 5) Install packages needed by pySDR:
    - cd ~/Python/pySDR
+   - conda activate aa2il
    - pip3 install -r requirements.txt
+
+   From conda repository - this only gives us the RTL dongle:
    - conda install -c conda-forge soapysdr
    - conda install -c conda-forge soapysdr-module-rtlsdr
 
-6) Set PYTHON PATH so os can find libraries:
+   or from local build (see Installation under Linux, step 3 above) - this gives both RTL dongle and sdrplay:
+   cp ~/Dev/SoapySDR/build/swig/python/SoapySDR.py ~/miniconda3/envs/aa2il/lib/python3.10/site-packages
+   cp ~/Dev/SoapySDR/build/swig/python/_SoapySDR.so ~/miniconda3/envs/aa2il/lib/python3.10/site-packages
+   
+6) Need to "blacklist" the RTL Dongles:
+
+      sudo ln -s /home/joea/miniconda3/envs/aa2il_2/lib/udev/rules.d/rtl-sdr.rules /etc/udev/rules.d/
+      sudo udevadm control --reload && sudo udevadm trigger
+
+7) Set PYTHON PATH so os can find libraries:
    - Under tcsh:      setenv PYTHONPATH $HOME/Python/libs
    - Under bash:      export PYTHONPATH="$HOME/Python/libs"
 
-7) To run pySDR, we need to specify python interpreter so it doesn't run in
+8) To run pySDR, we need to specify python interpreter so it doesn't run in
    the default system environment:
    - cd ~/Python/pySDR
    - conda activate aa2il
    - python pySDR.py
 
-8) Known issues using this (as of July 2023):
-   - Need to add support for SDRplay to this recipee...
+9) Known issues using this (as of Aug 2024):
+   - None (but not rigorously tested either!)
 
 # Installation for Windoz:
 

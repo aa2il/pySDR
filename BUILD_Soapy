@@ -19,12 +19,16 @@
 ##########################################################################################
 
 # Install building tools - make sure this works properly before proceeding!!!
-if( 1 )then
+if( 0 )then
+    echo " "
+    echo "--- Installing build tools ..."
+    echo " "
     sudo apt update
     sudo apt upgrade -y
+    #sudo apt autoremove
     sudo apt-get -y install build-essential git cmake automake libpulse-dev \
                         libgtk-3-dev python3-dev swig python3-tk \
-                        libusb-1.0-0-dev
+                        libusb-1.0-0-dev g++ python3-numpy
                         
     # Problem childen on RPi - not quite sure why we need these?  Apparently, we don't!
     # sudo apt-get -y install freeglut3 freeglut3-dev
@@ -34,12 +38,23 @@ endif
 
 # These should eliminate need to build everything but we'll see...
 if( 1 )then
+    echo " "
+    echo "--- Trying out pre-built tools ..."
+    echo " "
     sudo apt -y install python3-soapysdr soapysdr-module-rtlsdr
     sudo apt -y install libsoapysdr-doc libsoapysdr-dev soapysdr-tools
                                                 
     rehash
+    echo " "
+    echo " --- Let's see if SoapySDRUtil works ..."
+    echo " "
     which SoapySDRUtil
     SoapySDRUtil --info
+    echo " "
+    echo " --- Let's see if we can find the RTL SDR ..."
+    echo " "
+    SoapySDRUtil --probe="driver=rtlsdr"
+    SoapySDRUtil --find
     
     exit
 endif
@@ -55,16 +70,22 @@ if( 1 )then
     
     sudo make uninstall SoapySDR
     sudo rm -rf SoapySDR
-    git clone https://github.com/pothosware/SoapySDR
+    git clone https://github.com/pothosware/SoapySDR.git  # First time
 
     cd SoapySDR
+    #git pull origin master             # Update
+    
     sudo rm -rf build
     mkdir build
     cd build
     cmake ..
-    make
+    
+    #make
+    #sudo make install
+    #sudo ldconfig
 
-    sudo make install
+    make -j4
+    sudo make install -j4
     sudo ldconfig
 
     # Permissions were a real problem when trying to get this to

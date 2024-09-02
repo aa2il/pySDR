@@ -22,13 +22,12 @@
 #
 ################################################################################
 
-if False:
-    # use Qt4 
-    from PyQt4.QtCore import * 
-else:
-    # use Qt5
-    from PyQt5.QtCore import * 
+try:
+    from PySide6.QtWidgets import *
+    from PySide6.QtCore import *
+except ImportError:
     from PyQt5.QtWidgets import *
+    from PyQt5.QtCore import * 
 from rig_io.socket_io import *
 from utilities import freq2band
 

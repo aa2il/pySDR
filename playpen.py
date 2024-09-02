@@ -1,8 +1,11 @@
-#! /usr/bin/python3 -u
+#! /home/joea/.venv/bin/python -u
+#
+# NEW: /home/joea/.venv/bin/python -u
+# OLD: /usr/bin/python3 -u 
 #######################################################################################
 #
 # SDRP Play Pen - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Test routines for SDR Play / RTL / Soapy SDR drivers.
 #
@@ -194,7 +197,7 @@ def sdrPlayPen(P):
 
 #######################################################################################
 
-if True:
+if False:
     f1=1e6
     f2=48e3
 

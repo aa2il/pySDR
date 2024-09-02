@@ -12,18 +12,18 @@
 set ROOT="/media/${USER}/marconi"
 #set ROOT="/media/${USER}/hertz"
 #set ROOT="/media/${USER}/sproul"
+set ROOT="/mnt/sproul"
 #set ROOT="/media/${USER}/3D76-ECB1"
 #set ROOT="/media/${USER}/acer"
 #set ROOT="/media/${USER}/cartman"
 if( !(-e $ROOT) && (-e ${ROOT}2) )then
     set ROOT="${ROOT}2"
-else
+else if( 0 )then
     echo Trying to think but nothing happens ...
     set MACHINE=`basename $ROOT`
     set ROOT=`ls -d /run/user/1001/gvfs/smb-share*${MACHINE}`
 endif
 echo ROOT=$ROOT
-
 #exit
 
 # Add path down to old version

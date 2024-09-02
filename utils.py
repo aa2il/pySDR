@@ -29,8 +29,12 @@ import io
 from threading import enumerate
 from rig_io import bands,CONNECTIONS,RIGS
 from multiprocessing import active_children
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtGui import QIcon, QPixmap
+try:
+    from PySide6.QtWidgets import QMessageBox,QApplication
+    from PySide6.QtGui import QIcon, QPixmap
+except ImportError:
+    from PyQt5.QtWidgets import QMessageBox,QApplication
+    from PyQt5.QtGui import QIcon, QPixmap
 from utilities import freq2band, error_trap
 
 ############################################################################
@@ -477,12 +481,17 @@ def find_sdr_device(self,args):
 
         # For now, we only can handle one device
         if len(devices)==0:
-            print('\n**********************************')
-            print('*** -- No SDR Device Found  -- ***')
-            print('*** Make sure it is plugged in ***')
-            print('**********************************')
+            print('\n******************************************')
+            print('***     -- No SDR Device Found  --     ***')
+            print('***     Make sure it is plugged in     ***')
+            print('***                                    ***')
+            print('*** If problem persists, kill driver:  ***')
+            print('***    ps -aux | fgrep sdrplay         ***')
+            print('***    kill -9 <proc number>           ***')
+            print('******************************************')
 
             if True:
+                app  = QApplication(sys.argv)
                 msgBox = QMessageBox()
                 msgBox.setIcon(QMessageBox.Information)
                 msgBox.setText("Could not find SDR !!!\n\nMake sure it is plugged in and click OK to try again ...")
@@ -509,13 +518,14 @@ def find_sdr_device(self,args):
             
             # If we get here, we found the device - check what it is
             Done=True
+            print('devices=',devices)
             dev=devices[0]['driver']
             print('dev=',dev)
             try:
                 sdr = SoapySDR.Device( dict(driver=dev) )
                 sdrkey = sdr.getDriverKey()
             except: 
-                error_trap('UTILS->FIND SDR DEVICE')
+                error_trap('UTILS->FIND SDR DEVICE',1)
                 print('\n***************************************')
                 print('Unable to open driver - dev=',dev)
                 print('Perhaps you need to restart the driver?')

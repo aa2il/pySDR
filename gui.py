@@ -31,12 +31,17 @@ from Plotting import *
 from receiver import *
 from rig_io.ft_tables import *
 from rig_io.presets import *
-from rtty import *
+#from rtty import *            # Disabled until we get a chance to bring it up to date
 from widgets_qt import *
 import collections
 from utils import  show_threads
 from utilities import freq2band
-from PyQt5.QtCore import QTimer
+try:
+    from PySide6.QtCore import QTimer
+    #print('\n----------------- USING QT6/PySide6 -------------------\n')
+except ImportError:
+    from PyQt5.QtCore import QTimer
+    #print('\n----------------- USING QT5 -------------------\n')
 
 ############################################################################
 
@@ -631,7 +636,8 @@ class SDR_GUI(QMainWindow):
         self.show()
 
         # Move to lower left corner of screen
-        screen_resolution = self.P.app.desktop().screenGeometry()
+        #screen_resolution = self.P.app.desktop().screenGeometry()
+        screen_resolution = self.P.app.primaryScreen().size()
         self.screen_width  = screen_resolution.width()
         self.screen_height = screen_resolution.height()
         if P.GEO==None:
@@ -1732,7 +1738,7 @@ class SDR_GUI(QMainWindow):
 
     # Callback to change center freq when clicked 
     def MouseClickRF(self,button,frq,y,fc):
-        print('MouseClickRF in:',button,frq,y,self.P.PSD_AF_FC2,fc)
+        print('MouseClickRF: button=',button,'\tfrq=',frq,'\ty=',y,'\tFC2=',self.P.PSD_AF_FC2,'\tfc=',fc)
         if self.P.TRANSPOSE:
             frq,y = y,frq
         
@@ -1764,7 +1770,7 @@ class SDR_GUI(QMainWindow):
             else:
                 call=''
             
-        if button==1:
+        if button==1 or button==Qt.MouseButton.LeftButton:
 
             # Left click - What we do depends on how SDR is being used
             if self.P.RIG_IF==0 or True:
@@ -1781,7 +1787,7 @@ class SDR_GUI(QMainWindow):
                 vfo='A'
                 self.P.sock.set_freq(float(frq),vfo)
             
-        elif button==2:
+        elif button==2 or button==Qt.MouseButton.RightButton:
 
             # Right click with 2 RX's - shift freq of VFO B
             if self.P.NUM_RX==2:
@@ -1820,7 +1826,7 @@ class SDR_GUI(QMainWindow):
                 #print("Right button - Freq Select ...",frq,True,vfo)
                 self.FreqSelect(frq,True,vfo)
                 
-        elif button==4:
+        elif button==4 or button==Qt.MouseButton.MiddleButton:
 
             # Middle button with 2 RXs or SO2V - swap rig VFOs
             if self.P.NUM_RX==2 or self.so2v_cb.isChecked():

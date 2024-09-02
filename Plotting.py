@@ -21,9 +21,14 @@
 
 import sys
 import pyqtgraph as pg
-from PyQt5.QtGui import QTransform,QFont
-from PyQt5.QtWidgets import QLCDNumber,QLabel
-from PyQt5.QtCore import * 
+try:
+    from PySide6.QtWidgets import QLCDNumber,QLabel
+    from PySide6.QtCore import *
+    from PySide6.QtGui import QTransform,QFont
+except ImportError:
+    from PyQt5.QtWidgets import QLCDNumber,QLabel
+    from PyQt5.QtCore import * 
+    from PyQt5.QtGui import QTransform,QFont
 from Tables import *
 import sig_proc as dsp
 import numpy as np
@@ -675,7 +680,7 @@ class three_box_plot():
         #print 'button=',evt.button()
         #print 'buttons=',evt.buttons()
         #if evt.button()==1:
-        print('Button ',evt.button(),self.mouse_x)
+        print('\tButton=',evt.button(),'\tx=',self.mouse_x)
         
         # Snap to closest peak
         if self.P.gui.Use_Peaks_cb.isChecked():

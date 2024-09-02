@@ -34,7 +34,10 @@ import numpy as np
 from rig_io import bands
 from utilities import freq2band
 
-from PyQt5.QtCore import QTimer
+try:
+    from PySide6.QtCore import QTimer
+except ImportError:
+    from PyQt5.QtCore import QTimer
 
 ############################################################################
 

@@ -1,7 +1,9 @@
 ############################################################################
 #
 # .py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# THIS NEEDS A LOT OF WORK!!!!
 #
 # Portion of GUI related to wideband RTTY
 #
@@ -21,20 +23,20 @@
 #
 ############################################################################
 
-from __future__ import print_function
+#from __future__ import print_function
 
 import sys
 import time
 import math
-if False:
-    # use Qt4 
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import * 
-else:
+try:
+    from PySide6.QtWidgets import *
+    from PySide6.QtCore import *
+    from PySide6.QtGui import *
+except ImportError:
     # use Qt5
-    from PyQt5.QtGui import *
+    #from PyQt5.QtGui import *
     from PyQt5.QtWidgets import *
-    from PyQt5.QtCore import * 
+    #from PyQt5.QtCore import * 
 import pyqtgraph as pg
 import numpy as np
 from sig_proc import ring_buffer2

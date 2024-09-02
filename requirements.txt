@@ -1,35 +1,51 @@
+###############################################################################
+#
+# This was how this used to work:
+#     pip3 install -r requirements.txt
+#
+# There are some changes in the latest pyqtgraph so for now, we use
+# the older version until I can catch up
+#
+#    pip3 install --upgrade pyqtgraph==0.12.4
+#
+# Once these are resolved, should be able to use 
+#
+#     pip3 install --upgrade pyqtgraph
+#
+# but, in true linux fashion, it was broken in Python 3.11 - great jobs guys!
+#
+# Try this:
+#
+#    sudo apt install python3.12-venv
+#    mkdir -p ~/.venvs
+#    python3 -m venv ~/.venv --system-site-packages
+#    ~/.venv/bin/python -m pip install -r requirements.txt
+#
+###############################################################################
+#
 # Under Mint 21, tried this but didn't work --> "Illegal Instruction"
-
+#
 #   sudo apt -y install python3-soapysdr soapysdr-module-rtlsdr
 #   sudo apt -y install libsoapysdr-doc libsoapysdr-dev soapysdr-tools
 #   sudo apt -y install rtl-sdr librtlsdr-dev libusb-1.0-0-dev
-
+#
 # Use sudo apt remove ... to get rid of them before attempting to build.
 # Had to resort to building from source.  Hopefully this will get
 # resolved some day.
-
+#
 # Also tried it under RPi Bookworm - these mostly work except need to
 # build Soapy driver for the SDRplay.  This is probably bx they use
 # a propietary driver.
-
+#
 #     BUILD_Soapy
 #     BUILD_RTL
 #     BUILD_SDRplay
-
+#
 #############################################################################
 
-# pip3 install -r requirements.txt
-
-# There are some changes in the latest pyqtgraph so for now, we use
-# the older version until I can catch up
-
-# pip3 install --upgrade pyqtgraph==0.12.4
-
-# Once these are resolved, should be able to use 
-
-# pip3 install --upgrade pyqtgraph
-
-pyqt5
+#pyqt5
+pyqt6
+PySide6
 matplotlib
 pyqtgraph
 pyserial
@@ -40,11 +56,18 @@ pyaudio
 pyrtlsdr
 
 pandas
+numpy
 scipy
-#levenshtein
 
 # It might be a lot easier in the future to just use mini-conda:
-# Must use python 3.10 but it works!!!!:
 # conda install -c conda-forge soapysdr
 # conda install -c conda-forge soapysdr-module-rtlsdr
+
+# Overcome problems with mini-conda - ignore
+#feedparser
+#cryptography
+#platformdirs
+#attrs
+#requests-file
+#requests-toolbelt
 
