@@ -37,11 +37,9 @@ import collections
 from utils import  show_threads
 from utilities import freq2band
 try:
-    from PySide6.QtCore import QTimer
-    #print('\n----------------- USING QT6/PySide6 -------------------\n')
+    from PySide6.QtCore import QTimer,qVersion
 except ImportError:
-    from PyQt5.QtCore import QTimer
-    #print('\n----------------- USING QT5 -------------------\n')
+    from PyQt5.QtCore import QTimer,qVersion
 
 ############################################################################
 
@@ -62,6 +60,7 @@ class SDR_GUI(QMainWindow):
 
         # Init
         self.P=P
+        print('QT Version=',qVersion())
         
         # Put up splash screen
         self.P = P

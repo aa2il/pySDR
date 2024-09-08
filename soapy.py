@@ -1,6 +1,9 @@
-#! /usr/bin/python3 -u 
+#! /usr/bin/python3 -u
+#
+# NEW: /home/joea/.venv/bin/python -u
+# OLD: /usr/bin/python3 -u 
 
-# Basic SoapySDR/Python exampel from https://github.com/pothosware/SoapySDR/wiki/PythonSupport
+# Basic SoapySDR/Python example from https://github.com/pothosware/SoapySDR/wiki/PythonSupport
 
 import SoapySDR
 from SoapySDR import * #SOAPY_SDR_ constants

@@ -101,7 +101,8 @@ if( 1 )then
     #sudo chmod -R go+rx /usr/local/lib/arm*
     
     rehash
-    
+
+    echo " "
     which SoapySDRUtil
     SoapySDRUtil --info
 
