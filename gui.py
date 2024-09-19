@@ -1283,8 +1283,15 @@ class SDR_GUI(QMainWindow):
                 npsds = int(nsamp/new_samps)
                 x = list(range(new_samps))
                 for i in range(npsds):
-                    y = P.rb_af.pull(new_samps,True)
-                    self.plots_af.plot(x,y,P.PSD_AF_FC2,show_time_series,show_psd)
+                    if False:
+                        # OLD
+                        y = P.rb_af.pull(new_samps,True)
+                        self.plots_af.plot(x,y,P.PSD_AF_FC2,show_time_series,show_psd)
+                    else:
+                        # Try this instead
+                        y = P.rb_af.pull(new_samps,False)
+                        if i==0:
+                            self.plots_af.plot(x,y,P.PSD_AF_FC2,show_time_series,show_psd)
             else:
                 x = list(range(new_samps))
                 while True:
