@@ -39,16 +39,18 @@ BANDMAP_UPDATE_INTERVAL=30
 class Logger:
     def __init__(self,P):
 
+        self.P = P
+        print('LOGGER Init ...')
+
         if True:
             P.LOG1 = open('/tmp/LOG1.TXT','w')
             P.LOG2 = open('/tmp/LOG2.TXT','w')
             P.LOG2.write('%d,%d,0,0\n' % (P.RB_SIZE,P.FS_OUT) )
+            P.LOG2.flush()
         else:
             P.LOG1 = None
             P.LOG2 = None
             
-        self.P = P
-
         
 # Watch Dog Timer - Called every 2-sec to monitor health of app
 class WatchDog:
@@ -133,7 +135,7 @@ class WatchDog:
             fs         = msg[4]
         elif P.MP_SCHEME==1:
             player     = P.players[irx]
-            if player and player.active:
+            if player and (player.active or irx==0):
                 tag        = player.rb.tag
                 nsamps     = player.rb.nsamps 
                 size       = player.rb.size
@@ -156,11 +158,10 @@ class WatchDog:
             self.avg_latency[irx] = (1.-alpha)*self.avg_latency[irx] + alpha*latency
 
         if not self.quiet:
-            #print('Watch Dog:',tag,'Latency =',nsamps,'samps =',latency,' sec')
-            print('Watch Dog: %s Latency = %5d samp = %4.2f sec\t%d' % \
+            print('WATCH DOG Check Ringbuff: %s Latency = %5d samp = %4.2f sec\t%d' % \
                   (tag,nsamps,latency,size),end='',flush=True)
         if self.P.LOG2:
-            self.P.LOG2.write('%f,%d,%f,%f\n' % (t,nsamps,latency,self.avg_latency[irx]) )
+            self.P.LOG2.write('%s,%f,%d,%f,%f\n' % (tag,t,nsamps,latency,self.avg_latency[irx]) )
             self.P.LOG2.flush()
 
         dt = t - Start_Time
@@ -188,7 +189,7 @@ class WatchDog:
             print(' ...')
 
         # Check on plotting ring buffs
-        if False:
+        if True:
             if self.P.SHOW_RF_PSD:
                 nsamps = self.P.rb_rf.nsamps
                 tag    = self.P.rb_rf.tag
@@ -205,7 +206,10 @@ class WatchDog:
                 nsamps = self.P.rb_af.nsamps
                 tag    = self.P.rb_af.tag
                 size   = self.P.rb_af.size
-                print('Watch Dog:',tag,'nsamps =',nsamps,size)
+                pct    = float(100*nsamps)/float(size)
+                print('Watch Dog:',tag,'nsamps =',nsamps,'\tsize=',size,'\tpct=',pct)
+                self.P.LOG2.write('%s,%f,%d,%d,%f\n' % (tag,t,nsamps,size,pct))
+                self.P.LOG2.flush()
 
 
     def ItsAlive(self):
@@ -220,7 +224,6 @@ class WatchDog:
                 P=self.P
                 P.SHUT_DOWN = True
                 P.Stopper.set()
-                #P.gui.closeEvent()
             
             self.P.Timer2 = threading.Timer(2.0, self.ItsAlive)
             self.P.Timer2.daemon=True
@@ -231,7 +234,7 @@ class WatchDog:
     def Monitor(self):
         P=self.P
         self.in_and_out+=1
-        #print('Monitor: in...',self.in_and_out)
+        #print('WATCH DOG Monitor: in...',self.in_and_out)
 
         #QTimer.singleShot(250, self.alive)
         #self.timer2.start(self.msec2)
@@ -247,9 +250,6 @@ class WatchDog:
             print('Watch Dog: FC,FOFFSET=',P.FC,P.FOFFSET)
 
         if P.SHUT_DOWN:
-            #quit_rx(self.P)
-            #print "\nThat's all Folks!"
-            #P.gui.QuitApp()
             print('WatchDog Monitor: Shutting down...')
             #P.gui.closeEvent()
             sys.exit(0)
@@ -259,7 +259,7 @@ class WatchDog:
             print('\nWatch Dog:',int( t-self.Start_Time ))
         self.count+=1
 
-        # Monitor audio ring buffer i/o
+        # Monitor audio ring buffers
         for i in range(P.NUM_PLAYERS):
             self.check_ringbuff(t,i,verbosity)
             #time.sleep(0.1)
