@@ -75,6 +75,7 @@ import datetime
 import threading
 from profiler import *
 from udp import open_udp_client,KEYER_UDP_PORT
+from utilities import Memory_Monitor
 
 ################################################################################
 
@@ -215,6 +216,10 @@ if __name__ == '__main__':
     # Set-up run-time params
     P=RUN_TIME_PARAMS()
     P.MP_SCHEME=1            # For now
+
+    # Memory Monitor
+    if True:
+        P.MEM = Memory_Monitor('/tmp/SDR_MEMORY.TXT')
 
     # Put up splash screen
     P.app  = QApplication(sys.argv)

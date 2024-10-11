@@ -630,7 +630,8 @@ class three_box_plot():
     def removeAllSpots(self):
         for spot in self.SpotItems:
             self.p3.removeItem(spot)
-
+            del spot
+        self.SpotItems=[]
         
     # Function to shift waterfall when we change freqs
     def shift_waterfall(self,frq):

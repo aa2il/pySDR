@@ -23,11 +23,13 @@ from pyqtgraph.Qt import QtCore
 import time
 import numpy as np
 import sys
+import os
 from rig_io import find_fldigi_port
 from Tables import BANDS
 from utilities import freq2band, error_trap
 from udp import *
 import threading
+import psutil
 
 ############################################################################
 
@@ -263,7 +265,11 @@ class WatchDog:
         for i in range(P.NUM_PLAYERS):
             self.check_ringbuff(t,i,verbosity)
             #time.sleep(0.1)
-        
+
+        # Monitor memory usage
+        if P.MEM:
+            P.MEM.take_snapshot()
+                        
         # Monitor AGC
         if verbosity>=0:
             agc=P.rx[0].agc
@@ -287,9 +293,6 @@ class WatchDog:
         # Check UDP client
         if P.UDP_CLIENT:
             self.check_udp_clients()
-
-        if False:
-            P.NEW_SPOT_LIST=['HeLlO',1,'white']
 
         # Check rig band
         if P.sock and P.FOLLOW_BAND and P.sock.active:

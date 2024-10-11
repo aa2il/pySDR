@@ -1337,7 +1337,7 @@ class SDR_GUI(QMainWindow):
                     elif len(c)==1:
                         # Catch all so program doesn't crash & burn
                         c='w'
-                        
+
                     self.plots_af.addSpot(freq,100,call,c)
                     self.Spots.append(SPOT(call,freq,c))
                 P.NEW_SPOT_LIST=None
