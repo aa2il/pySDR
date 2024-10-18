@@ -22,9 +22,14 @@
 import sys
 import pyqtgraph as pg
 try:
-    from PySide6.QtWidgets import QLCDNumber,QLabel
-    from PySide6.QtCore import *
-    from PySide6.QtGui import QTransform,QFont
+    if True:
+        from PyQt6.QtWidgets import QLCDNumber,QLabel
+        from PyQt6.QtCore import * 
+        from PyQt6.QtGui import QTransform,QFont
+    else:
+        from PySide6.QtWidgets import QLCDNumber,QLabel
+        from PySide6.QtCore import *
+        from PySide6.QtGui import QTransform,QFont
 except ImportError:
     from PyQt5.QtWidgets import QLCDNumber,QLabel
     from PyQt5.QtCore import * 
@@ -347,13 +352,13 @@ class three_box_plot():
         self.vLine4 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen1)
         self.p3.addItem(self.vLine4, ignoreBounds=True)
 
-        pen2=pg.mkPen((128,0,255), width=3, style=Qt.DotLine)  
+        pen2=pg.mkPen((128,0,255), width=3, style=Qt.PenStyle.DotLine)  
         self.vLine5 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen2)
         self.p3.addItem(self.vLine5, ignoreBounds=True)
         self.vLine6 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen2)
         self.p3.addItem(self.vLine6, ignoreBounds=True)
 
-        pen3=pg.mkPen((255,200,255), width=3, style=Qt.DashLine)  
+        pen3=pg.mkPen((255,200,255), width=3, style=Qt.PenStyle.DashLine)  
         self.vLine7 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen3)
         self.p3.addItem(self.vLine7, ignoreBounds=True)
         self.vLine8 = pg.InfiniteLine(angle=ANGLE, movable=False, pen=pen3)
@@ -615,7 +620,12 @@ class three_box_plot():
             txt0='      '         # Get call sign out from under the mouse
         spot = pg.TextItem(txt2,c,angle=ang,anchor=(0,1))
         spot.setPos(x,y)
-        spot.setFont(QFont('Arial',ftsize, QFont.Bold))
+        
+        # spot.setFont(QFont('Arial',ftsize, QFont.Bold))
+        font=QFont('Arial',ftsize)
+        font.setBold(True)
+        spot.setFont(font)
+        
         spot.setToolTip(txt0+txt)
         self.pwin.setStyleSheet(" QToolTip{ border: 1px solid white; color: k ; font: bold 12pt}")
         #                         "background-color: lightgoldenrodyellow ;

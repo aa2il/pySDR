@@ -30,8 +30,12 @@ from threading import enumerate
 from rig_io import bands,CONNECTIONS,RIGS
 from multiprocessing import active_children
 try:
-    from PySide6.QtWidgets import QMessageBox,QApplication
-    from PySide6.QtGui import QIcon, QPixmap
+    if True:
+        from PyQt6.QtWidgets import QMessageBox,QApplication
+        from PyQt6.QtGui import QIcon, QPixmap
+    else:
+        from PySide6.QtWidgets import QMessageBox,QApplication
+        from PySide6.QtGui import QIcon, QPixmap
 except ImportError:
     from PyQt5.QtWidgets import QMessageBox,QApplication
     from PyQt5.QtGui import QIcon, QPixmap

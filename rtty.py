@@ -29,9 +29,12 @@ import sys
 import time
 import math
 try:
-    from PySide6.QtWidgets import *
-    from PySide6.QtCore import *
-    from PySide6.QtGui import *
+    if True:
+        from PyQt6.QtWidgets import *
+    else:
+        from PySide6.QtWidgets import *
+        from PySide6.QtCore import *
+        from PySide6.QtGui import *
 except ImportError:
     # use Qt5
     #from PyQt5.QtGui import *

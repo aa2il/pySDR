@@ -37,7 +37,10 @@ import collections
 from utils import  show_threads
 from utilities import freq2band
 try:
-    from PySide6.QtCore import QTimer,qVersion
+    if True:
+        from PyQt6.QtCore import QTimer,qVersion
+    else:
+        from PySide6.QtCore import QTimer,qVersion
 except ImportError:
     from PyQt5.QtCore import QTimer,qVersion
 
@@ -445,13 +448,13 @@ class SDR_GUI(QMainWindow):
         # Volume control
         lb=QLabel("AF Gain:")
         self.grid.addWidget(lb,nrows,1)
-        self.afgain = QSlider(Qt.Horizontal)
+        self.afgain = QSlider(Qt.Orientation.Horizontal)
         # sld.setFocusPolicy(Qt.NoFocus)
         self.afgain.setMinimum(0)
         self.afgain.setMaximum(100)
         self.afgain.setValue(int(P.VOL))
         self.afgain.valueChanged.connect(self.VolumeControl)
-        self.afgain.setTickPosition(QSlider.TicksBelow)
+        self.afgain.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.afgain.setTickInterval(10)
         self.grid.addWidget(self.afgain,nrows,2,1,ncols-3)
         self.VolumeControl()

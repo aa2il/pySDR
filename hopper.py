@@ -35,7 +35,10 @@ from rig_io import bands
 from utilities import freq2band
 
 try:
-    from PySide6.QtCore import QTimer
+    if True:
+        from PyQt6.QtCore import QTimer
+    else:
+        from PySide6.QtCore import QTimer
 except ImportError:
     from PyQt5.QtCore import QTimer
 
