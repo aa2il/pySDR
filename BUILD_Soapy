@@ -1,7 +1,15 @@
 #! /bin/tcsh
-
+##########################################################################################
+#
 # Script to build SDR support
-
+#
+# As of Oct 2024, the latest Soapy is hosed up.
+# These is some chatter that this is a result of having mulitple installs
+# of soapy.  I've done due diligence on this and it doesn't seem that's
+# the issue.  The best way to tell is by doning a fresh install of the OS
+# so next time I end up doing that, well try.
+# For now, use the older version that still works.
+#
 # Mint 21 - Installing from package manager still doesn't work but
 #           building from scratch seems ok.
 #           See requirements.txt for list of packages tried.  This
@@ -15,7 +23,7 @@
 # since I neglected the Blacklisting of the RTLSDR - need to retry this.
 #
 # This also seems ok for RPi Bullseye 64-bit
-
+#
 ##########################################################################################
 
 # Install building tools - make sure this works properly before proceeding!!!
@@ -37,7 +45,7 @@ if( 0 )then
 endif
 
 # These should eliminate need to build everything but we'll see...
-if( 1 )then
+if( 0 )then
     echo " "
     echo "--- Trying out pre-built tools ..."
     echo " "
@@ -67,10 +75,13 @@ if( 1 )then
     cd ~/Dev
 
     #cmake --help-policy CMP0078
+
+    # NOTE - As of Oct 2024, the latest Soapy is hosed up.
+    # For now, use the older version that still works.
     
     sudo make uninstall SoapySDR
-    sudo rm -rf SoapySDR
-    git clone https://github.com/pothosware/SoapySDR.git  # First time
+    #sudo rm -rf SoapySDR
+    #git clone https://github.com/pothosware/SoapySDR.git  # First time
 
     cd SoapySDR
     #git pull origin master             # Update

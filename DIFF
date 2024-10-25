@@ -11,8 +11,8 @@
 #set ROOT="/media/${USER}/aa2il"
 set ROOT="/media/${USER}/marconi"
 #set ROOT="/media/${USER}/hertz"
-#set ROOT="/media/${USER}/sproul"
-set ROOT="/mnt/sproul"
+set ROOT="/media/${USER}/sproul"
+#set ROOT="/mnt/sproul"
 #set ROOT="/media/${USER}/3D76-ECB1"
 #set ROOT="/media/${USER}/acer"
 #set ROOT="/media/${USER}/cartman"
@@ -35,7 +35,7 @@ echo PTH=$PTH
 set old=${ROOT}${PTH}
 
 # Overide if necessary
-#set old="save59"
+set old="save77"
 echo OLD=$old
 
 rm -f DIFFS
@@ -52,8 +52,8 @@ foreach i (DIFF *.py SSTV FT8* *.bat *.m BUILD* *.txt README.md)
         diff -w $old/$i $i >> DIFFS
         echo " " >> DIFFS
         
-        #kompare $old/$i $i
-        kompare $i $old/$i
+        kompare $old/$i $i
+        #kompare $i $old/$i
     endif
 end
 

@@ -34,143 +34,170 @@ To be continued....
 
 1) Uses python3 and pyqt5
 2) Clone gitub pySDR, libs and data repositories
-    - cd
-    - mkdir Python
-    - cd Python
-    - git clone https://github.com/aa2il/pySDR
-    - git clone https://github.com/aa2il/libs
-    - git clone https://github.com/aa2il/data
-3) Build components that deal with the SDR device:    
-    - cd ~/Python/pySDR
-    - BUILD_Soapy
-    - BUILD_RTL
-    - BUILD_SDRplay
+      
+      cd
+      mkdir Python
+      cd Python
+      git clone https://github.com/aa2il/pySDR
+      git clone https://github.com/aa2il/libs
+      git clone https://github.com/aa2il/data
+      
+3) Build components that deal with the SDR device:
+   Note! As of October 2024, the latest version of Soapy is broken.  I'm using an older build.
+         
+      cd ~/Python/pySDR
+      BUILD_Soapy
+      BUILD_RTL
+      BUILD_SDRplay
+      
 4) Install packages needed for pySDR:
-   - cd ~/Python/pySDR
-   - pip3 install -r requirements.txt
+   Note! As of python 3.11, its very difficult to install pacakges on the system or user level.  Hence,
+   As of Oct 2024, the "sandbox" outline below is recommened.
+                                   
+      cd ~/Python/pySDR
+      pip3 install -r requirements.txt
+      
 5) Make sure its executable:
-   - chmod +x pySDR.py start start_cw
+         
+      chmod +x pySDR.py start start_cw
+   
 6) Set PYTHON PATH so os can find libraries:
+         
    - Under tcsh:      setenv PYTHONPATH $HOME/Python/libs
    - Under bash:      export PYTHONPATH="$HOME/Python/libs"
+   
 7) Bombs away:
-   - ./pySDR.py
+      ./pySDR.py
 
-# Installation under Mini-conda:
+# Installation under Mini-conda - the "sandbox" approach:
 
    As of Python 3.12, there are a lot more restrictions imposed on using pip,
-   to the point where it is becoming difficult to get things going.  Perhaps
-   its time to start migrating toward a "sandbox."
+   to the point where it is becoming difficult to get things going.  Accordingly,
+   it is time to start migrating toward a "sandbox."
    
 0) Good video:  https://www.youtube.com/watch?v=23aQdrS58e0&t=552s
 
 1) Miniconda homepage: https://docs.conda.io/en/latest/miniconda.html
 
-   - google-chrome-stable https://docs.conda.io/en/latest/miniconda.html
-      
 2) Download and install latest & greatest Mini-conda for your particular OS:
 
-   - I used the bash installer for linux
-   - As of July 2023: Conda 23.5.2 Python 3.11.3 released July 13, 2023
-   - As of Aug 2024:  Conda 24.7.1 Python 3.12.4 released Aug 22, 2024
+   - I used the bash installer for linux - Follow the prompts:
+
+       mkdir -p ~/miniconda3
+       cd ~/miniconda3
+       wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O 
+       bash ~/miniconda3/Miniconda3-latest-Linux-x86_64.sh -b -u -p ~/miniconda3
+       #rm ~/miniconda3/Miniconda3-latest-Linux-x86_64.sh
+
+   - If you'd prefer that conda's base environment not be activated on startup,
+     set the auto_activate_base parameter to false:
    
-   - mkdir -p ~/miniconda3
-   - cd ~/miniconda3
-   - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O 
-   - bash ~/miniconda3/Miniconda3-latest-Linux-x86_64.sh -b -u -p ~/miniconda3
-   - rm ~/miniconda3/Miniconda3-latest-Linux-x86_64.sh
-
-   - Follow the prompts
-
-   - If you'd prefer that conda's base environment not be activated on startup, 
-      set the auto_activate_base parameter to false: 
-
-      conda config --set auto_activate_base false
+       conda config --set auto_activate_base false
 
    - To get it to work under tcsh:
-       - cd    
-       - bash
-       - conda init tcsh
-       - This creates ~/.tcshrc - move its contents to .cshrc if need be
-       - relaunch tcsh and all should be fine!
-       - Test with:
-           - conda list
+
+       cd    
+       bash
+       conda init tcsh
+       
+    - This creates ~/.tcshrc - move its contents to .cshrc if need be.
+    - Relaunch tcsh and all should be fine!  Test it with:
+       
+       conda list
 
 3) Create a working enviroment for ham radio stuff:
 
-     !!! These instructions will be cleaned-up when the migration to miniconda
-         is complete !!!!!!!
-     
-     !!! As of July 2023, the conda libraries for the SDR device were not
-         completely up to date to need to use python 3.10 !!!
-   - conda create --name aa2il_10 python=3.10
+    -  !!! By default, conda does not include very many fonts for tk and therefore the
+           Tk GUIs look like crap.  Do this when creating the sandbox to avoid this problem:
 
-                   or 
-   
-     !!! As of Aug 2024, it seems that these libraries have caught up -
-         Code has been migrated to Python 3.12 and QT 6 but not thoroughly tested...
-   - conda create --name aa2il_12 python=3.12
+       bash
+       cd ~/miniconda3/envs/
+       conda create -y --prefix "aa2il" -c conda-forge "python==3.12.*" "tk[build=xft_*]"
+       exit
 
-     !!! By default, conda does not include very many fonts for tk and therefore the
-         tk guis look like crap.  Do this when creating the sandbox to avoid this:
+    - The fonts on an existing sandbox can be upgraded via:
 
-   - conda create -y --prefix "aa2il" -c conda-forge "python==3.12.*" "tk[build=xft_*]"
-
-     Existing sandboxes can be upgraded via 
-
-   - conda install --prefix "aa2il" -c conda-forge "tk=*=xft_* "
+       conda install --prefix "aa2il" -c conda-forge "tk=*=xft_* "
  
-     although there may be downgrades some of the packages - who cares!  
+    - Note: there may be downgrades some of the packages - who cares!  
          
-   - To activate this environment, use:
+    - To activate this environment, use:
          conda activate aa2il
-   - To deactivate an active environment, use:
+    - To deactivate an active environment, use:
          conda deactivate
-   - To see all the available envirnoments:
+    - To see all the available envirnoments:
          conda env list
-   - To remove an environment:
+    - To remove an environment:
         conda remove -n aa2il --all
-   - To see conda and python versions:
+    - To see conda and python versions:
         conda info
         
-4) Clone gitub pySDR, libs and data repositories:
-    - cd
-    - mkdir Python
-    - cd Python
-    - git clone https://github.com/aa2il/pySDR
-    - git clone https://github.com/aa2il/libs
-    - git clone https://github.com/aa2il/data
+4) Clone the gitub pySDR, libs and data repositories:
+
+       cd
+       mkdir Python
+       cd Python
+       git clone https://github.com/aa2il/pySDR
+       git clone https://github.com/aa2il/libs
+       git clone https://github.com/aa2il/data
 
 5) Install packages needed by pySDR:
-   - cd ~/Python/pySDR
-   - conda activate aa2il
-   - pip3 install -r requirements.txt
 
-   From conda repository - this only gives us the RTL dongle:
-   - conda install -c conda-forge soapysdr
-   - conda install -c conda-forge soapysdr-module-rtlsdr
+       cd ~/Python/pySDR
+       conda activate aa2il
+       pip3 install -r requirements.txt
 
-   or from local build (see Installation under Linux, step 3 above) - this gives both RTL dongle and sdrplay:
-   cp ~/Dev/SoapySDR/build/swig/python/SoapySDR.py ~/miniconda3/envs/aa2il_12/lib/python3.12/site-packages
-   cp ~/Dev/SoapySDR/build/swig/python/_SoapySDR.so ~/miniconda3/envs/aa2il_12/lib/python3.12/site-packages
+   - !!! As of Oct 2024, the latest version of SoapySDR is hosed up and doesn't work.
+     I'm still using an older version which seems just fine.  If/when this ever does get resolved,
+     there are two options:
+     
+     -- From conda repository - this only gives us the RTL dongle:
+        This worked in July 2024 but no longer works in Oct 2024 - ugh!
+     
+          conda install -c conda-forge soapysdr
+          conda install -c conda-forge soapysdr-module-rtlsdr
+
+     -- From the local build (see Installation under Linux, step 3 above) - this gives both RTL dongle and sdrplay:
+        This is what I am currently using:     
+          
+          cd ~/miniconda3/envs/aa2il/lib/python3.12/site-packages/
+          rm -f SoapySDR.py _SoapySDR.so 
+          ln -s ~/Dev/SoapySDR/build/swig/python/SoapySDR.py 
+          ln -s ~/Dev/SoapySDR/build/swig/python/_SoapySDR.so 
    
 6) Need to "blacklist" the RTL Dongle:
 
-      sudo ln -s /home/joea/miniconda3/envs/aa2il_2/lib/udev/rules.d/rtl-sdr.rules /etc/udev/rules.d/
+      sudo ln -s /home/joea/miniconda3/envs/aa2il/lib/udev/rules.d/rtl-sdr.rules /etc/udev/rules.d/
       sudo udevadm control --reload && sudo udevadm trigger
 
 7) Set PYTHON PATH so os can find libraries:
+         
    - Under tcsh:      setenv PYTHONPATH $HOME/Python/libs
    - Under bash:      export PYTHONPATH="$HOME/Python/libs"
 
 8) To run pySDR, we need to specify python interpreter so it doesn't run in
    the default system environment:
-   - cd ~/Python/pySDR
-   - conda activate aa2il
-   - python pySDR.py
+   
+      cd ~/Python/pySDR
+      conda activate aa2il
+      python pySDR.py
 
-9) Known issues using this (as of Aug 2024):
-   - None (but not rigorously tested either!)
+9) Known issues using this (as of Oct 2024):
+   - Latest version of SoapySDR is broke.
+     A platform-independent drivers is a fine idea and noble goal but this
+     package has been very problematic.  Specifically, each time I've
+     upgraded my OS, the version of this package provided by the distribution
+     never works and  I end up fiddling with this package to get it functioning.
+     This was tolerable until this latest release which I can't even get to
+     function properly. Accordingly, I am in the process of abandoning this
+     package and developing my own drivers for the RTL and SDRPlay.
+     The driver for the RTL is showing promise and needs further testing.
+     Until these are ready, my recommendation is to use the older version
+     of this package.
+   - There can be a problem with the waterfall plots when pySDR is run for
+     a while (hours).  I think this is due to the buffering of the samples
+     from the SDR.  This needs to be changed to a "push" model instead of a
+     separate timer thread that just fires - will be addressed soon...
 
 # Installation for Windoz:
 

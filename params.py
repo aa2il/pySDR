@@ -140,7 +140,7 @@ class RUN_TIME_PARAMS:
         arg_proc.add_argument("-save_demod", help="Save demodulated data",
                               action="store_true")
 
-        arg_proc.add_argument("-show_iq", help="Showraw IQ data",
+        arg_proc.add_argument("-showiq", help="Show raw IQ data along with waterfall plots",
                               action="store_true")
         
         arg_proc.add_argument('-hop', help="List of Hop Frequencies (KHz)",
@@ -191,6 +191,10 @@ class RUN_TIME_PARAMS:
             print(vars(args))
             print(args.rtl)
             sys.exit(0)
+
+        # Init
+        self.MP_SCHEME    = 1            # For now
+        self.threads      = []
 
         # Determine SDR type which is connected to computer
         self.PLATFORM     = platform.system()
@@ -400,7 +404,7 @@ class RUN_TIME_PARAMS:
         self.sock1        = None
         
         # Set other defaults
-        self.SHOW_RF_IQ        = args.show_iq
+        self.SHOW_RF_IQ        = args.showiq
         self.SHOW_RF_PSD       = False                   # No PSD plots        
         self.SHOW_BASEBAND_PSD = False                   # 
         self.SHOW_AF_PSD       = False                   # 
@@ -421,7 +425,6 @@ class RUN_TIME_PARAMS:
         self.fnames            = ['raw_iq','baseband_iq','demod']
         self.fp                = [-1]*3
         self.status            = [0]*3
-        self.threads           = []
         self.NEW_SPOT_LIST     = None
 
         # Compute size of RF sampling chunk and playback ring buffer:

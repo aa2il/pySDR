@@ -23,7 +23,7 @@ endif
 
 # Well, do we have what we need already?
 # Seems like the pre-built libs are fine on the RPi/Bookworm for the rtl
-if( 1 )then
+if( 0 )then
     which SoapySDRUtil
     SoapySDRUtil --info
     SoapySDRUtil --probe="driver=rtlsdr"
@@ -40,8 +40,11 @@ if( 1 )then
     echo "\n------------------------------------ Installing SoapSDR for RTL part 1 ...\n"
     cd ~/Dev
 
-    sudo rm -rf SoapyRTLSDR
-    git clone https://github.com/pothosware/SoapyRTLSDR.git
+    # NOTE - As of Oct 2024, the latest Soapy is hosed up.
+    # For now, use the older version that still works.
+    
+    #sudo rm -rf SoapyRTLSDR
+    #git clone https://github.com/pothosware/SoapyRTLSDR.git
     cd SoapyRTLSDR
 
     rm -rf build
@@ -89,7 +92,8 @@ if( 1 )then
     sudo chmod -R go+rx /usr/local/lib/aarch64-linux-gnu/SoapySDR
     
     rehash
-    
+
+    echo " "
     which SoapySDRUtil
     SoapySDRUtil --find
     SoapySDRUtil --probe="driver=rtlsdr"

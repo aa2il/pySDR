@@ -213,6 +213,15 @@ class WatchDog:
                 self.P.LOG2.write('%s,%f,%d,%d,%f\n' % (tag,t,nsamps,size,pct))
                 self.P.LOG2.flush()
 
+        if self.P.USE_FAKE_RTL and False:
+            # List of all attributes (including internal ones)
+            attributes = dir(self.P.sdr.device)
+            print(attributes)
+            for attr in attributes:
+                if not attr.startswith('__'):
+                    value = getattr(self.P.sdr.device, attr)
+                    if not str(value).startswith('<bound'):
+                        print(f'{attr}: {value}')
 
     def ItsAlive(self):
         if self.in_and_out==0:

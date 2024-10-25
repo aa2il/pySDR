@@ -19,9 +19,21 @@
 #
 ############################################################################
 
-import SoapySDR
-from SoapySDR import *                # SOAPY_SDR_ constants
 import sys
+try:
+    import SoapySDR
+    from SoapySDR import *                # SOAPY_SDR_ constants
+    SAMPLE_FORMAT=SOAPY_SDR_CF32
+    #print('SOAPY_SDR_RX=',SOAPY_SDR_RX)
+    #sys.exit(0)
+except ImportError:
+    print('RECEIVER: Unable to import SoapySDR - be sure to use -FAKE flag')
+    #SAMPLE_FORMAT='CS16'
+    SOAPY_SDR_CF32='CF32'
+    SOAPY_SDR_RX=1
+SAMPLE_FORMAT=SOAPY_SDR_CF32
+print('SAMPLE_FORMAT=',SAMPLE_FORMAT)
+
 import numpy as np
 import time
 from sig_proc import up_dn
@@ -37,9 +49,6 @@ import multiprocessing as mp
 import ctypes
 
 ############################################################################
-
-SAMPLE_FORMAT=SOAPY_SDR_CF32
-#SAMPLE_FORMAT=SOAPY_SDR_CS16
 
 def RX_Thread(P,irx):
     print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ RX Thread @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',irx)
@@ -582,9 +591,14 @@ class SDR_EXECUTIVE:
             while n1<P.IN_CHUNK_SIZE and (not P.Stopper or not P.Stopper.isSet()):
                 #print 'SDR RX 1c'
                 try:
-                    sr = P.sdr.readStream(P.rxStream, [self.xx], P.IN_CHUNK_SIZE)
-                    nn = sr.ret
+                    if not P.USE_FAKE_RTL:
+                        sr = P.sdr.readStream(P.rxStream, [self.xx], P.IN_CHUNK_SIZE)
+                        nn = sr.ret
+                    else:
+                        self.xx=P.sdr.readStreamRTL(P.rxStream,P.IN_CHUNK_SIZE)
+                        nn=len(self.xx)
                     #print(self.xx[0:10],self.xx[2000:2010])
+                    #print(self.xx,len(self.xx))
                 except:
                     error_trap('RECEIVER->READ CHUNK - SDR stream error')
                     nn=0

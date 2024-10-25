@@ -16,6 +16,7 @@ for result in results: print(result)
 #create device instance
 #args can be user defined or from the enumeration result
 args = dict(driver="rtlsdr")
+print('args=',args)
 sdr = SoapySDR.Device(args)
 
 #query device info

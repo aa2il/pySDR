@@ -10,10 +10,12 @@
 # That was OK with Mint 18.3 since we could just downgrade but not with Mint 19.3.  Things seem ok in Mint 20 & 21
 
 # Linux - Versions 2.11, 2.13, 3.07 are ancient!
-#set VER=3.12
+set VER=3.07               # Use this until Soapy get fixed
+set SUBVER=1
+#set VER=3.12              # Seems ok
 #set SUBVER=1
-set VER=3.15
-set SUBVER=2
+#set VER=3.15              # Seems ok - try this again with a fresh build
+#set SUBVER=2
 set ARCH="Linux"
 
 # RPi
@@ -22,7 +24,7 @@ set ARCH="Linux"
 #set SUBVER=1                          # Only works for true 64-bit OS, not hybrid nonsense that RPi defaults to!!
 
 # Do this to skip download from SDRPlay
-set ARCH="NONE"
+#set ARCH="NONE"
 
 if( $ARCH == "Linux")then
 
@@ -87,12 +89,15 @@ if( 1 )then
     sudo rm -rf SoapySDRPlay
     #if( $VER == 3.07 )then
     #if( $VER == 3.12 )then
-    if( $VER == 3.15 )then
+    if( ($VER == 3.07) || ($VER == 3.12) || ($VER == 3.15) )then
+    
+        # NOTE - As of Oct 2024, the latest Soapy is hosed up.
+        # For now, use the older version that still works.
     
         # The current Soapy seems to work with the newer driver
         echo "Cloning Soapy SDRPlay stuff ..."
         pwd
-        git clone https://github.com/pothosware/SoapySDRPlay.git ./SoapySDRPlay
+        #git clone https://github.com/pothosware/SoapySDRPlay.git ./SoapySDRPlay
         
     else if( 0 )then
     

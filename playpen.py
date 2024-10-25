@@ -1,4 +1,4 @@
-#! /home/joea/.venv/bin/python -u
+#! /usr/bin/python3 -u 
 #
 # NEW: /home/joea/.venv/bin/python -u
 # OLD: /usr/bin/python3 -u 

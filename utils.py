@@ -19,9 +19,15 @@
 #
 ############################################################################
 
-import SoapySDR
-from SoapySDR import *                # SOAPY_SDR_ constants
 import sys
+try:
+    import SoapySDR
+    from SoapySDR import *                # SOAPY_SDR_ constants
+except ImportError:
+    print('UTIL: Unable to import SoapySDR - be sure to use -FAKE flag')
+    SOAPY_SDR_RX=1
+    from sig_proc import ring_buffer2,ring_buffer3
+
 import numpy as np
 import time
 from Tables import MODES,SDRplaysrates,RTLsrates
@@ -39,66 +45,90 @@ try:
 except ImportError:
     from PyQt5.QtWidgets import QMessageBox,QApplication
     from PyQt5.QtGui import QIcon, QPixmap
-from utilities import freq2band, error_trap
+
+from utilities import freq2band, error_trap, whoami
+from rtlsdr import RtlSdr
+from sig_proc import ring_buffer2
+import asyncio
+import threading
 
 ############################################################################
 
-import inspect
-from rtlsdr import RtlSdr
-from sig_proc import ring_buffer2
-#import asyncio
-import threading
-
-def whoami():
-    # [0] is this method's frame, [1] is the parent's frame - which we want
-    name=inspect.stack()[1].function
-    name = '\n *+*+*+*+*+*+*+*+*+*+*  '+ name +' ***'
-    return name
-
-def rtlsdr_callback(samples, context):
-    #print('Callback...',context)
-    self=rtlsdr_callback
-    if context==None:
-        self.rb=samples
-        return
-        
-    print('Callback...',samples[0:5],len(samples))
-    self.rb.push(samples)
-    #print('Callback...',self.rb.nsamps)
-
+# This is the "fake" rtl driver, probably a bad name for it but ...
+# It is an alternative to Soapy and only relies on the python rtlsdr library
+# which has been seen to be quite stable and reliable.  It has not been
+# completely vetted but seems to work.
+#
+# Most of the methods in this class are meant to mimic similar methods in
+# Soapy.  The exception is readSteam where I haven't quite figured out how
+# to modify function arguments - but who cares!
 
 class RTL_SDR_DRIVER:
     def __init__(self,P):
-        print('Init RTL_DRIVER ...')
+        print('======================================================Init RTL_DRIVER ...')
 
         self.device = RtlSdr()
         self.direct=None
         self.ret=None
         self.key='RTLSDR'
         self.P=P
-        #self.rb=P.rtl_rb
 
-    def RunRun(self):
-        pass
+        if P.MP_SCHEME==1: 
+            self.rb  = ring_buffer2('IO',256*1024,PREVENT_OVERFLOW=False)
+        elif P.MP_SCHEME==2: 
+            self.rb  = ring_buffer3('IO',256*1024)
+
+        # Using an avent is probably the right way to do this but I haven't gotten it to work ?!
+        #self.Enable = asyncio.Event()
+        #self.Enable.clear()
+        self.loop = asyncio.get_event_loop()
+        self.th = threading.Thread(target=self.Streamer2, args=(),
+                              name='RTL Streamer')
+        self.th.daemon=True
+        #self.th.start()                         # Do this here if we ever get the event-drive paradigm to work
+        P.threads.append(self.th)
         
-        #rtlsdr_callback(self.P.rtl_rb,None)
-        #self.device.read_samples_async(rtlsdr_callback)  #,self.P.IN_CHUNK_SIZE)
-        #print(whoami(),'Done.')
+    # Routine to continuously read blocks of samples from the RTL device
+    # and pump them into a ringbuffer.  
+    def Streamer2(self):
+
+        print('=====================RTL_SDR_DRIVER:',whoami(),'Starting ===================================================.')
+        #loop = asyncio.get_event_loop()
+        self.loop.run_until_complete(self.streaming())
+        
+    async def streaming(self):
+
+        """
+        print('============================ RTL_SDR_DRIVER:',whoami(),
+                    ' ... Waiting ... ==========================')
+        await self.Enable.wait()
+        
+        print('============================ RTL_SDR_DRIVER:',whoami(),
+                    ' ... Streaming ... ==========================')
+        """
+        
+        async for x in self.device.stream():
+            #print(x,len(x))
+            self.rb.push(x)
+            
+        print('============================ RTL_SDR_DRIVER:',whoami(),
+                    ' ... Done ... ==========================')
 
     def setSampleRate(self,rx, b, fs):
-        print(whoami(),rx, b, fs)
+        print('RTL_SDR_DRIVER:',whoami(),rx, b, fs)
         self.device.sample_rate = fs
         print(self.device.rs)
         #sys.exit(0)
         
     def getSampleRate(self,rx, b):
-        print(whoami(),rx, b)
+        print('RTL_SDR_DRIVER:',whoami(),rx, b)
         return self.device.sample_rate
         
     def setFrequency(self,rx, b, tag, f=None):
-        print(whoami(),rx, b, tag, f)
+        print('RTL_SDR_DRIVER:',whoami(),rx, b, tag, f)
         if f==None:
             f=tag
+            self.device.center_freq = int(f)
         elif tag=='RF':
             self.device.center_freq = int(f)
         elif tag=='CORR':
@@ -114,15 +144,15 @@ class RTL_SDR_DRIVER:
         #sys.exit(0)
 
     def getFrequency(self,rx, b, tag):
-        print(whoami(),rx, b, tag)
+        print('RTL_SDR_DRIVER:',whoami(),rx, b, tag)
         return self.device.center_freq
         
     def getNumChannels(self,rx):
-        print(whoami(),rx)
+        print('RTL_SDR_DRIVER:',whoami(),rx)
         return 1
         
     def writeSetting(self,s1,s2):
-        print(whoami(),s1,s2)
+        print('RTL_SDR_DRIVER:',whoami(),s1,s2)
         if s1=='if_mode':
             pass
         elif s1=='direct_samp':
@@ -131,108 +161,109 @@ class RTL_SDR_DRIVER:
             print(int(s2))
             #sys.exit(0)
         else:
-            sys.exit(0)
+            print('RTL_SDR_DRIVER:',whoami(),'Option not implemented yet - ignored')
 
     def listGains(self,rx,b):
-        print(whoami(),rx,b)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b)
         return self.device.valid_gains_db
 
     def getGainRange(self,rx,b,stage=None):
-        print(whoami(),rx,b,stage)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b,stage)
         gains=self.device.valid_gains_db
         return [min(gains),max(gains),1]
     
     def hasGainMode(self,rx,b):
-        print(whoami(),rx,b)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b)
         return True
         
     def setGainMode(self,rx,b,tf):
-        print(whoami(),rx,b,tf)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b,tf)
         self.device.gain = 'auto'
         
     def getGainMode(self,rx,b):
-        print(whoami(),rx,b)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b)
         return self.device.gain
         
     def getGain(self,rx,b,stage):
         gain=self.device.gain
-        print(whoami(),rx,b,stage,gain)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b,stage,gain)
         return gain
 
     def setGain(self,rx,b,stage,gain):
         if gain>49.6:
             gain=49.6
         self.device.gain = gain
-        print(whoami(),rx,b,stage,gain)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b,stage,gain)
         #sys.exit(0)
         
     def setAntenna(self,rx,b,ant):
-        print(whoami(),rx,b,ant)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b,ant)
         
     def getAntenna(self,rx,b):
-        print(whoami(),rx,b)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b)
         return 0
         
     def getSettingInfo(self):
+        print('RTL_SDR_DRIVER:',whoami())
         return []
     
     def listSampleRates(self,rx,b):
+        print('RTL_SDR_DRIVER:',whoami(),rx,b)
         return [1.024e6,2.048e6]
     
     def listBandwidths(self,rx,b):
+        print('RTL_SDR_DRIVER:',whoami())
         return []
     
     def getBandwidth(self,rx,b):
-        print(whoami(),rx,b)
+        print('RTL_SDR_DRIVER:',whoami(),rx,b)
         bw = self.device.bandwidth
         return bw
-
     
     def setupStream(self,rx,fmt):
-        print(whoami(),rx,fmt)
+        print('RTL_SDR_DRIVER:',whoami(),rx,fmt)
         self.fmt=fmt
         return 0
 
     def activateStream(self,rx):
-        print(whoami(),rx)
+        print('RTL_SDR_DRIVER:',whoami(),rx)
+        #self.Enable.set()
+        #print('============================ RTL_SDR_DRIVER:',whoami(),
+        #            ' ... Enabled ... ==========================',self.Enable.is_set())
+        self.th.start()                         # Do this here for now until we get the event-drive paradigm to work
 
-    def readStream(self,rx, bufs , n):        
-        xx=bufs[0]
-        #print(whoami(),rx,n)
-        #print(whoami(),n)
-        #print(whoami(),n,xx,len(xx))
-        nread=0
-        while nread<n-1024:
-            x = self.device.read_samples()
-            n2=len(x)
-            #print(n,n2,len(xx))
-            xx[nread:(nread+n2)] = x
-            if nread==0 and False:
-                print(x)
-                print(xx[nread:(nread+n2)])
-            nread += n2
-        if False:
-            print('end',x)
-            print(xx[(nread-n2):nread])
-        #print(whoami(),xx,self.fmt)
-        #sys.exit(0)
-        self.ret=nread
-        return self
+    def readStreamRTL(self,rx,n):
+
+        #print('RTL_SDR_DRIVER:',whoami(),n)
+        if self.rb.ready(n):
+            x=self.rb.pull(n)
+            #print('RTL_SDR_DRIVER:',x,n,len(x))
+        else:
+            x=[]
+        #print('RTL_SDR_DRIVER:',whoami(),n,len(x))
+        return np.array(x, np.complex64)
     
     def deactivateStream(self,rx):
-        print(whoami(),rx)
+        print('RTL_SDR_DRIVER:',whoami(),rx)
+        #self.Enable.clear()
+        #self.device.cancel_read_async()
+        self.device.stop()
 
     def closeStream(self,rx):
-        print(whoami(),rx)
-
+        print('RTL_SDR_DRIVER:',whoami(),rx)
+        #self.device.stop()
+        self.device.close()
 
     def getDriverKey(self):
+        print('RTL_SDR_DRIVER:',whoami())
         return self.key
 
     def getHardwareKey(self):
+        print('RTL_SDR_DRIVER:',whoami())
         return self.device.get_tuner_type()
     
     def getHardwareInfo(self):
+        print('RTL_SDR_DRIVER:',whoami())
         #return self.device.init_device_values()
         return []
 

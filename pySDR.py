@@ -96,7 +96,6 @@ VERSION='1.0'
 def init_sdr(P):
 
     # Ring buffers to throttle between data capture and playback/display
-    # Seems like this should use blocking???
     if P.MP_SCHEME==1: 
         P.rb_rf       = dsp.ring_buffer2('RF',8*P.IN_CHUNK_SIZE)
         P.rb_baseband = dsp.ring_buffer2('BB',8*P.IN_CHUNK_SIZE)
@@ -161,7 +160,6 @@ def start_threads(P):
         
     # Instantiate the receive processor
     P.evt = threading.Event()
-    #P.sdr=None
     worker = threading.Thread(target=SDR_EXECUTIVE(P,True).Run,args=(), name='SDR_EXEC')
     worker.daemon=True
     worker.start()
@@ -215,7 +213,6 @@ if __name__ == '__main__':
 
     # Set-up run-time params
     P=RUN_TIME_PARAMS()
-    P.MP_SCHEME=1            # For now
 
     # Memory Monitor
     if True:
