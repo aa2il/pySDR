@@ -45,8 +45,20 @@ class Logger:
         print('LOGGER Init ...')
 
         if True:
-            P.LOG1 = open('/tmp/LOG1.TXT','w')
-            P.LOG2 = open('/tmp/LOG2.TXT','w')
+            if sys.platform == "linux" or sys.platform == "linux2":
+                # linux
+                fname1='/tmp/LOG1.TXT'
+                fname2='/tmp/LOG2.TXT'
+            elif sys.platform == "win32":
+                # Windows...
+                fname1=os.path.expanduser('~/Python/tmp/LOG1.TXT')
+                fname2=os.path.expanduser('~/Python/tmp/LOG2.TXT')
+            elif sys.platform == "darwin":
+                # OS X
+                print('MEMORY MONITOR: No support for Mac OS')
+                sys.exit(0)
+            P.LOG1 = open(fname1,'w')
+            P.LOG2 = open(fname2,'w')
             P.LOG2.write('%d,%d,0,0\n' % (P.RB_SIZE,P.FS_OUT) )
             P.LOG2.flush()
         else:

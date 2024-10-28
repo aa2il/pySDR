@@ -1,12 +1,20 @@
 @echo off
 echo.
-echo Notes about how to run pySDR on Windoze 10
+echo Notes about how to run pySDR on Windoze 11
 echo.
-echo !!!!!!!!!!!!!! WORK IN PROGRESS !!!!!!!!!!!!!!!!!
+echo This is actually almost working using the "fake" RTL driver
+echo Main problem is that the audio is glitchy but the panadapter seems ok.
 echo.
-echo Need the following standard Python libraries:
-echo            pip install
-echo,
+echo  pip install pyrtlsdrlib
+echo.
+echo Run using the "fake" RTL driver:
+echo.
+echo    pySDR.py -fake
+echo.
+echo =======================================================================
+echo. 
+echo OLD NOTES - these may or may not be relavent?!
+echo .
 echo Need to build the SoapySDR stuff
 echo   - Download and install swigwin  from swig.org
 echo     -- It comes as a built dir, not an installed

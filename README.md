@@ -201,5 +201,32 @@ To be continued....
 
 # Installation for Windoz:
 
-1) Best bet is to use mini-conda and follow the instructions above.
-2) I have not had success building an executable for windoz.
+0) One option is to use miniconda and follow the directions above.
+      
+1) I had success installing Python (v3.12 as of Oct 2024) the Microslop Store
+   (or directly from python.org).
+
+2) Install dependancies:
+
+   pip install -r requirements.txt
+   pip install pyrtlsdrlib
+
+3) Install RTL-SDR driver - follow instructions at https://www.rtl-sdr.com/getting-the-rtl-sdr-to-work-on-windows-10/
+      
+   3a) Download the latest version of Zadig from zadig.akeo.ie
+   3b) Plug in the RTL-SDR.
+   3c) Run Zadig as administrator
+   3d) Go to Options -> List all devices and make sure it is checked.
+   3e) In the drop down box choose Bulk-In, Interface (Interface 0). This may also sometimes show up as something prefixed with "RTL28328U". That choice is also valid.
+   3f) Make sure that WinUSB is selected as the target driver and click on Replace Driver.
+
+4) Run it using "fake" RTL driver
+
+   pySDR.py -fake
+   
+5) I have not tried getting Soapy installed under winblows to have supprot for the SDRPlay device
+                                                                                6) I have not tried building a stand-alone executable yet
+
+7) The audio is still a bit glitchy under windoz
+                                                                                8) THIS IS A WORK IN PROGRESS!
+                                                                               
