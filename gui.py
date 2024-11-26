@@ -105,8 +105,6 @@ class SDR_GUI(QMainWindow):
         self.ShowParams()
         self.SHOW_BASEBAND_PLOTS=False
         self.itune_cnt=0
-        self.P.AF_FILTER_NUM = None
-        self.P.audio_playback = False
 
         # Start by putting up the root window
         self.win  = QWidget()
@@ -1797,6 +1795,7 @@ class SDR_GUI(QMainWindow):
                 self.P.sock.set_freq(float(frq),vfo)
             
         elif button==2 or button==Qt.MouseButton.RightButton:
+            print('\t...RIGHT CLICK ...')
 
             # Right click with 2 RX's - shift freq of VFO B
             if self.P.NUM_RX==2:

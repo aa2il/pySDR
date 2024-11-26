@@ -97,7 +97,7 @@ def udp_msg_handler(self,sock,msg):
                 band=self.P.BAND
                 msg='SpotList:'+band+':?\n'
                 self.P.udp_client2.Send(msg)
-                #print('UDP MSG HANDLER: Passing on SPOT LIST REFRESH message')
+                print('UDP MSG HANDLER: Passing on SPOT LIST REFRESH message')
                 
             elif mm[1]!='?':
                 

@@ -117,8 +117,10 @@ To be continued....
 
     - The fonts on an existing sandbox can be upgraded via:
 
+       bash
        conda install --prefix "aa2il" -c conda-forge "tk=*=xft_* "
- 
+       exit
+       
     - Note: there may be downgrades some of the packages - who cares!  
          
     - To activate this environment, use:

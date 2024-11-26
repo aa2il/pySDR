@@ -62,6 +62,7 @@ P.evt            = None
 P.Stopper        = None
 P.MP_SCHEME      = MP_SCHEME
 P.gui            = None
+P.audio_playback = True
 
 ############################################################################
 
@@ -70,7 +71,7 @@ if P.MP_SCHEME==1:
     # This works - rx is in its own thread
     #worker = threading.Thread(target=SDR_RX, args=(P,False),name='TH_SDR_RX')
     worker = threading.Thread(target=SDR_EXECUTIVE(P,False).Run,args=(), name='SDR_EXEC')
-    worker.setDaemon(True)
+    worker.daemon=True
     worker.start()
     #print('RB_SIZE1:',P.RB_SIZE)
     #P.RB_SIZE        = 4*P.OUT_CHUNK_SIZE

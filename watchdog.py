@@ -153,6 +153,7 @@ class WatchDog:
                 tag        = player.rb.tag
                 nsamps     = player.rb.nsamps 
                 size       = player.rb.size
+                qsize      = player.rb.buf.qsize()
                 Start_Time = player.Start_Time
                 fs         = player.fs
             else:
@@ -175,7 +176,7 @@ class WatchDog:
             print('WATCH DOG Check Ringbuff: %s Latency = %5d samp = %4.2f sec\t%d' % \
                   (tag,nsamps,latency,size),end='',flush=True)
         if self.P.LOG2:
-            self.P.LOG2.write('%s,%f,%d,%f,%f\n' % (tag,t,nsamps,latency,self.avg_latency[irx]) )
+            self.P.LOG2.write('%s,%f,%d,%f,%f,%d\n' % (tag,t,nsamps,latency,self.avg_latency[irx],qsize) )
             self.P.LOG2.flush()
 
         dt = t - Start_Time
@@ -220,9 +221,10 @@ class WatchDog:
                 nsamps = self.P.rb_af.nsamps
                 tag    = self.P.rb_af.tag
                 size   = self.P.rb_af.size
+                qsize  = self.P.rb_af.buf.qsize()
                 pct    = float(100*nsamps)/float(size)
                 print('Watch Dog:',tag,'nsamps =',nsamps,'\tsize=',size,'\tpct=',pct)
-                self.P.LOG2.write('%s,%f,%d,%d,%f\n' % (tag,t,nsamps,size,pct))
+                self.P.LOG2.write('%s,%f,%d,%d,%f %d\n' % (tag,t,nsamps,size,pct,qsize) )
                 self.P.LOG2.flush()
 
         if self.P.USE_FAKE_RTL and False:

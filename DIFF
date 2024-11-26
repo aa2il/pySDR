@@ -12,6 +12,7 @@
 set ROOT="/media/${USER}/marconi"
 #set ROOT="/media/${USER}/hertz"
 set ROOT="/media/${USER}/sproul"
+set ROOT="/media/${USER}/sproul-win"
 #set ROOT="/mnt/sproul"
 #set ROOT="/media/${USER}/3D76-ECB1"
 #set ROOT="/media/${USER}/acer"
@@ -35,7 +36,7 @@ echo PTH=$PTH
 set old=${ROOT}${PTH}
 
 # Overide if necessary
-set old="save77"
+#set old="save77"
 echo OLD=$old
 
 rm -f DIFFS

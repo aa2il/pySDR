@@ -193,8 +193,10 @@ class RUN_TIME_PARAMS:
             sys.exit(0)
 
         # Init
-        self.MP_SCHEME    = 1            # For now
-        self.threads      = []
+        self.MP_SCHEME      = 1            # For now
+        self.threads        = []
+        self.AF_FILTER_NUM  = None
+        self.audio_playback = False
 
         # Determine SDR type which is connected to computer
         self.PLATFORM     = platform.system()
