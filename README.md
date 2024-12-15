@@ -41,6 +41,15 @@ To be continued....
       git clone https://github.com/aa2il/pySDR
       git clone https://github.com/aa2il/libs
       git clone https://github.com/aa2il/data
+
+      You will also need to make sure that the python interpretor can find the libraries.
+      Under tcsh, execute the following and/or add it to your .cshrc file:
+
+              setenv PYTHONPATH $HOME/Python/libs
+
+      Under bash, the equivalent is something like this:
+
+              export PYTHONPATH="$HOME/Python/libs"
       
 3) Build components that deal with the SDR device:
    Note! As of October 2024, the latest version of Soapy is broken.  I'm using an older build.
