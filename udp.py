@@ -1,7 +1,7 @@
 #########################################################################################
 #
 # udp.py - Rev. 1.0
-# Copyright (C) 2022-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2022-5 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # UDP messaging for pySDR.
 #
@@ -22,6 +22,7 @@
 from tcp_server import *
 from rig_io.socket_io import SetTXSplit
 from utilities import freq2band
+from Plotting import SPOT
 
 #########################################################################################
 
@@ -108,6 +109,29 @@ def udp_msg_handler(self,sock,msg):
                 
             return
 
+        elif mm[0]=='LOG':
+
+            # LOG:CALL:BAND:FREQ:MODE:DATE_OFF:TIME_OFF
+            print('\nUDP: Received LOGged contact:',mm)
+
+            call = mm[1]
+            freq = float( mm[3] )
+            c    = 'r'
+
+            if False:
+                # Add another spot - this leads to a memory leak - probably wrong thread
+                #print('\tcall=',call,'\tfreq=',freq)
+                item=P.gui.plots_af.addSpot(freq,100,call,c)
+                P.gui.Spots.append(SPOT(call,freq,c,item))
+
+            else:
+                # Change color of any spots for this callsign
+                # If this causes a memory leak, will need to setup something like NEW_SPOT_LIST
+                for spot in P.gui.Spots:
+                    if spot.call==call:
+                        spot.item.setColor('red')
+            return
+            
         elif mm[0]=='RunFreq' and False:
 
             # This pathway uses the bandmap as the arbiter - more up to date but very slow

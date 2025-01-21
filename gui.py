@@ -1,7 +1,7 @@
 ############################################################################
 #
 # gui.py - Rev 1.0
-# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # GUI-related functions for pySDR
 #
@@ -44,15 +44,6 @@ try:
 except ImportError:
     from PyQt5.QtCore import QTimer,qVersion
 
-############################################################################
-
-# Structure to hold a bandmap spot
-class SPOT:
-    def __init__(self,call,freq,color):
-        self.call=call
-        self.freq=freq
-        self.color=color
-        
 ############################################################################
 
 # The GUI 
@@ -1339,8 +1330,8 @@ class SDR_GUI(QMainWindow):
                         # Catch all so program doesn't crash & burn
                         c='w'
 
-                    self.plots_af.addSpot(freq,100,call,c)
-                    self.Spots.append(SPOT(call,freq,c))
+                    item = self.plots_af.addSpot(freq,100,call,c)
+                    self.Spots.append(SPOT(call,freq,c,item))
                 P.NEW_SPOT_LIST=None
                 
 

@@ -1,7 +1,7 @@
 ############################################################################
 #
 # Plotting.py - Rev 1.1
-# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Plotting related functions for pySDR
 #
@@ -45,6 +45,16 @@ from utilities import error_trap
 BIG_DOT=False
 #BIG_DOT=True
 
+############################################################################
+
+# Structure to hold a bandmap spot
+class SPOT:
+    def __init__(self,call,freq,color,item):
+        self.call  = call
+        self.freq  = freq
+        self.color = color
+        self.item  = item
+        
 ################################################################################
 
 def get_color_map(key, pos_min, pos_max):
@@ -592,7 +602,7 @@ class three_box_plot():
 
     # Add spots to waterfall - a work in progress
     def addSpot(self,x,y,txt,c):
-        #print('Plotting->AddSpot:',x,y,txt,c)
+        #print('Plotting->AddSpot: x=',x,'\ty=',y,'\ttxt=',txt,'\tc=',c)
         if self.TRANSPOSE:
             y,x=x-0.1,y
             self.imager.xpad=20
@@ -631,6 +641,8 @@ class three_box_plot():
         #                         "background-color: lightgoldenrodyellow ;
         self.p3.addItem(spot,ignoreBounds=True)
         self.SpotItems.append(spot)
+
+        return spot
 
     def mouseClicked2(self,evt):
         print("\nSPOTS Mouse click detected: evt=",evt)
