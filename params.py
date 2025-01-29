@@ -428,6 +428,7 @@ class RUN_TIME_PARAMS:
         self.fp                = [-1]*3
         self.status            = [0]*3
         self.NEW_SPOT_LIST     = None
+        self.CHANGE_SPOT_COLOR = None
 
         # Compute size of RF sampling chunk and playback ring buffer:
         # Pulse audio wants in chunks of 1024 samples ...

@@ -119,17 +119,24 @@ def udp_msg_handler(self,sock,msg):
             c    = 'r'
 
             if False:
-                # Add another spot - this leads to a memory leak - probably wrong thread
+                # Add another spot - this leads to a big memory leak - wrong thread
                 #print('\tcall=',call,'\tfreq=',freq)
                 item=P.gui.plots_af.addSpot(freq,100,call,c)
                 P.gui.Spots.append(SPOT(call,freq,c,item))
 
-            else:
+            elif False:
                 # Change color of any spots for this callsign
-                # If this causes a memory leak, will need to setup something like NEW_SPOT_LIST
+                # This causes a smaller memory leak but let's try something else
                 for spot in P.gui.Spots:
                     if spot.call==call:
                         spot.item.setColor('red')
+
+            else:
+
+                # Change color of any spots for this callsign -
+                # Create list so this gets done in the proper thread
+                self.P.CHANGE_SPOT_COLOR=[call,'red']
+                
             return
             
         elif mm[0]=='RunFreq' and False:

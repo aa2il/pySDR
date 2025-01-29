@@ -1334,6 +1334,14 @@ class SDR_GUI(QMainWindow):
                     self.Spots.append(SPOT(call,freq,c,item))
                 P.NEW_SPOT_LIST=None
                 
+            if P.CHANGE_SPOT_COLOR:
+                print('UPDATEPSD: Change Spot ColorList:',P.CHANGE_SPOT_COLOR)
+                call = P.CHANGE_SPOT_COLOR[0]
+                c    = P.CHANGE_SPOT_COLOR[1]
+                for spot in self.Spots:
+                    if spot.call==call:
+                        spot.item.setColor(c)
+                P.CHANGE_SPOT_COLOR=None
 
         if P.SHOW_BASEBAND_PSD:
             P.PSD_BB_FC3 += 0*0.001*P.FOFFSET
