@@ -1,11 +1,11 @@
-#! /usr/bin/python3 -u 
+#! /home/joea/miniconda3/envs/aa2il/bin/python -u
 #
-# NEW: /home/joea/.venv/bin/python -u
+# NEW: /home/joea/miniconda3/envs/aa2il/bin/python -u
 # OLD: /usr/bin/python3 -u 
 ############################################################################
 #
 # pySDR.py - Rev 1.0
-# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # A complete SDR written in Python.
 #
