@@ -1,7 +1,7 @@
 ############################################################################
 #
 # gui.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # GUI-related functions for pySDR
 #
@@ -55,9 +55,9 @@ class SDR_GUI(QMainWindow):
         # Init
         self.P=P
         print('QT Version=',qVersion())
-        
+        self.Spots=[]
+                
         # Put up splash screen
-        self.P = P
         self.parent=parent
         self.splash=SPLASH_SCREEN(P.app,'splash.png')    
         self.status_bar = self.splash.status_bar
@@ -1324,6 +1324,8 @@ class SDR_GUI(QMainWindow):
                         c='orange'
                     elif c=='y':
                         c='yellow'
+                    elif c=='c':
+                        c='coral'
                     elif c in ['g','lg']:
                         c='lightgreen'
                     elif len(c)==1:
