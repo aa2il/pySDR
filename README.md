@@ -171,7 +171,7 @@ To be continued....
           conda install -c conda-forge soapysdr-module-rtlsdr
 
      -- From the local build (see Installation under Linux, step 3 above) - this gives both RTL dongle and sdrplay:
-        This is what I am currently using:     
+        This is what I am currently using (and still works under python 3.13):
           
           cd ~/miniconda3/envs/aa2il/lib/python3.12/site-packages/
           rm -f SoapySDR.py _SoapySDR.so 

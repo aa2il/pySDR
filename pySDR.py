@@ -5,7 +5,7 @@
 ############################################################################
 #
 # pySDR.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # A complete SDR written in Python.
 #
@@ -76,6 +76,7 @@ import threading
 from profiler import *
 from udp import open_udp_client,KEYER_UDP_PORT
 from utilities import Memory_Monitor
+#from pprint import pprint
 
 ################################################################################
 
@@ -88,7 +89,7 @@ logging.basicConfig(
 
 ################################################################################
 
-VERSION='1.0'
+VERSION='1.1'
 
 ################################################################################
 
@@ -133,7 +134,6 @@ def start_threads(P):
     
     # Instantiate servers allowing external control of each RX
     P.Stopper = threading.Event()
-    #print "P=",pprint(vars(P))
     if P.HAMLIB_SERVERS:
         # Full suite
         for i in range(P.NUM_RX+1):
@@ -212,12 +212,16 @@ if __name__ == '__main__':
     print('\n   pySDR v',VERSION,'beginning ...\n')
 
     # Set-up run-time params
+    print('\tPython version=',sys.version_info[0],'.',
+          sys.version_info[1],'.',sys.version_info[2],'\n')
     P=RUN_TIME_PARAMS()
+    #print("P=")
+    #pprint(vars(P))
 
     # Memory Monitor
     if True:
         P.MEM = Memory_Monitor('/tmp/SDR_MEMORY.TXT')
-
+ 
     # Put up splash screen
     P.app  = QApplication(sys.argv)
     P.gui = SDR_GUI(P)
