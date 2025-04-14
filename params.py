@@ -183,6 +183,8 @@ class RUN_TIME_PARAMS:
                               action='store_true')
         arg_proc.add_argument('-desktop',type=int,default=None,
                               help='Desk Top Work Space No.')
+        arg_proc.add_argument('-settings',action='store_true',
+                              help='Open setting window')
         args = arg_proc.parse_args()
 
         if False:
@@ -465,6 +467,20 @@ class RUN_TIME_PARAMS:
         # Adjust tuning offset so we don't have to compute sines/cosines
         # over and over in the local osc
         adjust_foffset(self)
+
+        """
+        # Read config file
+        self.SETTINGS,self.RCFILE = read_settings('.keyerrc')
+        if args.settings:
+            SettingsWin = SETTINGS_GUI(None,self,BLOCK=True)
+
+        # Where to find/put data files
+        #self.PLATFORM=platform.system()
+        self.DATA_DIR=self.SETTINGS['MY_DATA_DIR']
+        if self.DATA_DIR=='':
+            self.DATA_DIR='~/Python/data'
+        print('DATA_DIR=',self.DATA_DIR)
+        """
 
     def list_fields(self):
         vv=vars(self)

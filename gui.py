@@ -35,7 +35,7 @@ from rig_io.presets import *
 from widgets_qt import *
 import collections
 from utils import  show_threads
-from utilities import freq2band
+from utilities import freq2band,find_resource_file,error_trap
 try:
     if True:
         from PyQt6.QtCore import QTimer,qVersion
@@ -417,7 +417,9 @@ class SDR_GUI(QMainWindow):
 
         # Add presets
         ncols2=6
-        presets = read_presets2(None,'Presets')
+        #PRESETS_FNAME = P.DATA_DIR + '/presets.xls'
+        PRESETS_FNAME = find_resource_file('presets.xls')
+        presets = read_presets2(None,PRESETS_FNAME,'Presets')
         for line in presets:
             grp=line['Group']
             if grp=='Sats':
@@ -1389,7 +1391,7 @@ class SDR_GUI(QMainWindow):
             return
         
         if self.follow_freq_cb.isChecked() or self.so2v_cb.isChecked():
-            #print('RIG RETUNE - following rig freq or so2v ...')
+            #print('RIG RETUNE: Following rig freq or so2v ...')
             if not self.P.sock.active:
                 print('RIG_RETUNE 1: *** No connection to rig *** ')
                 self.follow_freq_cb.setChecked(False)
@@ -1402,13 +1404,15 @@ class SDR_GUI(QMainWindow):
                 self.P.sock.set_sub_dial(func='VFO-B')
 
             if self.split_cb.isChecked():
+                print('RIG RETUNE: Reading clarifier ...')
                 df_rx,df_tx=self.P.sock.read_clarifier()
+                print('RIG RETUNE: Setting sub-dial ...')
                 self.P.sock.set_sub_dial(func='CLAR')
                 if df_tx!=0:
                     df=df_tx
                 else:
                     df=df_rx
-                #print('SPLIT - Clarifier df=',df_rx,df_tx,df)
+                print('RIG_RETUNE: Clarifier df rx/tx=',df_rx,df_tx,df)
             else:
                 df=0
 
@@ -1824,15 +1828,15 @@ class SDR_GUI(QMainWindow):
             elif self.split_cb.isChecked():
                 
                 # DX split - Adjust Clarifier
+                print('MOUSE CLICK RF: Reading clarifier ...')
                 frq1 = self.P.sock.get_freq()*1e-3
                 df = frq-frq1
-                print("Right button - Setting Split",frq,frq1,df)
+                print("\tRight button - Setting Split frq-frq1=df:",frq,frq1,df)
                 SetTXSplit(self.P,df)
 
                 # Also tune SDR to pile-up so we can listen to it
-                #vfo='A'
                 vfo='B'
-                #print("Right button - Freq Select ...",frq,True,vfo)
+                print("MOUSE CLICK RF: Right button - Freq Select ...",frq,True,vfo)
                 self.FreqSelect(frq,True,vfo)
                 
         elif button==4 or button==Qt.MouseButton.MiddleButton:
@@ -1878,14 +1882,15 @@ class SDR_GUI(QMainWindow):
     # Callback to change center freq
     def FreqSelect(self,new_frq,tune_rig=True,VFO=[]):
         P = self.P
-        print('&&&&&&&&&&&&&&&&&& RX UPDATE FREQ &&&&&&&&&&&&&&&&',P.FC,new_frq,VFO,tune_rig)
+        print('&&&&&&&&&&&&&&&&&& RX UPDATE FREQ &&&&&&&&&&&&&&&&',P.FC,
+              '\tfrq=',new_frq,'\tvfo=',VFO,'\ttune=',tune_rig)
 
         # If SO2V and VFO A or SDR is listening to rig's IF, only change rig freq
         if P.RIG_IF!=0 or (self.so2v_cb.isChecked() and VFO=='A'):
             #print 'Howdy Ho!'
             vfo='A'
             if new_frq>0:
-                print('@@@@@@@@@@@@ Tuning rig only',new_frq,vfo)
+                print('\t@@@@@@@@@@@@ Tuning rig only',new_frq,vfo)
                 P.sock.set_freq(float(new_frq),vfo)
                 P.frqArx = new_frq
                 self.itune_cnt=0
@@ -1902,9 +1907,9 @@ class SDR_GUI(QMainWindow):
             f2 = new_frq[irx]*1000.
         if f2>0:
             if P.REPLAY_MODE:
-                print('Changing',P.REPLAY_FC,f2,P.FOFFSET)
+                print('\tChanging',P.REPLAY_FC,f2,P.FOFFSET)
                 P.FOFFSET = P.lo.change_freq( P.REPLAY_FC-f2 + 0*P.BFO )
-                print('Replay mode:',P.FOFFSET)
+                print('\tReplay mode:',P.FOFFSET)
             else:
                 if P.MP_SCHEME==2:
                     #f1 = self.mp_comm('getFrequency') + P.FOFFSET
@@ -1933,7 +1938,7 @@ class SDR_GUI(QMainWindow):
                              self.so2v_cb.isChecked() ):
                 # Keep track of current rig vfo
                 rig_vfo = P.sock.get_vfo()
-                print('Current rig vfo=',rig_vfo)
+                print('\tRe-tune rig - Current rig vfo=',rig_vfo)
 
                 # Tune the rig
                 if len(VFO)==0:
@@ -1942,8 +1947,8 @@ class SDR_GUI(QMainWindow):
                         vfo='B'
                 else:
                     vfo=VFO
-                print('&&&&&&&&&&&& Tuning rig',f2,vfo)
-                P.sock.set_freq(.001*f2,vfo)
+                print('&&&&&&&&&&&& Tuning rig - f2=',f2,'\tvfo=',vfo)
+                P.sock.set_freq(.001*f2,vfo,VERBOSITY=0)
                 self.itune_cnt=0
 
                 mode = P.MODE
@@ -2008,8 +2013,6 @@ class SDR_GUI(QMainWindow):
                     if rig_vfo[0]!=vfo:
                         P.sock.set_vfo(rig_vfo[0])
 
-                    
-
         # Manage GUI LCD display
         if f2>0:
             self.lcd.set(.001*f2)
@@ -2017,6 +2020,7 @@ class SDR_GUI(QMainWindow):
             for i in range(P.NUM_RX):
                 self.rx_frq_box[i].setText( "{0:,.1f} KHz".format(.001*P.FC[i]) )
 
+                
     # Function to set demod mode
     def ModeSelect(self,idx):
         # If SDR is listening to rig's IF, only change rig freq
