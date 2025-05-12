@@ -32,6 +32,56 @@ This project initially started out (circa 2017) as a simple demodulator for broa
 
 To be continued....
                                                                                 
+# Installation under Linux using uv:
+
+0) This seems to be the easiest/best solution.  You will need to install uv on your system (once):
+
+      curl -LsSf https://astral.sh/uv/install.sh | sh      
+      rehash     
+
+1) Clone gitub pySDR, libs and data repositories
+      
+      cd
+      mkdir Python
+      cd Python
+      git clone https://github.com/aa2il/pySDR
+      git clone https://github.com/aa2il/libs
+      git clone https://github.com/aa2il/data
+
+2) One of the features of uv is that the virtual environment is included in the github repository.  You should NOT have to do anything since uv will install the environment and required packages the first time you run wclock.:
+
+For the record, here is how I set up the environment:
+
+     cd ~/Python/pySDR
+     uv init
+     rm main.py
+     uv add -r requirements.txt
+
+Note: pySDR.py uses qt, not tk, so there is no problem with the recent versions of python (e.g. 3.13).
+
+3) Patch-up SoapySDR: uv does not seem to have a version of SoapySDR so we need to cobbled this together:
+
+     cd ~/Python/pySDR/.venv/lib/python3.13/site-packages
+     rm -f SoapySDR.py _SoapySDR.so 
+     ln -s ~/Dev/SoapySDR/build/swig/python/SoapySDR.py 
+     ln -s ~/Dev/SoapySDR/build/swig/python/_SoapySDR.so 
+
+3) Make sure pySDR.py is executable and set PYTHON PATH so os can find libraries:
+
+     cd ~/Python/pySDR
+     chmod +x pySDR.py
+
+   - Under tcsh:      setenv PYTHONPATH $HOME/Python/libs
+   - Under bash:      export PYTHONPATH="$HOME/Python/libs"
+   
+4) Bombs away:
+
+     uv run pySDR.py
+
+   or, 
+
+     ./pySDR.py
+
 # Installation under Linux:
 
 1) Uses python3 and pyqt5

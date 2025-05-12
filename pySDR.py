@@ -1,3 +1,5 @@
+#!/usr/bin/env -S uv run --script
+#
 #! /home/joea/miniconda3/envs/aa2il/bin/python -u
 #
 # NEW: /home/joea/miniconda3/envs/aa2il/bin/python -u

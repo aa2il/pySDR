@@ -1,0 +1,22 @@
+[project]
+name = "pysdr"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.10.3",
+    "numpy>=2.2.5",
+    "pandas>=2.2.3",
+    "psutil>=7.0.0",
+    "pyaudio>=0.2.14",
+    "pyhamtools>=0.11.0",
+    "pyqt6>=6.9.0",
+    "pyqtgraph>=0.13.7",
+    "pyrtlsdr>=0.3.0",
+    "pyserial>=3.5",
+    "scipy>=1.15.3",
+    "setuptools>=80.4.0",
+    "unidecode>=1.4.0",
+    "xlrd>=2.0.1",
+]
