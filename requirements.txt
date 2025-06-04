@@ -1,5 +1,7 @@
 ###############################################################################
 #
+# Code has been migrated to uv - See README.md for instructions.
+#
 # This was how this used to work:
 #     pip3 install -r requirements.txt
 #
@@ -13,13 +15,6 @@
 #     pip3 install --upgrade pyqtgraph
 #
 # but, in true linux fashion, it was broken in Python 3.11 - great jobs guys!
-#
-# Try this:
-#
-#    sudo apt install python3.12-venv
-#    mkdir -p ~/.venvs
-#    python3 -m venv ~/.venv --system-site-packages
-#    ~/.venv/bin/python -m pip install -r requirements.txt
 #
 ###############################################################################
 #
@@ -45,7 +40,6 @@
 
 setuptools
 
-#pyqt5
 pyqt6
 #PySide6             # Cant use this - has a bug
 matplotlib
@@ -61,6 +55,9 @@ pandas
 numpy
 scipy
 psutil
+
+pygame
+pyudev
 
 # It might be a lot easier in the future to just use mini-conda:
 # conda install -c conda-forge soapysdr

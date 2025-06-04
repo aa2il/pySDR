@@ -43,6 +43,7 @@ from pprint import pprint
 from utils import setupSDR,check_sdr_settings
 from utilities import error_trap
 import sig_proc as dsp
+from audio_io import AudioIO
 from scipy.io import savemat
 from Tables import AF_BWs
 import multiprocessing as mp
@@ -69,7 +70,7 @@ def RX_Thread(P,irx):
     else:
         device = None
     rb = dsp.ring_buffer2('Audio'+str(irx+1),P.RB_SIZE)
-    player = dsp.AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,rb,device,'B')
+    player = AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,rb,device,'B')
 
     # Process raw data from main
     print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ RX Thread ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',irx)
@@ -846,14 +847,14 @@ class SDR_EXECUTIVE:
                 device = None
             rb = dsp.ring_buffer2('Audio'+str(irx+1),P.RB_SIZE)
             print('Opening audio playback for rx',irx,' ...')
-            player = dsp.AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,rb,device,'B',Tag='RX '+str(irx))
+            player = AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,rb,device,'B',Tag='RX '+str(irx))
             P.players.append(player)
 
         # Provide Audio playback on speakers also
         if P.LOOPBACK and P.AUX_AUDIO:
             print('Providing audio playback on both loopback and speakers ...')
             P.aux_rb = dsp.ring_buffer2('Audio Aux',P.RB_SIZE)
-            P.aux_player = dsp.AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,P.aux_rb,
+            P.aux_player = AudioIO(P,P.FS_OUT+P.FS_OUT_CORR,P.aux_rb,
                                            None,'B',Tag='LOOPBACK AUX')
             P.AUX_USE_BPF=True
             if P.AUX_USE_BPF:
