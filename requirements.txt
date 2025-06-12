@@ -2,6 +2,14 @@
 #
 # Code has been migrated to uv - See README.md for instructions.
 #
+# In a nutshel:
+#
+# rm -r .venv/ pyproject.toml .python-version uv.lock
+# uv init
+# uv add -r requirements.txt
+#
+###############################################################################
+#
 # This was how this used to work:
 #     pip3 install -r requirements.txt
 #
@@ -41,9 +49,13 @@
 setuptools
 
 pyqt6
-#PySide6             # Cant use this - has a bug
-matplotlib
+# This seems to mostly work except with pyqtgraph under uv.
+# In the apst, there was a bug that caused a gui program to hang on final
+# but his seems to be fixed now
+#PySide6
 pyqtgraph
+
+matplotlib
 pyserial
 xlrd
 unidecode

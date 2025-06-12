@@ -36,12 +36,18 @@ from widgets_qt import *
 import collections
 from utils import  show_threads
 from utilities import freq2band,find_resource_file,error_trap
-try:
-    if True:
-        from PyQt6.QtCore import QTimer,qVersion
-    else:
-        from PySide6.QtCore import QTimer,qVersion
-except ImportError:
+
+if True:
+    # Dynamic importing - this works!
+    from widgets_qt import QTLIB
+    exec('from '+QTLIB+'.QtWidgets import QCheckBox,QSlider,QTabWidget,QLineEdit,QComboBox,QPushButton,'+ \
+         'QApplication,QMainWindow,QWidget,QGridLayout,QSizePolicy')
+    exec('from '+QTLIB+'.QtCore import QRect,QTimer,qVersion')
+elif False:
+    from PyQt6.QtCore import QTimer,qVersion
+elif False:
+    from PySide6.QtCore import QTimer,qVersion
+else:
     from PyQt5.QtCore import QTimer,qVersion
 
 ############################################################################

@@ -21,16 +21,21 @@
 
 import sys
 import pyqtgraph as pg
-try:
-    if True:
-        from PyQt6.QtWidgets import QLCDNumber,QLabel
-        from PyQt6.QtCore import * 
-        from PyQt6.QtGui import QTransform,QFont
-    else:
-        from PySide6.QtWidgets import QLCDNumber,QLabel
-        from PySide6.QtCore import *
-        from PySide6.QtGui import QTransform,QFont
-except ImportError:
+if True:
+    # Dynamic importing - this works!
+    from widgets_qt import QTLIB
+    exec('from '+QTLIB+'.QtWidgets import QLCDNumber,QLabel')
+    exec('from '+QTLIB+'.QtCore import Qt')
+    exec('from '+QTLIB+'.QtGui import QTransform,QFont')    
+elif False:
+    from PyQt6.QtWidgets import QLCDNumber,QLabel
+    from PyQt6.QtCore import * 
+    from PyQt6.QtGui import QTransform,QFont
+elif False:
+    from PySide6.QtWidgets import QLCDNumber,QLabel
+    from PySide6.QtCore import *
+    from PySide6.QtGui import QTransform,QFont
+else:
     from PyQt5.QtWidgets import QLCDNumber,QLabel
     from PyQt5.QtCore import * 
     from PyQt5.QtGui import QTransform,QFont

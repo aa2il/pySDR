@@ -34,12 +34,15 @@ import numpy as np
 from rig_io import bands
 from utilities import freq2band
 
-try:
-    if True:
-        from PyQt6.QtCore import QTimer
-    else:
-        from PySide6.QtCore import QTimer
-except ImportError:
+if True:
+    # Dynamic importing - this works!
+    from widgets_qt import QTLIB
+    exec('from '+QTLIB+'.QtCore import QTimer')
+elif False:
+    from PyQt6.QtCore import QTimer
+elif False:
+    from PySide6.QtCore import QTimer
+else:
     from PyQt5.QtCore import QTimer
 
 ############################################################################

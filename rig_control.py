@@ -22,14 +22,19 @@
 #
 ################################################################################
 
-try:
-    if True:
-        from PyQt6.QtWidgets import *
-        from PyQt6.QtCore import * 
-    else:
-        from PySide6.QtWidgets import *
-        from PySide6.QtCore import *
-except ImportError:
+if True:
+    # Dynamic importing - this works!
+    from widgets_qt import QTLIB
+    exec('from '+QTLIB+'.QtWidgets import QWidget,QGridLayout,QButtonGroup,QLabel,QRadioButton,QSlider,'+\
+         'QLineEdit,QPushButton')
+    exec('from '+QTLIB+'.QtCore import Qt')
+elif False:
+    from PyQt6.QtWidgets import *
+    from PyQt6.QtCore import * 
+elif False:
+    from PySide6.QtWidgets import *
+    from PySide6.QtCore import *
+else:
     from PyQt5.QtWidgets import *
     from PyQt5.QtCore import * 
 from rig_io.socket_io import *

@@ -35,14 +35,19 @@ import io
 from threading import enumerate
 from rig_io import bands,CONNECTIONS,RIGS
 from multiprocessing import active_children
-try:
-    if True:
-        from PyQt6.QtWidgets import QMessageBox,QApplication
-        from PyQt6.QtGui import QIcon, QPixmap
-    else:
-        from PySide6.QtWidgets import QMessageBox,QApplication
-        from PySide6.QtGui import QIcon, QPixmap
-except ImportError:
+
+if True:
+    # Dynamic importing - this works!
+    from widgets_qt import QTLIB
+    exec('from '+QTLIB+'.QtWidgets import QMessageBox,QApplication')
+    exec('from '+QTLIB+'.QtGui import QIcon, QPixmap')
+elif False:
+    from PyQt6.QtWidgets import QMessageBox,QApplication
+    from PyQt6.QtGui import QIcon, QPixmap
+elif False:
+    from PySide6.QtWidgets import QMessageBox,QApplication
+    from PySide6.QtGui import QIcon, QPixmap
+else:
     from PyQt5.QtWidgets import QMessageBox,QApplication
     from PyQt5.QtGui import QIcon, QPixmap
 
