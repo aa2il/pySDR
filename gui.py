@@ -633,6 +633,10 @@ class SDR_GUI(QMainWindow):
         # Finally, we're ready to show the gui
         print('------------------------- And Away We Go !!!!!!!!!!!!!!!!!!!!!!')
         self.show()
+        if P.MINIMIZED:
+            self.showMinimized()
+        else:
+            self.showNormal()
 
         # Move to lower left corner of screen
         #screen_resolution = self.P.app.desktop().screenGeometry()

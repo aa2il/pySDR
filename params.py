@@ -181,6 +181,8 @@ class RUN_TIME_PARAMS:
                               action='store_true')
         arg_proc.add_argument('-no_hamlib', help="Disable hamlib servers",
                               action='store_true')
+        arg_proc.add_argument('-minimized', help="Minimize Main Window",
+                              action='store_true')
         arg_proc.add_argument('-desktop',type=int,default=None,
                               help='Desk Top Work Space No.')
         arg_proc.add_argument('-settings',action='store_true',
@@ -203,6 +205,7 @@ class RUN_TIME_PARAMS:
         # Determine SDR type which is connected to computer
         self.PLATFORM     = platform.system()
         self.TEST_MODE    = args.test
+        self.MINIMIZED    = args.minimized
         self.GEO          = args.geo
         self.DESKTOP      = args.desktop
         self.USE_FAKE_RTL = args.fake
