@@ -21,24 +21,12 @@
 
 import sys
 import pyqtgraph as pg
-if True:
-    # Dynamic importing - this works!
-    from widgets_qt import QTLIB
-    exec('from '+QTLIB+'.QtWidgets import QLCDNumber,QLabel')
-    exec('from '+QTLIB+'.QtCore import Qt')
-    exec('from '+QTLIB+'.QtGui import QTransform,QFont')    
-elif False:
-    from PyQt6.QtWidgets import QLCDNumber,QLabel
-    from PyQt6.QtCore import * 
-    from PyQt6.QtGui import QTransform,QFont
-elif False:
-    from PySide6.QtWidgets import QLCDNumber,QLabel
-    from PySide6.QtCore import *
-    from PySide6.QtGui import QTransform,QFont
-else:
-    from PyQt5.QtWidgets import QLCDNumber,QLabel
-    from PyQt5.QtCore import * 
-    from PyQt5.QtGui import QTransform,QFont
+
+from widgets_qt import QTLIB
+exec('from '+QTLIB+'.QtWidgets import QLCDNumber,QLabel,QWidget')
+exec('from '+QTLIB+'.QtCore import Qt')
+exec('from '+QTLIB+'.QtGui import QTransform,QFont')    
+
 from Tables import *
 import sig_proc as dsp
 import numpy as np
@@ -288,9 +276,42 @@ class imager():
         
 ################################################################################
 
+"""
+class MyWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+
+    def closeEvent(self, event):
+        reply = QMessageBox.question(self, 'Message', 'Are you sure to quit?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+"""
+
+# Override for main plotting widgt so we can capture the close button
+class MyGraphicsLayoutWidget(pg.GraphicsLayoutWidget):
+    def __init__(self, *args, **kwargs):
+        super(MyGraphicsLayoutWidget, self).__init__(*args, **kwargs)
+        self.closeCB=None
+
+    # Hook to set up callback when indow is close
+    def setCloseCB(self,callback):
+        self.closeCB=callback
+            
+    def closeEvent(self, event):
+        print("()(()()()()()( User has clicked the big X on the main window ()()()()()))")
+        if self.closeCB:
+            self.closeCB()
+        #p=self.parentWidget()
+        #print('PARENT=',p)
+
+        
 # Object to plot data and its PSD
 class three_box_plot():
-    def __init__(self,P,win_label,TITLE1,TITLE2,fs,foff,chunk_size,Nfft,overlap,clickCB=None,TRANSPOSE=False):
+    def __init__(self,P,win_label,TITLE1,TITLE2,fs,foff,chunk_size,Nfft,overlap,
+                 clickCB=None,TRANSPOSE=False,closeCB=None):
         self.P = P
         self.enable_mouse=True # This will be the driver routine for the mouse
         self.clickCB = clickCB
@@ -301,7 +322,11 @@ class three_box_plot():
         self.first_time=True
 
         # Create plot window and start out with it hidden
-        self.pwin = pg.GraphicsLayoutWidget(show=False,title=win_label)
+        if False:
+            self.pwin = pg.GraphicsLayoutWidget(show=False,title=win_label)
+        else:
+            self.pwin = MyGraphicsLayoutWidget(show=False,title=win_label)
+            self.pwin.setCloseCB(closeCB)
         self.pwin.hide()
 
         # Tighten borders - order looks like LEFT, TOP, RIGHT, BOTTOM

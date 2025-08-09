@@ -37,18 +37,10 @@ import collections
 from utils import  show_threads
 from utilities import freq2band,find_resource_file,error_trap
 
-if True:
-    # Dynamic importing - this works!
-    from widgets_qt import QTLIB
-    exec('from '+QTLIB+'.QtWidgets import QCheckBox,QSlider,QTabWidget,QLineEdit,QComboBox,QPushButton,'+ \
-         'QApplication,QMainWindow,QWidget,QGridLayout,QSizePolicy')
-    exec('from '+QTLIB+'.QtCore import QRect,QTimer,qVersion')
-elif False:
-    from PyQt6.QtCore import QTimer,qVersion
-elif False:
-    from PySide6.QtCore import QTimer,qVersion
-else:
-    from PyQt5.QtCore import QTimer,qVersion
+from widgets_qt import QTLIB
+exec('from '+QTLIB+'.QtWidgets import QCheckBox,QSlider,QTabWidget,QLineEdit,QComboBox,QPushButton,'+ \
+     'QApplication,QMainWindow,QWidget,QGridLayout,QSizePolicy')
+exec('from '+QTLIB+'.QtCore import QRect,QTimer,qVersion')
 
 ############################################################################
 
@@ -618,16 +610,25 @@ class SDR_GUI(QMainWindow):
         #title="pySDR by AA2IL"
         self.plots_rf=three_box_plot(P,"RF - AA2IL","RF Time Series","RF PSD", \
                                      P.SRATE/1000.,P.FOFFSET/1000.,P.IN_CHUNK_SIZE,
-                                     2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF,P.TRANSPOSE)
+                                     2*P.IN_CHUNK_SIZE,0.,
+                                     clickCB=self.MouseClickRF,
+                                     TRANSPOSE=P.TRANSPOSE,
+                                     closeCB=self.StartStopRF_PSD)
         self.plots_rf.hide()
         OVERLAP = 0.5   # 0.75
         self.plots_af=three_box_plot(P,"Demod Audio - AA2IL","AF Time Series","AF PSD", \
                                      P.FS_OUT/1000.,0,4*P.OUT_CHUNK_SIZE,
-                                     8*P.OUT_CHUNK_SIZE,OVERLAP,self.MouseClickRF,P.TRANSPOSE)
+                                     8*P.OUT_CHUNK_SIZE,OVERLAP,
+                                     clickCB=self.MouseClickRF,
+                                     TRANSPOSE=P.TRANSPOSE,
+                                     closeCB=self.StartStopAF_PSD)
         self.plots_af.hide()
         self.plots_bb=three_box_plot(P,"Baseband IQ - AA2IL","Baseband Time Series", \
                                      "Baseband PSD", P.FS_OUT/1000.,0,P.IN_CHUNK_SIZE,
-                                     2*P.IN_CHUNK_SIZE,0.,self.MouseClickRF,P.TRANSPOSE)
+                                     2*P.IN_CHUNK_SIZE,0.,
+                                     clickCB=self.MouseClickRF,
+                                     TRANSPOSE=P.TRANSPOSE,
+                                     closeCB=self.StartStopBaseband_PSD)
         self.plots_bb.hide()
 
         # Finally, we're ready to show the gui
@@ -1095,6 +1096,8 @@ class SDR_GUI(QMainWindow):
         else:
             self.btn2.setText('Start RF PSD')
             self.plots_rf.pwin.hide()
+            self.btn2.setChecked(False)
+            self.showNormal()
 
         self.P.SHOW_RF_PSD = not self.P.SHOW_RF_PSD
         if self.P.MP_SCHEME==2:
@@ -1126,6 +1129,8 @@ class SDR_GUI(QMainWindow):
         else:
             self.btn4.setText('Start BB IQ PSD')
             self.plots_bb.pwin.hide()
+            self.btn4.setChecked(False)
+            self.showNormal()
 
         self.P.SHOW_BASEBAND_PSD = not self.P.SHOW_BASEBAND_PSD
         if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
@@ -1137,7 +1142,8 @@ class SDR_GUI(QMainWindow):
         if self.P.SHOW_AF_PSD:
             print('STARTing AF PSD ...')
             self.btn3.setText('Stop AF PSD')
-            self.plots_af.pwin.show()
+            #self.plots_af.pwin.show()
+            self.plots_af.show()
             if self.P.TRANSPOSE:
                 w=int(self.screen_width/5)
                 h=self.screen_height-1
@@ -1161,6 +1167,7 @@ class SDR_GUI(QMainWindow):
             self.btn3.setText('Start AF PSD')
             self.plots_af.pwin.hide()
             self.btn3.setChecked(False)
+            self.showNormal()
 
         if self.P.MP_SCHEME==2 or self.P.MP_SCHEME==3:
             self.mp_comm('showAFpsd',self.P.SHOW_AF_PSD )

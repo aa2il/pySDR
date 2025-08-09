@@ -50,7 +50,7 @@ setuptools
 
 pyqt6
 # This seems to mostly work except with pyqtgraph under uv.
-# In the apst, there was a bug that caused a gui program to hang on final
+# In the past, there was a bug that caused a gui program to hang on final
 # but his seems to be fixed now
 #PySide6
 pyqtgraph
