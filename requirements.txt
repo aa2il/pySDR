@@ -27,6 +27,7 @@
 ###############################################################################
 #
 # Under Mint 21, tried this but didn't work --> "Illegal Instruction"
+# BUT, it seems to work under Mint 22.2, at least for thr RTL:
 #
 #   sudo apt -y install python3-soapysdr soapysdr-module-rtlsdr
 #   sudo apt -y install libsoapysdr-doc libsoapysdr-dev soapysdr-tools

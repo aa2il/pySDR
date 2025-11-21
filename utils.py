@@ -603,6 +603,13 @@ def find_sdr_device(self,args):
                     print('*** RTL asked for but SDRplay Found ***')
                     print('***************************************')
                     sys.exit(0)
+
+            else:
+                print('\n***************************************')
+                print('*** ---   Unknown SDR Device    --- ***')
+                print('***          sdrkey=',sdrkey,'         ***')
+                print('***************************************')
+                sys.exit(0)
             
             return sdr
 

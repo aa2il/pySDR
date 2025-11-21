@@ -61,10 +61,22 @@ Note: pySDR.py uses qt, not tk, so there is no problem with the recent versions 
 
 3) Patch-up SoapySDR: uv does not seem to have a version of SoapySDR so we need to cobbled this together:
 
-     cd ~/Python/pySDR/.venv/lib/python3.13/site-packages
+   This worked under Mint 22.2 - First, install RTL support:
+     sudo apt -y install python3-soapysdr soapysdr-module-rtlsdr
+     sudo apt -y install libsoapysdr-doc libsoapysdr-dev soapysdr-tools
+     sudo apt -y install rtl-sdr librtlsdr-dev libusb-1.0-0-dev
+
+   Plug in RTL and see if we can find it (seems we don't need to do "blacklisting" for some reasen?):
+     rehash
+     rtl_test -t
+     
+   Make virtual env point to these libraries:
+     cd ~/Python/pySDR/.venv/lib/python3.1?/site-packages
      rm -f SoapySDR.py _SoapySDR.so 
-     ln -s ~/Dev/SoapySDR/build/swig/python/SoapySDR.py 
-     ln -s ~/Dev/SoapySDR/build/swig/python/_SoapySDR.so 
+     #ln -s ~/Dev/SoapySDR/build/swig/python/SoapySDR.py 
+     #ln -s ~/Dev/SoapySDR/build/swig/python/_SoapySDR.so 
+     ln -s /usr/lib/python3/dist-packages/SoapySDR.py
+     ln -s /usr/lib/python3/dist-packages/_SoapySDR.cpython-312-x86_64-linux-gnu.so
 
 3) Make sure pySDR.py is executable and set PYTHON PATH so os can find libraries:
 
