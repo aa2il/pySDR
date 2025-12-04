@@ -566,10 +566,16 @@ def find_sdr_device(self,args):
                 sdrkey = sdr.getDriverKey()
             except: 
                 error_trap('UTILS->FIND SDR DEVICE',1)
-                print('\n***************************************')
-                print('Unable to open driver - dev=',dev)
-                print('Perhaps you need to restart the driver?')
-                print('***************************************')
+                print('\n*******************************************')
+                print('* Unable to open driver - dev=',dev,'     *')
+                print('* Perhaps you need to restart the driver? *')
+                print('*                                         *')
+                print('* For the SDRplay:                        *')
+                print('*    psa | fgrep -i sdrplay               *')
+                print('*    sudo pkill -f sdrplay_apiService     *')
+                print('*    /usr/local/bin/sdrplay_apiService &  *')
+                print('*                                         *')
+                print('*******************************************')
                 sys.exit(0)
 
             # Is it the SDRplay RSP?
