@@ -1,7 +1,7 @@
 ############################################################################
 #
 # gui.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # GUI-related functions for pySDR
 #
@@ -1441,7 +1441,7 @@ class SDR_GUI(QMainWindow):
                 self.FreqSelect(frq,False,vfo)
                 
                 mode = self.P.sock.get_fldigi_mode()
-                rig_mode = self.P.sock.get_mode()
+                rig_mode,bw = self.P.sock.get_mode()
                 if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
                     mode=self.P.MODE
                 if len(mode)>0 and rig_mode!=mode:
@@ -1969,7 +1969,7 @@ class SDR_GUI(QMainWindow):
                 self.itune_cnt=0
 
                 mode = P.MODE
-                rig_mode = P.sock.get_mode(vfo)
+                rig_mode,bw = P.sock.get_mode(vfo)
                 #if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
                 #    mode=self.P.MODE
                 print('SDR & RIG MODES:',mode,rig_mode,vfo)
@@ -2020,7 +2020,7 @@ class SDR_GUI(QMainWindow):
                     self.itune_cnt=0
 
                     mode = P.MODE
-                    rig_mode = P.sock.get_mode(vfo)
+                    rig_mode,bw = P.sock.get_mode(vfo)
                     #if mode=='SSB' and (self.P.MODE=='LSB' or self.P.MODE=='USB'):
                     #    print('SDR & RIG MODES:',mode,rig_mode,vfo)
                     if rig_mode!=mode:

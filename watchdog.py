@@ -1,7 +1,7 @@
 ############################################################################
 #
 # watchdog.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Watchdog monitor for pySDR
 #
@@ -304,7 +304,7 @@ class WatchDog:
         # Check rig mode
         if P.sock and P.sock.fldigi_active and P.gui.follow_freq_cb.isChecked():
             mode = P.sock.get_fldigi_mode()
-            rig_mode = P.sock.get_mode()
+            rig_mode,bw = P.sock.get_mode()
             #print 'mode=',mode,rig_mode,P.MODE
             if mode=='CW' and rig_mode!='CW':
                 print('WATCHDOG: Setting rig to match FLDIGI decoder',mode,rig_mode,P.MODE,'...')
@@ -320,7 +320,7 @@ class WatchDog:
         # Check rig band
         if P.sock and P.FOLLOW_BAND and P.sock.active:
             freq = P.sock.get_freq()*1e-3
-            mode = P.sock.get_mode()
+            mode,bw = P.sock.get_mode()
             band = freq2band(freq*1e-3)
             #print BANDS
             #print "Rig    :\tFreq =",freq,"\tBand =",band,"\tMode =",mode

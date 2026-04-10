@@ -1,7 +1,7 @@
 ################################################################################
 #
 # rig_control.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Portion of GUI related to rig controls - Qt version
 #
@@ -22,21 +22,10 @@
 #
 ################################################################################
 
-if True:
-    # Dynamic importing - this works!
-    from widgets_qt import QTLIB
-    exec('from '+QTLIB+'.QtWidgets import QWidget,QGridLayout,QButtonGroup,QLabel,QRadioButton,QSlider,'+\
-         'QLineEdit,QPushButton')
-    exec('from '+QTLIB+'.QtCore import Qt')
-elif False:
-    from PyQt6.QtWidgets import *
-    from PyQt6.QtCore import * 
-elif False:
-    from PySide6.QtWidgets import *
-    from PySide6.QtCore import *
-else:
-    from PyQt5.QtWidgets import *
-    from PyQt5.QtCore import * 
+from widgets_qt import QTLIB
+exec('from '+QTLIB+'.QtWidgets import QWidget,QGridLayout,QButtonGroup,QLabel,QRadioButton,QSlider,'+\
+     'QLineEdit,QPushButton')
+exec('from '+QTLIB+'.QtCore import Qt')
 from rig_io.socket_io import *
 from utilities import freq2band
 
@@ -306,7 +295,7 @@ class RIG_CONTROL():
         if self.band:
             self.band_buttons[self.band].setChecked(True)
 
-        self.mode = self.sock.get_mode()
+        self.mode,bw = self.sock.get_mode()
         print('RIG_STATUS: mode=',self.mode)
         if self.mode in ['PKT-U','PKTUSB','PSK-U']:
             self.mode='RTTY'
