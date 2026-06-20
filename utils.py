@@ -526,8 +526,8 @@ def find_sdr_device(self,args):
             print('***     Make sure it is plugged in     ***')
             print('***                                    ***')
             print('*** If problem persists, kill driver:  ***')
-            print('***    ps -aux | fgrep sdrplay         ***')
-            print('***    kill -9 <proc number>           ***')
+            print('       ps -aux | fgrep sdrplay            ')
+            print('       sudo kill -9  proc_number          ')
             print('******************************************')
 
             if True:
