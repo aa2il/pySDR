@@ -1422,7 +1422,11 @@ class SDR_GUI(QMainWindow):
 
             if self.split_cb.isChecked():
                 print('RIG RETUNE: Reading clarifier ...')
-                df_rx,df_tx=self.P.sock.read_clarifier()
+                #df_rx,df_tx=self.P.sock.read_clarifier()
+                rit   = self.sock.rit(-1)
+                df_rx = rit[0]*rit[1]
+                xit   = self.sock.xit(-1)
+                df_tx = xit[0]*xit[1]
                 print('RIG RETUNE: Setting sub-dial ...')
                 self.P.sock.set_sub_dial(func='CLAR')
                 if df_tx!=0:
