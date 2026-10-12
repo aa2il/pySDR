@@ -337,7 +337,8 @@ class RIG_CONTROL():
     # Callback for tx power slider
     def powerCB(self):
         p = self.pwr_slider.value()
-        set_tx_pwr(self,p)
+        #set_tx_pwr(self,p)
+        self.P.sock.tx_power(int(p),99,VERBOSITY=1)
         self.pwr_txt.setText( "{0:,d} W".format(p) )
         
     # Callback for mic gain slider

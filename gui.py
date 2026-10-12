@@ -34,7 +34,7 @@ from rig_io.presets import *
 #from rtty import *            # Disabled until we get a chance to bring it up to date
 from widgets_qt import *
 import collections
-from utils import  show_threads
+from utils import show_threads
 from utilities import freq2band,find_resource_file,error_trap
 
 from widgets_qt import QTLIB
@@ -781,10 +781,8 @@ class SDR_GUI(QMainWindow):
             # Not sure why I thought we needed to do this
             # It sets all the rx's to the same freq 
             fc = self.lcd.get()
-            print('BURP1: FC=',fc,P.FC)
             for i in range(1,P.NUM_RX):
                 P.FC[i]=1000*fc
-            print('BURP2: FC=',fc,P.FC)
             self.FreqSelect(fc,False)
         
         if P.ENABLE_RTTY:

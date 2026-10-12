@@ -20,6 +20,7 @@
 #set ROOT="/mnt/Sproul"
 set ROOT="/mnt/Calvin"
 #set ROOT="/mnt/Luther"
+set ROOT="/mnt/marconi"
 if( !(-e $ROOT) && (-e ${ROOT}2) )then
     set ROOT="${ROOT}2"
 else if( 0 )then
